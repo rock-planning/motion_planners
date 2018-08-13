@@ -1,0 +1,7 @@
+---
+- time: 20180813-1403
+  cmdline: "/media/natarajan/Workspace/dev/rock_dev/transterra/gui/vizkit/bin/rock-display "
+  robot_name: default
+  robot_type: default
+  app_name: motion_planners
+  app_dir: "/media/natarajan/Workspace/dev/rock_dev/transterra/planning/motion_planners"

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package>
+  <name>stomp</name>
+  <version>0.4.0</version>
+  <description>STOMP motion planner, core optimizer</description>
+  <maintainer email="kalakris@usc.edu">Mrinal Kalakrishnan</maintainer>
+  <author email="kalakris@usc.edu">Mrinal Kalakrishnan</author>
+  <maintainer email="sankar.natarajan@dfki.de">Sankaranarayanan Natarajan</maintainer>
+  <license>BSD</license>
+  <url>https://github.com/kalakris/stomp</url>
+
+</package>

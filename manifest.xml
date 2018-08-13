@@ -1,17 +1,14 @@
 <package>
-  <description brief="">
-  
+  <description brief="Motion Planning Libraries">
+  A framework for robot motion planning. This library contains different state of the art motion planners.
+  The current version supports optimization and sampling based planner. 
+  Available motion planners are STOMP, TrajOpt and OMPL.
   </description>
   <author>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</author>
   <license></license>
   <url>http://</url>
   <logo>http://</logo>
   <depend package="base/cmake" />
-  <!--
-   To add any dependencies use the depend tag
-  <depend package="dummy-dependency-0" />
-	...
-  <depend package="dummy-dependency-n-1" />
-  <depend package="dummy-dependency-n" />
-  -->
+  <depend package="planning/kinematics_library" />
+  <depend package="planning/collision_detection" />
 </package>

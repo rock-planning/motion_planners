@@ -1,0 +1,33 @@
+debug:
+  output_dir_: ../src/planners/stomp/test/stomp_2d_test
+  save_noise_trajectories_: true
+  save_noiseless_trajectories_: true
+  save_cost_function_: true
+  write_to_file_: true
+
+
+stomp:
+  # set the three parameters below to the same value for normal operation
+  max_rollouts_: 50
+  min_rollouts_: 50
+  num_rollouts_per_iteration_: 50
+  num_iterations_: 120
+  num_time_steps_: 30
+  num_dimensions_: 2
+  movement_duration_: 1.0
+  control_cost_weight_: 0.0001
+  resolution_: 0.002
+  delay_per_iteration_: 0.04
+  #noise adaptation mode: recommended
+  use_noise_adaptation_: false #true
+  #initial noise stddev - needs to be tuned.
+  noise_stddev_: [ 0.80, 0.80 ]
+  #how much to decay the noise every iteration, only used if noise_adaptation is disabled
+  noise_decay_: [ 1.0, 1.0 ]
+  #minimum value the noise can reach
+  noise_min_stddev_: [0.01, 0.01]
+  num_thread_: 1
+  use_openmp_: false
+ 
+
+
