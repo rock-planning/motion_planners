@@ -32,6 +32,8 @@ link_directories(${kdl_parser_LIBRARY_DIRS})
 
 #store wrapper's library name
 set (WRAPPERS_LIB "")
+#store link directory
+#set (WRAPPERS_LINK_DIR "")
 
 #stomp wrappers
 add_library(stomp_wrapper SHARED
@@ -45,14 +47,14 @@ LIST(APPEND WRAPPERS_LIB "stomp_wrapper")
 
 # if OMPL is found, add it to the planner factory
 pkg_check_modules(OMPL REQUIRED ompl)
+
 if(${OMPL_FOUND})
     message ("OMPL found !")    
     message("OMPL dir ${OMPL_INCLUDE_DIRS}")
     message(${OMPL_LIBRARY_DIRS})
     message(${OMPL_LIBRARIES})
-    message(${orocos_kdl_LIBRARIES})
-    message(${kdl_parser_LIBRARIES})
     include_directories(${PLANNERS_PATH} ${OMPL_INCLUDE_DIRS})
+    link_directories(${OMPL_LIBRARY_DIRS})
     
     add_library(ompl_wrapper SHARED
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/OmplPlanner.cpp    	    
@@ -61,24 +63,20 @@ if(${OMPL_FOUND})
     target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} collision_detection robot_model)    
     
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
+    #LIST(APPEND WRAPPERS_LINK_DIR ${OMPL_LIBRARY_DIRS})  #is needed if ompl is installed through ROS
+    
     install(TARGETS ompl_wrapper DESTINATION lib)
-    add_definitions(-DOMPL_FOUND)
+    
 else(${OMPL_FOUND})
     message ("OMPL not found !")    
 endif()
 
-
-
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_OMPL_FOUND")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_OMPL_FOUND")
-#include_directories(${CMAKE_CURRENT_BINARY_DIR})
-message(${WRAPPERS_LIB})
+add_definitions(-DOMPL_FOUND=${OMPL_FOUND})    
 
 #planner factory
 add_library(planner_factory SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/PlannerFactory.cpp
 )
-
 
 target_link_libraries(planner_factory ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} ${WRAPPERS_LIB})
 

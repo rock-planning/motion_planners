@@ -19,10 +19,12 @@ message(${PCL_VERSION})
 get_directory_property(ROBOT_MODEL_PATH DIRECTORY robot_model DEFINITION ROBOT_MODEL_DIR_PATH)
 get_directory_property(PLANNERS_PATH DIRECTORY planners DEFINITION PLANNERS_DIR_PATH)
 get_directory_property(STOMP_PATH DIRECTORY planners DEFINITION STOMP_PATH)
+#get_directory_property(WRAPPERS_LINK_DIR DIRECTORY planners DEFINITION WRAPPERS_LINK_DIR) #is needed if ompl is installed through ROS
 
 set(DEPS_INCLUDE_HEADER ${EIGEN3_INCLUDE_DIR} ${kdl_parser_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS}
 					 ${COLLISION_DETECTION_INCLUDE_DIRS} ${KINEMATICS_INCLUDE_DIRS} ${PLANNERS_PATH}/include ${ROBOT_MODEL_PATH}/include ${STOMP_PATH}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include ${DEPS_INCLUDE_HEADER})
+#link_directories(${kdl_parser_LIBRARY_DIRS} ${WRAPPERS_LINK_DIR})
 link_directories(${kdl_parser_LIBRARY_DIRS})
 	    
 add_library(motion_planners SHARED
@@ -31,7 +33,6 @@ add_library(motion_planners SHARED
 
 target_link_libraries(motion_planners collision_detection kinematics_library robot_model planner_factory ${PCL_LIBRARIES})
 
-#set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} pcl_common-1.7 robot_model")
 set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -I${CMAKE_SOURCE_DIR}/include;${DEPS_INCLUDE_HEADER}")
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 

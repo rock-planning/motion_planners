@@ -162,7 +162,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 	goal_joint_status_.clear();
 	goal_joint_status_.resize(planning_group_joints_.size());
 	
-	robot_model_->robot_kinematics_->solveIK(goal_pose_.position, goal_pose_.orientation, start_jointvalues,
+	robot_model_->robot_kinematics_->solveIK(goal_pose_, start_jointvalues,
 						 ik_solution_, planner_status.kinematic_status);
 	std::cout<<"aff = "<<planner_status.kinematic_status.statuscode<<std::endl;
 	if(planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND)

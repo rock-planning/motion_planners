@@ -6,7 +6,7 @@
 #include <wrapper/stomp/StompPlanner.hpp>
 
 
-#ifdef OMPL_FOUND
+#if OMPL_FOUND    
     #include <wrapper/ompl/OmplPlanner.hpp>
 #endif
 
@@ -27,8 +27,6 @@ class PlannerFactory
 		AbstractPlannerPtr getPlannerTask(motion_planners::PlannerLibrary library);
    
 };
-
-
 
 }// end planner
 
