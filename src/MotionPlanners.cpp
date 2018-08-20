@@ -154,8 +154,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 {
     
     if (checkStartState(start_jointvalues, planner_status))
-    {	 
-
+    {
 	// assign the goal joint values from the target joint status
 	goal_pose_ = target_pose;	
 	// assign the goal joint values from the target joint status
@@ -164,14 +163,13 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 	
 	robot_model_->robot_kinematics_->solveIK(goal_pose_, start_jointvalues,
 						 ik_solution_, planner_status.kinematic_status);
-	std::cout<<"aff = "<<planner_status.kinematic_status.statuscode<<std::endl;
+	
 	if(planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND)
-	{std::cout<<"Found IK "<<std::endl;
+	{
 	    for(size_t i = 0; i < planning_group_joints_.size(); i++)
 	    {
 		try
 		{
-		    
 		    goal_joint_status_.names.at(i)	= planning_group_joints_.at(i).first;
 		    goal_joint_status_.elements.at(i)	= ik_solution_.getElementByName(planning_group_joints_.at(i).first);
 		}
@@ -186,31 +184,17 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 		return true;
 	    else
 		return false;	    
-	}
-	std::cout<<"beforedd = "<<planner_status.kinematic_status.statuscode<<std::endl;
-    }
-    
+	}	
+    }    
     return false;
-
 }
 
 bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {    
-    planner_->updateInitialTrajectory(initial_joint_status_, goal_joint_status_, planner_status);
+    planner_->updateInitialTrajectory(initial_joint_status_, goal_joint_status_, planner_status);        
     
-    std::cout<<"SSSSSSSSTART "<<std::endl;
-    for(size_t i = 0; i < planning_group_joints_.size(); i++)
-	std::cout<<initial_joint_status_.elements.at(i).position<<std::endl;
-    std::cout<<"----------------"<<std::endl;
-    std::cout<<"EEEEEnd "<<std::endl;
-    for(size_t i = 0; i < planning_group_joints_.size(); i++)
-	std::cout<<goal_joint_status_.elements.at(i).position<<std::endl;
-    std::cout<<"----------------"<<std::endl;
-    std::cout<<"beforei solve = "<<planner_status.statuscode<<std::endl;
-    planner_->solve(solution, planner_status);
-    std::cout<<"after solve = "<<planner_status.statuscode<<std::endl;
+    planner_->solve(solution, planner_status);    
     
-    return true;
-    
+    return true;    
     
 }

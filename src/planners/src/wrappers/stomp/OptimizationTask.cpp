@@ -16,8 +16,7 @@ OptimizationTask::OptimizationTask(stomp::StompConfig config, std::shared_ptr<Ro
 
 OptimizationTask::~OptimizationTask()
 {
-    policy_.reset();
-    //stomp_.reset();
+    policy_.reset();    
 }
 
 bool OptimizationTask::stompInitialize(int num_threads, int num_rollouts)
@@ -28,91 +27,75 @@ bool OptimizationTask::stompInitialize(int num_threads, int num_rollouts)
     Eigen::VectorXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING));
     
     
-    for (int d=0; d < stomp_config_.num_dimensions_; ++d)
-    {
-	derivative_costs_[d].col(stomp::STOMP_ACCELERATION)		= Eigen::VectorXd::Ones(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING);
-	
-    }
+    for (int d=0; d < stomp_config_.num_dimensions_; ++d)    
+	derivative_costs_[d].col(stomp::STOMP_ACCELERATION) = Eigen::VectorXd::Ones(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING);
     
     proj_pos_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     pos_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     vel_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     acc_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     
-    
     collision_costs_ = Eigen::VectorXd::Zero(stomp_config_.num_time_steps_);
         
     return true;
 }
 
-
-//void OptimizationTask::updateInitialTrajectory(const Eigen::VectorXd &start, const Eigen::VectorXd &goal)
-
 void OptimizationTask::updateTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal)
 {
-
-    double increment = 0;
-   
+    double increment = 0;   
 
     for (int d=0; d < stomp_config_.num_dimensions_; ++d)
-    {	
-	//initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start(d) * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
-	//initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal(d)  * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
-	
+    {
 	initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start.elements.at(d).position * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
 	initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal.elements.at(d).position  * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
-// 		
-	increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_ - 1);
-	for (int i=0; i < stomp_config_.num_time_steps_; i++)
-	{
-	    initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);
-	}
-    } 
 
+	increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_ - 1);
+	
+	for (int i=0; i < stomp_config_.num_time_steps_; i++)
+	    initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);	
+    } 
 }
 
 bool OptimizationTask::getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy)
 {
-  policy = policy_;
-  return true;
+    policy = policy_;
+    return true;
 }
 
 bool OptimizationTask::setPolicy(const boost::shared_ptr<stomp::CovariantMovementPrimitive> policy)
 {
-  policy_ = policy;
-  return true;
+    policy_ = policy;
+    return true;
 }
 
 double OptimizationTask::getControlCostWeight()
 {
-  return stomp_config_.control_cost_weight_;
+    return stomp_config_.control_cost_weight_;
 }
 
 bool OptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int rollout_id, int thread_id) 
 {  
-  bool filtered = false;
-  
-  for (unsigned int d=0; d<parameters.size(); ++d)
-  {
-    for (int t=0; t<stomp_config_.num_time_steps_; ++t)
+    bool filtered = false;
+
+    for (unsigned int d=0; d<parameters.size(); ++d)
     {
-      if (parameters[d](t) < lower_limits_.at(d))
-      {	
-        parameters[d](t) = lower_limits_.at(d);
-	
-        filtered = true;
-      }
-      if (parameters[d](t) > upper_limits_.at(d))
-      {	
-        parameters[d](t) = upper_limits_.at(d);
-	
-        filtered = true;
-      }
+	for (int t=0; t<stomp_config_.num_time_steps_; ++t)
+	{
+	    if (parameters[d](t) < lower_limits_.at(d))
+	    {	
+		parameters[d](t) = lower_limits_.at(d);
+		filtered = true;
+	    }
+	    if (parameters[d](t) > upper_limits_.at(d))
+	    {	
+		parameters[d](t) = upper_limits_.at(d);
+		filtered = true;
+	    }
+	}
     }
-  }
-    
-  return filtered;
+    return filtered;
 }
+
 void OptimizationTask::createPolicy()
 {
     policy_.reset(new stomp::CovariantMovementPrimitive());
@@ -152,14 +135,10 @@ bool OptimizationTask::execute( std::vector<Eigen::VectorXd>& parameters,
 	proj_pos_.block(d, stomp::TRAJECTORY_PADDING, 1, stomp_config_.num_time_steps_) = projected_parameters[d].transpose();
 	pos_.block(d, stomp::TRAJECTORY_PADDING, 1, stomp_config_.num_time_steps_) = parameters[d].transpose();
     }
-
-    //vel_ = (vel_diff_matrix_ * pos_.transpose()).transpose();
-
-    //auto start_time = std::chrono::high_resolution_clock::now();        
+    
     for (int t = stomp::TRAJECTORY_PADDING; t < stomp::TRAJECTORY_PADDING + stomp_config_.num_time_steps_; ++t)
     {
-    // State cost
-	
+	// State cost	
 	robot_model_->updateJointGroup(planning_group_joints_names_, pos_.block(0,t,stomp_config_.num_dimensions_,1));
     
 	if(!robot_model_->isStateValid())
@@ -172,21 +151,16 @@ bool OptimizationTask::execute( std::vector<Eigen::VectorXd>& parameters,
 	    collision_cost = 0.0;
 	    validity = true;
 	}
-	
-	
-	 costs(t-stomp::TRAJECTORY_PADDING) = collision_cost;
+	costs(t-stomp::TRAJECTORY_PADDING) = collision_cost;
     }
-   //auto finish_time = std::chrono::high_resolution_clock::now();
+    
+    //auto finish_time = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double> elapsed = finish_time - start_time;
-    //std::cout << "Elapsed time colli: " << elapsed.count() << " s\n";
+    //std::cout << "Elapsed time colli: " << elapsed.count() << " s\n";    
+    //costs = collision_costs_;    
+    //std::cout<<"COST = "<<costs<<std::endl;
     
-    //costs = collision_costs_;
-    
-   //std::cout<<"COST = "<<costs<<std::endl;
-
-    
-    return true;
-    
+    return true;    
 }
 
 void OptimizationTask::computeCollisionCost()

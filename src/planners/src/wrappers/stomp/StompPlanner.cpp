@@ -13,10 +13,8 @@ StompPlanner::~StompPlanner()
 }
 
 bool StompPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path)
-{
-    
-    robot_model_ = robot_model;  
-    
+{    
+    robot_model_ = robot_model;      
     
     planning_group_name_ = robot_model_->getPlanningGroupName();
     
@@ -40,7 +38,6 @@ bool StompPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, s
 
 bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
-
     optimization_task_->createPolicy();   
     
     stomp_.reset(new stomp::Stomp());
@@ -77,7 +74,7 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
     noiseless_rollout.total_cost_ = 100.0;
     while ((iter_ct < stomp_config_.num_iterations_) && (noiseless_rollout.total_cost_ > 0.1))
     {	
-//	std::cout<<"Iteration = "<<i<<std::endl;
+	//std::cout<<"Iteration = "<<i<<std::endl;
         //start_time = std::chrono::high_resolution_clock::now();
         stomp_->runSingleIteration(iter_ct);
 	iter_ct ++;
@@ -88,10 +85,6 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	
         stomp_->getNoiselessRollout(noiseless_rollout);
 	std::cout<<iter_ct <<" Cost ="<<noiseless_rollout.total_cost_<<std::endl;
-	
-        //std::vector<double> stddevs;
-        //stomp_->getAdaptedStddevs(stddevs);
-	
 
         if (debug_config_.save_noisy_trajectories_)
         {
@@ -112,17 +105,14 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
         {
           std::stringstream ss;
           ss << debug_config_.output_dir_ << "/noiseless_" << iter_ct << ".txt";
-          optimization_task_->policy_->writeToFile(ss.str());
-          
+          optimization_task_->policy_->writeToFile(ss.str());          
         }
     }
     
-  auto finish_iter_time = std::chrono::high_resolution_clock::now();  
-  elapsed = finish_iter_time - start_iter_time;
-	std::cout << "Elapsed time solve tim: " << elapsed.count() << " s\n";
-          
-    
-   
+    auto finish_iter_time = std::chrono::high_resolution_clock::now();  
+    elapsed = finish_iter_time - start_iter_time;
+    std::cout << "Elapsed time solve tim: " << elapsed.count() << " s\n";
+	
     int start = stomp::DIFF_RULE_LENGTH -1;
     int end = (start + stomp_config_.num_time_steps_ -1);
     int diff = (end -start) +1;
@@ -136,15 +126,12 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	solution.names.at(d) = planning_group_joints_name_.at(d);
 	
 	solution.elements.at(d).resize(diff+2);
-	//for(int i = stomp::DIFF_RULE_LENGTH -2; i <= (stomp::DIFF_RULE_LENGTH + stomp_config_.num_time_steps_ -1); i++)
-	for( int i = 0; i <= diff+1; i++)
-	{
-//	       std::cout<<    optimization_task_->policy_->parameters_all_[d](i+(start-1))<<std::endl;
+	
+	for( int i = 0; i <= diff+1; i++)	
 	    solution.elements.at(d).at(i).position =  optimization_task_->policy_->parameters_all_[d](i+(start-1));
-	}
-    }
-   
-//  std::cout<<"-----ggg-----"<<std::endl;
+	
+    }   
+
   if (debug_config_.save_noisy_trajectories_)
     fclose(num_rollouts_file);
   stomp_.reset();
@@ -156,22 +143,5 @@ void StompPlanner::updateInitialTrajectory(const base::samples::Joints &start, c
 {
     optimization_task_->updateTrajectory(start, goal);
 }
- /*   double increment = 0;
 
-    for (int d=0; d < stomp_config_.num_dimensions_; ++d)
-    {	
-	//initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start(d) * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
-	//initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal(d)  * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
-	
-	initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start.elements.at(d).position * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
-	initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal.elements.at(d).position  * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
-	
-	increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_ - 1);
-	for (int i=0; i < stomp_config_.num_time_steps_; i++)
-	{
-	    initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);
-	}
-    } 
-
-}*/
 }// end namespace 
