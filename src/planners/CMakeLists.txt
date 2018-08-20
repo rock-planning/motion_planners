@@ -33,7 +33,7 @@ link_directories(${kdl_parser_LIBRARY_DIRS})
 #store wrapper's library name
 set (WRAPPERS_LIB "")
 #store link directory
-#set (WRAPPERS_LINK_DIR "")
+set (WRAPPERS_LINK_DIR "")
 
 #stomp wrappers
 add_library(stomp_wrapper SHARED
@@ -63,7 +63,8 @@ if(${OMPL_FOUND})
     target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} collision_detection robot_model)    
     
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
-    #LIST(APPEND WRAPPERS_LINK_DIR ${OMPL_LIBRARY_DIRS})  #is needed if ompl is installed through ROS
+    #If OMPL is installed through ROS, we need to specify the ompl install folder for linking.
+    LIST(APPEND WRAPPERS_LINK_DIR ${OMPL_LIBRARY_DIRS}) 
     
     install(TARGETS ompl_wrapper DESTINATION lib)
     
