@@ -165,6 +165,15 @@ class RobotModel
 
 	inline void setKinematicsSolver(kinematics_library::RobotKinematicsPtr robot_kinematics){robot_kinematics_ = robot_kinematics;}
 
+        bool getSelfCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int self_collision_num_max_contacts=2);
+        bool getWorldCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int world_collision_num_max_contacts=2);
+
+        bool getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance=0.05, int self_collision_num_max_contacts=2);
+        bool getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance=0.05, int world_collision_num_max_contacts=2);
+
+        void getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation);
+
+
 /*        WorldCollision &getWorlCollision();
 
 

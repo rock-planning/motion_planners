@@ -21,6 +21,11 @@ AbstractPlannerPtr PlannerFactory::getPlannerTask(motion_planners::PlannerLibrar
 		  planner = std::shared_ptr< StompPlanner>(new StompPlanner());
 		  break;
 		}
+        case TRAJOPT:
+        {
+            planner = std::shared_ptr< TrajoptPlanner>(new TrajoptPlanner());
+            break;
+        }
 		case OMPL:
 		{
 		    #if(OMPL_FOUND)

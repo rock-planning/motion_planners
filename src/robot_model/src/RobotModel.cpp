@@ -2751,6 +2751,58 @@ bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_
     return false;
 }
 
+bool RobotModel::getSelfCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int self_collision_num_max_contacts)
+{
+    if (robot_collision_detector_->checkSelfCollision(self_collision_num_max_contacts))
+    {
+
+    LOG_DEBUG("[RobotModel]: There is no self collision");
+
+//    if(robot_collision_detector_->checkWorldCollision(external_collision_manager_num_max_contacts))
+//    {
+//            LOG_DEBUG("[RobotModel]: There is no collision against environment" );
+//            return true;
+//        }
+//        else
+//    {
+//            LOG_DEBUG("[RobotModel]: There is collision against environment" );
+//            return false;
+//        }
+    }
+    else{
+        LOG_DEBUG("[RobotModel]: There is a self collision" );
+        contact_info = robot_collision_detector_->getSelfContacts();
+        return false;
+    }
+    return false;
+
+}
+bool RobotModel::getWorldCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int world_collision_num_max_contacts)
+{
+    if(robot_collision_detector_->checkWorldCollision(world_collision_num_max_contacts))
+    {
+        LOG_DEBUG("[RobotModel]: There is no collision against environment" );
+        return true;
+    }
+    else
+    {
+        LOG_DEBUG("[RobotModel]: There is collision against environment" );
+        contact_info = robot_collision_detector_->getEnvironmentalContacts();
+        return false;
+    }
+    return false;
+}
+
+bool RobotModel::getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance, int self_collision_num_max_contacts){
+    robot_collision_detector_->computeSelfDistanceInfo(distance_tolerance);
+    distance_info = robot_collision_detector_->getSelfDistanceInfo();
+}
+bool RobotModel::getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance, int world_collision_num_max_contacts){
+    robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo(distance_tolerance);
+    distance_info = robot_collision_detector_->getClosestObstacleToRobotDistanceInfo();
+}
+
+
 /*
 bool RobotModel::IsStateIsValid(int self_collision_num_max_contacts, int external_collision_manager_num_max_contacts)
 {
@@ -3040,6 +3092,19 @@ float RobotModel::randomFloat(const float& min,const  float &max)
     srand(time(NULL));
     float r = (float)rand() / (float)RAND_MAX;
     return min + r * (max - min);
+}
+
+void RobotModel::getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation)
+{
+
+    KDL::Frame link = robot_state_.robot_links_[link_name].getLinkFrame();
+
+    position.x() = link.p[0];
+    position.y() = link.p[1];
+    position.z() = link.p[2];
+
+    link.M.GetQuaternion(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+
 }
 
 /*These function are not used

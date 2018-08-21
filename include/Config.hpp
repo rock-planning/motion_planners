@@ -56,7 +56,7 @@ struct ModelObject
 
 enum PlannerLibrary
 {
-    STOMP, OMPL
+    STOMP, OMPL, TRAJOPT
 };
 
     
