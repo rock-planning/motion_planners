@@ -191,6 +191,7 @@ public:
   int getNumCosts() {return costs_.size();}
   int getNumConstraints() {return eqcnts_.size() + ineqcnts_.size();}
   int getNumVars() {return vars_.size();}
+  void clearProblem();
 
 protected:
   ModelPtr model_;

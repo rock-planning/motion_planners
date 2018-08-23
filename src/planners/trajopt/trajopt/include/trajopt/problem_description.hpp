@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 //#include "traj_plotter.hpp"
 #include "sco/modeling.hpp"
+#include "yaml-cpp/yaml.h"
 
 using namespace sco;
 namespace sco{struct OptResults; /*struct ProblemConstructionInfo;*/}
@@ -13,7 +14,14 @@ namespace Json {
 Json::Value readJsonFile(const std::string& fname);
 }
 
+
+//namespace YAML {
+//void readYamlFile(const std::string& fname, YAML::Node config);
+//}
+
 namespace trajopt {
+
+void readYamlFile(const char* filename, YAML::Node config);
 
 using namespace json_marshal;
 using namespace Json;
@@ -31,7 +39,11 @@ typedef boost::shared_ptr<TrajOptResult> TrajOptResultPtr;
 
 TrajOptProbPtr TRAJOPT_API ConstructProblem(const ProblemConstructionInfo&);
 TrajOptProbPtr TRAJOPT_API ConstructProblem(const Json::Value&, ConfigurationPtr rad, CollisionCheckerPtr coll);
-TrajOptResultPtr TRAJOPT_API OptimizeProblem(TrajOptProbPtr, bool plot);
+TrajOptProbPtr TRAJOPT_API ConstructProblem(const YAML::Node &, ConfigurationPtr rad, CollisionCheckerPtr coll);
+TrajOptResultPtr TRAJOPT_API OptimizeProblem(TrajOptProbPtr, DblVec data);
+
+TRAJOPT_API TrajArray getStraightLineTrajData1(int n_steps, int n_dof, DblVec startpoint, DblVec endpoint);
+TRAJOPT_API TrajArray getStationaryTrajData1();
 
 enum TermType {
   TT_COST,
@@ -72,11 +84,16 @@ public:
   void SetInitTraj(const TrajArray& x) {m_init_traj = x;}
   TrajArray GetInitTraj() {return m_init_traj;}
 
+  void setCollisionChecker(ConfigurationPtr rad){ m_rad = rad; }
+  void setRobotModel(CollisionCheckerPtr coll){m_collision_checker = coll; }
+
 //  TrajPlotterPtr GetPlotter() {return m_trajplotter;}
 
   friend TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo&);
 
+  void init(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll);
 private:
+  int n_steps;
   VarArray m_traj_vars;
   ConfigurationPtr m_rad;
   TrajArray m_init_traj;
@@ -99,6 +116,7 @@ struct BasicInfo  {
   string robot; // optional
   IntVec dofs_fixed; // optional
   void fromJson(const Json::Value& v);
+  void fromYaml(const YAML::Node& v);
 };
 
 /**
@@ -111,7 +129,9 @@ struct InitInfo {
   };
   Type type;
   TrajArray data;
+
   void fromJson(const Json::Value& v);
+  void fromYaml(const YAML::Node& v);
 };
 
 
@@ -129,6 +149,7 @@ struct TRAJOPT_API TermInfo  {
   string name; // xxx is this used?
   TermType term_type;
   virtual void fromJson(const Json::Value& v)=0;
+  virtual void fromYaml(const YAML::Node& v)=0;
   virtual void hatch(TrajOptProb& prob) = 0;
   
 
@@ -146,6 +167,7 @@ private:
   static std::map<string, MakerFunc> name2maker;
 };
  void fromJson(const Json::Value& v, TermInfoPtr&);
+ void fromYaml(const YAML::Node& v, TermInfoPtr&);
 
 /**
 This object holds all the data that's read from the JSON document
@@ -160,6 +182,7 @@ public:
   CollisionCheckerPtr collision_checker;
 
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
 };
 
 /**
@@ -175,6 +198,7 @@ struct PoseCostInfo : public TermInfo, public MakesCost, public MakesConstraint 
    double coeff;
   LinkPtr link;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(PoseCostInfo);
 };
@@ -192,6 +216,7 @@ struct JointPosCostInfo : public TermInfo, public MakesCost {
   DblVec vals, coeffs;
   int timestep;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(JointPosCostInfo)
 };
@@ -208,6 +233,7 @@ struct CartVelCntInfo : public TermInfo, public MakesConstraint {
   LinkPtr link;
   double max_displacement;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(CartVelCntInfo)
 };
@@ -223,6 +249,7 @@ where j indexes over DOF, and \f$c_j\f$ are the coeffs.
 struct JointVelCostInfo : public TermInfo, public MakesCost {
   DblVec coeffs;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(JointVelCostInfo)
 };
@@ -231,6 +258,7 @@ struct JointVelConstraintInfo : public TermInfo, public MakesConstraint {
   DblVec vals;
   int first_step, last_step;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(JointVelConstraintInfo)
 };
@@ -257,6 +285,7 @@ struct CollisionCostInfo : public TermInfo, public MakesCost {
   /// for continuous-time penalty, use swept-shape between timesteps t and t+gap (gap=1 by default)
   int gap;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(CollisionCostInfo)
 };
@@ -272,6 +301,7 @@ struct JointConstraintInfo : public TermInfo, public MakesConstraint {
   /// which timestep. default = n_timesteps - 1
   int timestep;
   void fromJson(const Value& v);
+  void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
   DEFINE_CREATE(JointConstraintInfo)
 };

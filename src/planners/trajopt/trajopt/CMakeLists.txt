@@ -1,3 +1,8 @@
+
+INCLUDE(FindPkgConfig)
+
+pkg_check_modules(YAML REQUIRED yaml-cpp)
+
 include_directories(
   SYSTEM
   # ${BULLET_INCLUDE_DIRS}
@@ -22,7 +27,8 @@ set(TRAJOPT_INCLUDE_HEADER ${TRAJOPT_DIR_PATH}/include ${EIGEN_INCLUDE_DIR} ${BO
     ${JSON_DIR_PATH}/include
                                          )
 
-include_directories(${TRAJOPT_INCLUDE_HEADER})
+include_directories(${TRAJOPT_INCLUDE_HEADER}  ${YAML_INCLUDE_DIRS}
+)
 
 if (NOT APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")

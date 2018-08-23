@@ -198,6 +198,17 @@ vector<ConstraintPtr> OptProb::getConstraints() const {
   out.insert(out.end(), ineqcnts_.begin(), ineqcnts_.end());
   return out;
 }
+
+void OptProb::clearProblem()
+{
+    vars_.clear();
+    lower_bounds_.clear();
+    upper_bounds_.clear();
+    costs_.clear();
+    eqcnts_.clear();
+    ineqcnts_.clear();
+
+}
 void OptProb::addLinearConstraint(const AffExpr& expr, ConstraintType type) {
   if (type == EQ) model_->addEqCnt(expr, "");
   else model_->addIneqCnt(expr, "");
