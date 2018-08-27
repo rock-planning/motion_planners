@@ -9,7 +9,7 @@ find_package(Eigen3 REQUIRED)
 #find_package(orocos_kdl REQUIRED)
 pkg_check_modules(kdl_parser REQUIRED kdl_parser)
 
-find_package(PCL 1.7 REQUIRED COMPONENTS core features filters io segmentation surface)
+find_package(PCL 1.8 REQUIRED COMPONENTS core features filters io segmentation surface)
 set(PCL_VERSION "${PCL_VERSION_MAJOR}.${PCL_VERSION_MINOR}")
 
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)

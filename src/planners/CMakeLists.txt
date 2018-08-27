@@ -12,7 +12,7 @@ INCLUDE(FindPkgConfig)
 # get basic library
 find_package(Eigen3 REQUIRED)
 find_package(orocos_kdl REQUIRED)
-find_package(PCL 1.7 REQUIRED COMPONENTS core features filters io segmentation surface)
+find_package(PCL 1.8 REQUIRED COMPONENTS core features filters io segmentation surface)
 pkg_check_modules(kdl_parser REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
@@ -46,7 +46,8 @@ LIST(APPEND WRAPPERS_LIB "stomp_wrapper")
 
 
 # if OMPL is found, add it to the planner factory
-pkg_check_modules(OMPL REQUIRED ompl)
+set(OMPL_FOUND false)  #This variable need to be defined here, so that C++ complier knows about it.
+pkg_check_modules(OMPL ompl)
 
 if(${OMPL_FOUND})
     message ("OMPL found !")    

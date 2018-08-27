@@ -59,13 +59,27 @@ enum PlannerLibrary
     STOMP, OMPL
 };
 
-    
 struct PlannerConfig
 {
     kinematics_library::KinematicsConfig kinematics_config; 
     RobotModelParameters robot_model;
     std::string planner_specific_config;
     enum PlannerLibrary planner;
+};
+
+
+struct EnvironmentConfig
+{
+    std::string env_frame;
+    double octree_resolution;
+    std::string env_object_name;
+
+};
+
+struct Config
+{
+    PlannerConfig planner_config;
+    EnvironmentConfig env_config;    
 };
 
 }// end motion_planners
