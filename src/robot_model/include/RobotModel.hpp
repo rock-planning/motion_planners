@@ -89,7 +89,7 @@ class RobotModel
 
     public:
 	RobotModel(std::string urdf_file, std::string srdf_file, std::string planning_group_name,
-		  double link_padding = 0.99);
+		  double link_padding = 1.00);
 
         bool initialization();    
 

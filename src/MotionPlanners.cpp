@@ -13,6 +13,8 @@ using namespace motion_planners;
 MotionPlanners::MotionPlanners(Config config)
 {
     config_ = config;
+    env_pcl_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    self_filtered_env_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
 }
 
 MotionPlanners::~MotionPlanners()
@@ -134,22 +136,26 @@ void MotionPlanners::getEnviornmentPointcloud(base::samples::Pointcloud &env_ptc
 void MotionPlanners::updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin)
 {
     //convert pointcloud to PCL-Pointcloud
-    env_pcl_cloud_.clear();
+    std::cout<<"im here"<<std::endl;
+    env_pcl_cloud_->clear();
     for (std::vector<base::Vector3d>::const_iterator it = pt_cloud.points.begin() ; it != pt_cloud.points.end(); ++it)
     {
 	pcl::PointXYZ point((*it)[0],(*it)[1],(*it)[2]);
-	env_pcl_cloud_.push_back(point);
+	env_pcl_cloud_->push_back(point);
     } 
+    std::cout<<"im here1 "<<env_pcl_cloud_->size()<<std::endl;
     
     //self filtering  
     self_filtered_env_cloud_->clear();
     
-    robot_model_->selfFilter(boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(env_pcl_cloud_), 
+    robot_model_->selfFilter(env_pcl_cloud_, 
 					   self_filtered_env_cloud_, config_.env_config.env_frame, motion_planners::COLLISION);
 
+    std::cout<<"im here3 "<<std::endl;
     // add pointloud to collision model    
     robot_model_->updatePointcloud(self_filtered_env_cloud_, sensor_origin, config_.env_config.env_frame, 
 				   config_.env_config.octree_resolution, config_.env_config.env_object_name);   
+    std::cout<<"im here4 "<<std::endl;
     
 }
 

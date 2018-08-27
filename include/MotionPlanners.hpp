@@ -83,7 +83,7 @@ class MotionPlanners
     
     base::commands::Joints ik_solution_;
     
-    pcl::PointCloud<pcl::PointXYZ> env_pcl_cloud_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr env_pcl_cloud_;
     
     pcl::PointCloud<pcl::PointXYZ>::Ptr self_filtered_env_cloud_;
     
