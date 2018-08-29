@@ -23,12 +23,14 @@ class RobotModelWrapper : public Configuration
 
 public:
 
-    RobotModelWrapper();
+    RobotModelWrapper(){}
     RobotModelWrapper(std::shared_ptr<RobotModel> &robot_model);
 
     virtual ~RobotModelWrapper() {}
 
 
+//    void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model = robot_model; }
+    void setRobotModel(std::shared_ptr<RobotModel> robot_model);
     virtual void SetDOFValues(const DblVec& dofs);
     virtual void GetDOFLimits(DblVec& lower, DblVec& upper) const;
     virtual DblVec GetDOFValues();

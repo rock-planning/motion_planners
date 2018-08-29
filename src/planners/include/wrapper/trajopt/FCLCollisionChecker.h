@@ -18,9 +18,11 @@ protected:
 //    FCLCollisionChecker& operator=(const FCLCollisionChecker&); // Prevent assignment
 //    virtual ~FCLCollisionChecker(); // Prevent unwanted destruction
 public:
+    FCLCollisionChecker(){}
     FCLCollisionChecker(std::shared_ptr<RobotModel> &robot_model);
     virtual ~FCLCollisionChecker();
 
+    void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model_ = robot_model; }
     // CollisionChecker interface
     void SetContactDistance(float distance);
     double GetContactDistance();

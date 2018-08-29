@@ -7,6 +7,18 @@ void RobotModelWrapper::DblVecToEigenVectorXd(const DblVec &in, Eigen::VectorXd 
 RobotModelWrapper::RobotModelWrapper(std::shared_ptr<RobotModel> &robot_model):
     m_robot_model(robot_model)
 {
+    std::cout << "testing if i reach here  .. .  .. . . \n";
+    m_planning_group_name_ = robot_model->getPlanningGroupName();
+    robot_model->getPlanningGroupJointsName(robot_model->getPlanningGroupName(), m_planning_group_joints_names_);
+
+    std::cout << "yes ....  ..  . . . " << m_planning_group_name_<< " \n";
+
+    std::cout << "testing if i reach here 1 .. .  .. . . \n";
+}
+
+void RobotModelWrapper::setRobotModel(std::shared_ptr<RobotModel> robot_model)
+{
+    m_robot_model = robot_model;
     m_planning_group_name_ = robot_model->getPlanningGroupName();
     robot_model->getPlanningGroupJointsName(robot_model->getPlanningGroupName(), m_planning_group_joints_names_);
 }

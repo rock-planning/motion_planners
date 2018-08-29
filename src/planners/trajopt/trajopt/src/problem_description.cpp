@@ -260,10 +260,10 @@ TermInfoPtr TermInfo::fromName(const string& type) {
   }
 }
 
-TrajArray getStationaryTrajData1(){
+TrajArray getStationaryTrajData1(DblVec startpoint){
     TrajArray data;
     int n_steps = gPCI->basic_info.n_steps;
-     data = toVectorXd(gPCI->rad->GetDOFValues()).transpose().replicate(n_steps, 1);
+     data = toVectorXd(startpoint).transpose().replicate(n_steps, 1);
     return data;
 }
 
@@ -286,7 +286,7 @@ void InitInfo::fromJson(const Json::Value& v) {
     int n_steps = gPCI->basic_info.n_steps;
     int n_dof = gPCI->rad->GetDOF();
     if (type_str == "stationary") {
-        data = getStationaryTrajData1();
+        data = getStationaryTrajData1(gPCI->rad->GetDOFValues());
     }
     else if (type_str == "given_traj") {
         FAIL_IF_FALSE(v.isMember("data"));
@@ -321,7 +321,7 @@ void InitInfo::fromYaml(const YAML::Node& v) {
   int n_dof = gPCI->rad->GetDOF();
 
   if (type_str == "stationary") {
-    data = getStationaryTrajData1();
+    data = getStationaryTrajData1(gPCI->rad->GetDOFValues());
   }
   else if (type_str == "given_traj") {
     FAIL_IF_FALSE(v["data"]);
@@ -487,6 +487,44 @@ TrajOptProb::TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr 
 
 
 TrajOptProb::TrajOptProb() {
+}
+
+void TrajOptProb::init(int n) {
+
+    n_steps = n;
+    std::cout << "init 1 . . . . . . . . .\n";
+
+    DblVec lower, upper;
+    m_rad->GetDOFLimits(lower, upper);
+
+    std::cout << "init 2 . . . . . . . . .\n";
+
+    int n_dof = m_rad->GetDOF();
+
+    std::cout << "init 3 . . . . . . . . .\n";
+
+    vector<double> vlower, vupper;
+    vector<string> names;
+
+    std::cout << "init 4 . . . . . . . . .\n";
+
+    for (int i=0; i < n_steps; ++i) {
+      vlower.insert(vlower.end(), lower.data(), lower.data()+lower.size());
+      vupper.insert(vupper.end(), upper.data(), upper.data()+upper.size());
+      for (unsigned j=0; j < n_dof; ++j) {
+        names.push_back( (boost::format("j_%i_%i")%i%j).str() );
+      }
+    }
+    std::cout << "init 5 . . . . . . . . .\n";
+
+    VarVector trajvarvec = createVariables(names, vlower, vupper);
+
+    std::cout << "init 6 . . . . . . . . .\n";
+
+    m_traj_vars = VarArray(n_steps, n_dof, trajvarvec.data());
+
+    std::cout << "init 7 . . . . . . . . . " <<m_traj_vars.rows() << " x "<<m_traj_vars.cols() << "\n";
+
 }
 
 //void SetupPlotting(TrajOptProb& prob, Optimizer& opt) {

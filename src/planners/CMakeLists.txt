@@ -12,7 +12,7 @@ INCLUDE(FindPkgConfig)
 # get basic library
 find_package(Eigen3 REQUIRED)
 find_package(orocos_kdl REQUIRED)
-find_package(PCL 1.7 REQUIRED COMPONENTS core features filters io segmentation surface)
+find_package(PCL 1.8 REQUIRED COMPONENTS core features filters io segmentation surface)
 pkg_check_modules(kdl_parser REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
@@ -52,6 +52,7 @@ add_library(trajopt_wrapper SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/RobotModelWrapper.cpp
             ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/FCLCollisionChecker.cpp
             ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/RobotLinkWrapper.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/HandleTrajoptConfig.cpp
 )
 
 target_link_libraries(trajopt_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} trajopt collision_detection robot_model)

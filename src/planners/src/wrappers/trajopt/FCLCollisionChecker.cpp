@@ -1,6 +1,7 @@
 #include "wrapper/trajopt/FCLCollisionChecker.h"
 
-FCLCollisionChecker::FCLCollisionChecker(std::shared_ptr<RobotModel> &robot_model)
+FCLCollisionChecker::FCLCollisionChecker(std::shared_ptr<RobotModel> &robot_model):
+    m_robot_model_(robot_model)
 {
 
 }

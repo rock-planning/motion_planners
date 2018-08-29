@@ -147,7 +147,13 @@ VarVector OptProb::createVariables(const vector<string>& var_names) {
   return createVariables(var_names, DblVec(var_names.size(), -INFINITY), DblVec(var_names.size(), INFINITY));
 }
 VarVector OptProb::createVariables(const vector<string>& var_names, const DblVec& lb, const DblVec& ub) {
+  std::cout << "createVariables . .. . . . . . . .  "<<  vars_.size() << "\n";
+
+
   size_t n_add = var_names.size(), n_cur = vars_.size();
+
+  std::cout << "createVariables . .. . . . . . . .  "<<  n_add << " ----- " << n_cur << "\n";
+
   assert(lb.size() == n_add);
   assert(ub.size() == n_add);
   vars_.reserve(n_cur + n_add);
@@ -158,6 +164,8 @@ VarVector OptProb::createVariables(const vector<string>& var_names, const DblVec
     lower_bounds_.push_back(lb[i]);
     upper_bounds_.push_back(ub[i]);
   }
+  std::cout << "createVariables 1 . .. . . . . . . .  "<<  vars_.size() << " ----- " << getVars().size() << "\n";
+
   model_->update();
   return VarVector(vars_.end()-n_add, vars_.end());
 }
@@ -232,7 +240,9 @@ vector<double> OptProb::getClosestFeasiblePoint(const vector<double>& x) {
   CvxOptStatus status = model_->optimize();
   if(status != CVX_SOLVED) {
     model_->writeToFile("/tmp/fail.lp");
-    PRINT_AND_THROW("couldn't find a feasible point. there's probably a problem with variable bounds (e.g. joint limits). wrote to /tmp/fail.lp");
+//    PRINT_AND_THROW("couldn't find a feasible point. there's probably a problem with variable bounds (e.g. joint limits). wrote to /tmp/fail.lp");
+    PRINT_ERROR("couldn't find a feasible point. there's probably a problem with variable bounds (e.g. joint limits). wrote to /tmp/fail.lp");
+    return vector<double>();
   }
   return model_->getVarValues(vars_);
 }

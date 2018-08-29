@@ -8,6 +8,8 @@
 #include "trajopt/problem_description.hpp"
 #include "sco/optimizers.hpp"
 #include "utils/clock.hpp"
+#include <wrapper/trajopt/RobotModelWrapper.h>
+#include <wrapper/trajopt/FCLCollisionChecker.h>
 
 using namespace trajopt;
 using namespace Json;
@@ -37,7 +39,14 @@ private:
 
                 TrajOptProbPtr m_prb;
                 BasicTrustRegionSQP m_opt;
-	
+
+                RobotModelWrapperPtr m_robot_model_wrapper;
+                FCLCollisionCheckerPtr m_collision_checker_wrapper;
+
+                YAML::Node m_input_config;
+
+                TrajOptResultPtr m_results;
+
 };
 }// end planner
 

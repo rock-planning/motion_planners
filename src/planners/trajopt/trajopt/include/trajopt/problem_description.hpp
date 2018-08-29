@@ -6,6 +6,7 @@
 //#include "traj_plotter.hpp"
 #include "sco/modeling.hpp"
 #include "yaml-cpp/yaml.h"
+#include "sco/expr_ops.hpp"
 
 using namespace sco;
 namespace sco{struct OptResults; /*struct ProblemConstructionInfo;*/}
@@ -43,7 +44,7 @@ TrajOptProbPtr TRAJOPT_API ConstructProblem(const YAML::Node &, ConfigurationPtr
 TrajOptResultPtr TRAJOPT_API OptimizeProblem(TrajOptProbPtr, DblVec data);
 
 TRAJOPT_API TrajArray getStraightLineTrajData1(int n_steps, int n_dof, DblVec startpoint, DblVec endpoint);
-TRAJOPT_API TrajArray getStationaryTrajData1();
+TRAJOPT_API TrajArray getStationaryTrajData1(DblVec startpoint);
 
 enum TermType {
   TT_COST,
@@ -81,17 +82,30 @@ public:
   ConfigurationPtr GetRAD() {return m_rad;}
   CollisionCheckerPtr GetCollisionChecker() {return m_collision_checker;}
 
-  void SetInitTraj(const TrajArray& x) {m_init_traj = x;}
+  inline void setInitTraj(DblVec start, DblVec goal) {
+      m_init_traj = trajopt::getStraightLineTrajData1(GetNumSteps(), GetNumDOF(), start, goal);
+                                              }
+  inline void setGoalTraj(DblVec goal_traj) {
+      VarVector vars = GetVarRow(GetNumSteps()-1);
+      int n_dof = vars.size();
+
+      for (int j=0; j < n_dof; ++j) {
+
+        addLinearConstraint(sco::exprSub(AffExpr(vars[j]), goal_traj[j]), EQ);
+
+      }
+  }
   TrajArray GetInitTraj() {return m_init_traj;}
 
-  void setCollisionChecker(ConfigurationPtr rad){ m_rad = rad; }
-  void setRobotModel(CollisionCheckerPtr coll){m_collision_checker = coll; }
+  void setRobotModel(ConfigurationPtr rad){ m_rad = rad; }
+  void setCollisionChecker(CollisionCheckerPtr coll){m_collision_checker = coll; }
 
 //  TrajPlotterPtr GetPlotter() {return m_trajplotter;}
 
   friend TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo&);
 
   void init(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll);
+  void init(int n);
 private:
   int n_steps;
   VarArray m_traj_vars;

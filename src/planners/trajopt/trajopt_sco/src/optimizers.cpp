@@ -244,13 +244,15 @@ OptStatus BasicTrustRegionSQP::optimize() {
   DblVec& x_ = results_.x; // just so I don't have to rewrite code
   if (x_.size() == 0) PRINT_AND_THROW("you forgot to initialize!");
   if (!prob_) PRINT_AND_THROW("you forgot to set the optimization problem");    
+
+  OptStatus retval = INVALID;
   
   x_ = prob_->getClosestFeasiblePoint(x_);
+  if (!x_.size()) return retval;
 
   assert(x_.size() == prob_->getVars().size());
   assert(prob_->getCosts().size() > 0 || constraints.size() > 0);
 
-  OptStatus retval = INVALID;
 
   for (int merit_increases=0; merit_increases < max_merit_coeff_increases_; ++merit_increases) { /* merit adjustment loop */
     for (int iter=1; ; ++iter) { /* sqp loop */

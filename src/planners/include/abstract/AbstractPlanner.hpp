@@ -42,6 +42,22 @@ T getValue (const YAML::Node &yaml_data, std::string name)
         
 }
 
+template<typename T>
+T getValue (const YAML::Node &yaml_data, std::string name, const T& df)
+{
+        T value;
+
+        if (const YAML::Node data = yaml_data[name])
+        {
+            value = data.as<T>();
+        }
+        else
+            value = df;
+
+        return value;
+
+}
+
 // enum PlannerLibrary
 // {
 //     STOMP, OMPL
