@@ -5,7 +5,7 @@ project(planner_factory)
 
 set(PLANNER_FACTORY_VERSION 0.1)
 set(TARGET_NAME ${PROJECT_NAME})
-set (PLANNERS_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
+set (PLANNERS_DIR_PATH ${CMAKE_CURRENT_LIST_DIR}) 
 
 INCLUDE(FindPkgConfig)
 
@@ -60,11 +60,12 @@ target_link_libraries(trajopt_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} 
 LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
 # if OMPL is found, add it to the planner factory
-pkg_check_modules(OMPL ompl)
-set(OMPL_FOUND false)  #This variable need to be defined here, so that C++ complier knows about it.
 
+set(OMPL_LIB_FOUND false)  #This variable need to be defined here, so that C++ complier knows about it.
+pkg_check_modules(OMPL ompl)
 
 if(${OMPL_FOUND})
+    set(OMPL_LIB_FOUND ${OMPL_FOUND})
     message ("OMPL found !")    
     message("OMPL dir ${OMPL_INCLUDE_DIRS}")
     message(${OMPL_LIBRARY_DIRS})
@@ -88,8 +89,8 @@ else(${OMPL_FOUND})
     message ("OMPL not found !")    
 endif()
 
-add_definitions(-DOMPL_FOUND=${OMPL_FOUND})    
-
+add_definitions(-DOMPL_LIB_FOUND=${OMPL_LIB_FOUND})    
+message("ompl = ${OMPL_LIB_FOUND}")
 #planner factory
 add_library(planner_factory SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/PlannerFactory.cpp

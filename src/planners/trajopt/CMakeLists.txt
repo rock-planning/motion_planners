@@ -56,7 +56,6 @@ add_library(trajopt SHARED
 )
  target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} sco utils)
 
- install(DIRECTORY include/ DESTINATION include/trajectory_optimization/planner)
  install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 

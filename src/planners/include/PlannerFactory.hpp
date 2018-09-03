@@ -7,7 +7,7 @@
 #include <wrapper/trajopt/TrajoptPlanner.hpp>
 
 
-#if OMPL_FOUND    
+#if OMPL_LIB_FOUND    
     #include <wrapper/ompl/OmplPlanner.hpp>
 #endif
 
