@@ -195,8 +195,8 @@ void BasicInfo::fromJson(const Json::Value& v) {
 
 void BasicInfo::fromYaml(const YAML::Node& v) {
   childFromYaml(v, start_fixed, "start_fixed", true);
-  childFromYaml(v, n_steps, "n_steps");
-  childFromYaml(v, manip, "manip");
+  childFromYaml(v, n_steps, "no_of_samples");
+  childFromYaml(v, manip, "planning_group");
   childFromYaml(v, robot, "robot", string(""));
   childFromYaml(v, dofs_fixed, "dofs_fixed", IntVec());
   // TODO: optimization parameters, etc?
@@ -260,14 +260,14 @@ TermInfoPtr TermInfo::fromName(const string& type) {
   }
 }
 
-TrajArray getStationaryTrajData1(DblVec startpoint){
+TrajArray getStationaryTrajData(DblVec startpoint){
     TrajArray data;
     int n_steps = gPCI->basic_info.n_steps;
      data = toVectorXd(startpoint).transpose().replicate(n_steps, 1);
     return data;
 }
 
-TrajArray getStraightLineTrajData1(int n_steps, int n_dof, DblVec startpoint, DblVec endpoint){
+TrajArray getStraightLineTrajData(int n_steps, int n_dof, DblVec startpoint, DblVec endpoint){
     TrajArray data;
     if (endpoint.size() != n_dof) {
         PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j")%n_dof%endpoint.size());
@@ -286,7 +286,7 @@ void InitInfo::fromJson(const Json::Value& v) {
     int n_steps = gPCI->basic_info.n_steps;
     int n_dof = gPCI->rad->GetDOF();
     if (type_str == "stationary") {
-        data = getStationaryTrajData1(gPCI->rad->GetDOFValues());
+        data = getStationaryTrajData(gPCI->rad->GetDOFValues());
     }
     else if (type_str == "given_traj") {
         FAIL_IF_FALSE(v.isMember("data"));
@@ -308,7 +308,7 @@ void InitInfo::fromJson(const Json::Value& v) {
         if (endpoint.size() != n_dof) {
             PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j")%n_dof%endpoint.size());
         }
-        data = getStraightLineTrajData1(n_steps, n_dof, gPCI->rad->GetDOFValues(), endpoint);
+        data = getStraightLineTrajData(n_steps, n_dof, gPCI->rad->GetDOFValues(), endpoint);
     }
 
 }
@@ -321,7 +321,7 @@ void InitInfo::fromYaml(const YAML::Node& v) {
   int n_dof = gPCI->rad->GetDOF();
 
   if (type_str == "stationary") {
-    data = getStationaryTrajData1(gPCI->rad->GetDOFValues());
+    data = getStationaryTrajData(gPCI->rad->GetDOFValues());
   }
   else if (type_str == "given_traj") {
     FAIL_IF_FALSE(v["data"]);
@@ -343,7 +343,7 @@ void InitInfo::fromYaml(const YAML::Node& v) {
     if (endpoint.size() != n_dof) {
       PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j")%n_dof%endpoint.size());
     }
-    data = getStraightLineTrajData1(n_steps, n_dof, gPCI->rad->GetDOFValues(), endpoint);
+    data = getStraightLineTrajData(n_steps, n_dof, gPCI->rad->GetDOFValues(), endpoint);
   }
 
 }
@@ -381,9 +381,9 @@ void ProblemConstructionInfo::fromYaml(const YAML::Node& v) {
 
 }
 
-TrajOptResult::TrajOptResult(OptResults& opt, TrajOptProb& prob) :
+TrajOptResult::TrajOptResult(OptResults& opt, TrajOptProb& prob, OptStatus status) :
   cost_vals(opt.cost_vals),
-  cnt_viols(opt.cnt_viols) {
+  cnt_viols(opt.cnt_viols), status(status) {
   BOOST_FOREACH(const CostPtr& cost, prob.getCosts()) {
     cost_names.push_back(cost->name());
   }
@@ -405,8 +405,11 @@ TrajOptResultPtr OptimizeProblem(TrajOptProbPtr prob) {
 //    SetupPlotting(*prob, opt);
 //  }
   opt.initialize(trajToDblVec(prob->GetInitTraj()));
-  opt.optimize();
-  return TrajOptResultPtr(new TrajOptResult(opt.results(), *prob));
+  OptStatus status = opt.optimize();
+  if (status != OptStatus::INVALID)
+    return TrajOptResultPtr(new TrajOptResult(opt.results(), *prob, status));
+  else
+      return TrajOptResultPtr(new TrajOptResult());
 }
 
 TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo& pci) {
@@ -453,7 +456,7 @@ TrajOptProbPtr ConstructProblem(const Json::Value& root, ConfigurationPtr rad, C
   pci.rad = rad;
   pci.collision_checker = coll;
   pci.fromJson(root);
-  ConstructProblem(pci);
+  return ConstructProblem(pci);
 }
 
 TrajOptProbPtr ConstructProblem(const YAML::Node& root, ConfigurationPtr rad, CollisionCheckerPtr coll) {
@@ -484,56 +487,6 @@ TrajOptProb::TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr 
     VarVector trajvarvec = createVariables(names, vlower, vupper);
     m_traj_vars = VarArray(n_steps, n_dof, trajvarvec.data());
 }
-
-
-TrajOptProb::TrajOptProb() {
-}
-
-void TrajOptProb::init(int n) {
-
-    n_steps = n;
-    std::cout << "init 1 . . . . . . . . .\n";
-
-    DblVec lower, upper;
-    m_rad->GetDOFLimits(lower, upper);
-
-    std::cout << "init 2 . . . . . . . . .\n";
-
-    int n_dof = m_rad->GetDOF();
-
-    std::cout << "init 3 . . . . . . . . .\n";
-
-    vector<double> vlower, vupper;
-    vector<string> names;
-
-    std::cout << "init 4 . . . . . . . . .\n";
-
-    for (int i=0; i < n_steps; ++i) {
-      vlower.insert(vlower.end(), lower.data(), lower.data()+lower.size());
-      vupper.insert(vupper.end(), upper.data(), upper.data()+upper.size());
-      for (unsigned j=0; j < n_dof; ++j) {
-        names.push_back( (boost::format("j_%i_%i")%i%j).str() );
-      }
-    }
-    std::cout << "init 5 . . . . . . . . .\n";
-
-    VarVector trajvarvec = createVariables(names, vlower, vupper);
-
-    std::cout << "init 6 . . . . . . . . .\n";
-
-    m_traj_vars = VarArray(n_steps, n_dof, trajvarvec.data());
-
-    std::cout << "init 7 . . . . . . . . . " <<m_traj_vars.rows() << " x "<<m_traj_vars.cols() << "\n";
-
-}
-
-//void SetupPlotting(TrajOptProb& prob, Optimizer& opt) {
-//  TrajPlotterPtr plotter = prob.GetPlotter();
-//  plotter->Add(prob.getCosts());
-//  plotter->Add(prob.getConstraints());
-//  opt.addCallback(boost::bind(&TrajPlotter::OptimizerCallback, *plotter, _1, _2));
-//}
-
 
 
 void PoseCostInfo::fromJson(const Value& v) {

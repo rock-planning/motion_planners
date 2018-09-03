@@ -153,16 +153,11 @@ void Optimizer::callCallbacks(DblVec& x) {
 }
 
 void Optimizer::initialize(const vector<double>& x) {
-
-   std::cout << "initializing optimization problem . .. . . . . . .. . . . \n";
-   std::cout << x << "\n";
   if (!prob_) PRINT_AND_THROW("need to set the problem before initializing");
-  if (prob_->getVars().size() != x.size()) 
+  if (prob_->getVars().size() != x.size())
     PRINT_AND_THROW(boost::format("initialization vector has wrong length. expected %i got %i")%prob_->getVars().size()%x.size());
   results_.clear(); 
   results_.x = x;
-
-  std::cout << "initializing optimization problem done  .. . . . . . .. . . . \n";
 }
 
 BasicTrustRegionSQP::BasicTrustRegionSQP() {

@@ -53,8 +53,6 @@ add_library(trajopt SHARED
         ${TRAJOPT_PLANNER_DIR_PATH}/src/collision_checker.cpp
         # plot_callback.cpp
         # bullet_unity.cpp
-
-        ${TRAJOPT_PLANNER_DIR_PATH}/src/TrajoptConfig.cpp
 )
  target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} sco utils)
 

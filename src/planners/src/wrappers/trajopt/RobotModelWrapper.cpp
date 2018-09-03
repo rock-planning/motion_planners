@@ -86,8 +86,12 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
 //    }
 
 
+    std::cout << "Getting position jacobian . . .. . .. . . \n ";
+
     DblMatrix m /*=  Eigen::MatrixXd::Zero()*/;
     m.resize(3, GetDOF());
+
+    std::cout << "After Getting position jacobian . . .. . .. . . \n ";
 
     return m;
 

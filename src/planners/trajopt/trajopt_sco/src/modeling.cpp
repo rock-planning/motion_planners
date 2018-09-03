@@ -147,12 +147,8 @@ VarVector OptProb::createVariables(const vector<string>& var_names) {
   return createVariables(var_names, DblVec(var_names.size(), -INFINITY), DblVec(var_names.size(), INFINITY));
 }
 VarVector OptProb::createVariables(const vector<string>& var_names, const DblVec& lb, const DblVec& ub) {
-  std::cout << "createVariables . .. . . . . . . .  "<<  vars_.size() << "\n";
-
 
   size_t n_add = var_names.size(), n_cur = vars_.size();
-
-  std::cout << "createVariables . .. . . . . . . .  "<<  n_add << " ----- " << n_cur << "\n";
 
   assert(lb.size() == n_add);
   assert(ub.size() == n_add);
@@ -164,8 +160,6 @@ VarVector OptProb::createVariables(const vector<string>& var_names, const DblVec
     lower_bounds_.push_back(lb[i]);
     upper_bounds_.push_back(ub[i]);
   }
-  std::cout << "createVariables 1 . .. . . . . . . .  "<<  vars_.size() << " ----- " << getVars().size() << "\n";
-
   model_->update();
   return VarVector(vars_.end()-n_add, vars_.end());
 }
