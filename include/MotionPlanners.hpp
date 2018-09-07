@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/conversions.h>
 #include <base/samples/Joints.hpp>
 #include "Config.hpp"
 #include <base/JointsTrajectory.hpp>
@@ -51,7 +53,7 @@ class MotionPlanners
     
     bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
     
-    void getEnviornmentPointcloud(base::samples::Pointcloud &env_ptcloud);
+    void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);
     
     std::vector< std::pair<std::string, std::string> > getCollisionObjectNames()
     {

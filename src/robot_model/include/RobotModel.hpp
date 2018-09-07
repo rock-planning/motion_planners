@@ -165,9 +165,14 @@ class RobotModel
 	inline void setKinematicsSolver(kinematics_library::RobotKinematicsPtr robot_kinematics){robot_kinematics_ = robot_kinematics;}
 	
 	template<class urdfT> 
-	void registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );        
+	void registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud ); 
+	
+	
+	void subtractingPtCloudsNew(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud);
         
 	void selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
+	
+	void selfFilterNew(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
 
         std::vector< collision_detection::DistanceInformation>& getSelfDistanceInfo();
 
@@ -190,11 +195,13 @@ class RobotModel
 	
 	void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &box_cloud,double x, double y, double z);
 
-        void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10, bool dense=false );
+        void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, 
+					int number_of_step_alpha=10, bool dense=false );
 	
-	void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha=20 );
+	void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha=5);
 
-        void createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10, int number_of_step_beta=10);
+        void createPtCloudFromSphere(	pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, 
+					int number_of_step_alpha=10, int number_of_step_beta=10);
 	
 	void createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_cloud, double radius, int number_of_step_alpha=20, int number_of_step_beta=20);
 

@@ -188,7 +188,7 @@ void RobotLink::setCollisionPointCloud(std::vector<pcl::PointCloud<pcl::PointXYZ
     link_collision_point_clouds_ = link_point_clouds;
 }
 
-std::vector<pcl::PointCloud<pcl::PointXYZ> > RobotLink::getCollisionPointCloud()
+std::vector<pcl::PointCloud<pcl::PointXYZ> >& RobotLink::getCollisionPointCloud()
 {
     return link_collision_point_clouds_;
 }

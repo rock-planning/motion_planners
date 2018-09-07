@@ -43,7 +43,7 @@ class RobotLink
         KDL::Frame getLinkFrame();
         void AddCollision(urdf::CollisionSharedPtr collision);
         void setCollisionPointCloud(std::vector<pcl::PointCloud<pcl::PointXYZ> > link_point_clouds);
-        std::vector<pcl::PointCloud<pcl::PointXYZ> > getCollisionPointCloud();
+        std::vector<pcl::PointCloud<pcl::PointXYZ> >& getCollisionPointCloud();
 
     private:
 
