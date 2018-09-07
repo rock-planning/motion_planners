@@ -6,7 +6,7 @@
 #include <wrapper/stomp/StompPlanner.hpp>
 
 
-#if OMPL_FOUND    
+#if OMPL_LIB_FOUND    
     #include <wrapper/ompl/OmplPlanner.hpp>
 #endif
 
