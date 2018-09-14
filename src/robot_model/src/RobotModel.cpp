@@ -589,8 +589,12 @@ void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_
     sphere_cloud.push_back(pcl::PointXYZ(0,0,-radius));
 }
 
+/* Subtracting the pointcloud using this method is not efficient because it creates a convex hull for the entire robot.
+ * In doing so, computation time is less but it will delete all the points between the robot links.
+ */
 
-void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud)
+void RobotModel::subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
+					     pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud)
 {
     std::vector<pcl::Vertices> polygons;
     pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
@@ -612,9 +616,7 @@ void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cl
     bb_filter.setInputCloud(cloud_1);
     bb_filter.setHullIndices(polygons);
     bb_filter.setHullCloud(boundingbox_ptr);
-    LOG_DEBUG_S<<" 1.4 = "<<boundingbox_ptr->size();
     bb_filter.filter(indices);
-    LOG_DEBUG_S<<"2 = "<<indices.size();
 
     pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
     fInliers->indices=indices ;
@@ -625,28 +627,22 @@ void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cl
     
     pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     extract.filter (*output_cloud);    
-    //extract.filter (*subtracted_cloud);    
     
     pclStatisticalOutlierRemoval(output_cloud, subtracted_cloud);
 }
 
-void RobotModel::subtractingPtCloudsNew(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, 					
+void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, 					
 					pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud)					
 {   
     
     std::vector<pcl::Vertices> polygons;
     pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::ConvexHull<pcl::PointXYZ> hull;
-// Set alpha, which is the maximum length from a vertex to the center of the voronoi cell (the smaller, the greater the resolution of the hull).
-//    http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_3:_Cloud_processing_(advanced)#Concave_hull
-/*
-    pcl::ConcaveHull<pcl::PointXYZ> hull;
-    hull.setAlpha(0.1);
-*/
+
     hull.setInputCloud(robot_link_cloud);
     hull.setDimension(3);
     hull.reconstruct(*boundingbox_ptr.get(),polygons);
-    //LOG_DEBUG_S<<"1 "<<boundingbox_ptr->size();
+   
     std::vector<int> indices;
     pcl::CropHull<pcl::PointXYZ> bb_filter;
 
@@ -654,10 +650,8 @@ void RobotModel::subtractingPtCloudsNew(pcl::PointCloud<pcl::PointXYZ>::Ptr env_
     bb_filter.setInputCloud(env_cloud);
     bb_filter.setHullIndices(polygons);
     bb_filter.setHullCloud(boundingbox_ptr);
-    //LOG_DEBUG_S<<" 1.4 = "<<boundingbox_ptr->size();
     bb_filter.filter(indices);
-    //LOG_DEBUG_S<<"2 = "<<indices.size();
-
+    
     pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
     fInliers->indices=indices ;
     pcl::ExtractIndices<pcl::PointXYZ> extract ;
@@ -1302,15 +1296,26 @@ void RobotModel::updateJointGroup( const std::vector<std::string> &joint_names, 
     }
 }
 
-void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pclCloud, const Eigen::Vector3d &sensor_origin,
-                                  const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
+void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
+                                  std::string collision_object_name)
+{    
+
+    world_collision_detector_->updateEnvironment(pcl_cloud, sensor_origin, collision_object_name);
+}
+
+void RobotModel::assignPlanningScene(	const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
+					const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
 {
 
     if(collision_object_name.empty())                            
 	collision_object_name = link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
-    LOG_DEBUG_S<<" 1!"<<std::endl;
-    world_collision_detector_->registerPointCloudToCollisionManager(pclCloud, sensor_origin, octree_resolution, collision_object_name );
-    LOG_DEBUG_S<<" 2!"<<std::endl;
+    
+    
+    base::Pose collision_object_pose;
+    collision_object_pose.position.setZero();
+    collision_object_pose.orientation.setIdentity();
+
+    world_collision_detector_->registerPointCloudToCollisionManager(pcl_cloud, sensor_origin, collision_object_pose, octree_resolution, collision_object_name );    
 }
 
 bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_collision_manager_num_max_contacts)
@@ -1523,8 +1528,8 @@ float RobotModel::randomFloat(const float& min,const  float &max)
     return min + r * (max - min);
 }
 
-void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
-			    std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
+void RobotModel::selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
+				    std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
 {    
     double start_time = omp_get_wtime();
 
@@ -1570,7 +1575,7 @@ void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, 
     LOG_DEBUG_S<<"[selfFilter:] Transforming point cloud took "<< end_time - start_time;
     //std::cout<<"  Size = "<<scene_ptr->size()<<"  "<<robot_pointcloud.size()<<"   "<<std::endl;
     start_time = omp_get_wtime();
-    subtractingPtClouds( scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(robot_pointcloud ) , new_scene_ptr);    
+    subtractingPtCloudsFullBody( scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(robot_pointcloud ) , new_scene_ptr);    
     end_time = omp_get_wtime();
     
     LOG_DEBUG_S<<"[selfFilter:] Subtracting point cloud took "<< end_time - start_time;
@@ -1578,7 +1583,7 @@ void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, 
     return;    
 }
 
-void RobotModel::selfFilterNew(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
+void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
 { 
     double start_time = omp_get_wtime();
 
@@ -1587,15 +1592,6 @@ void RobotModel::selfFilterNew(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, st
     std::string B_Frame_Name=this->getURDF()->getRoot()->name ;
 
     pcl::PointCloud<pcl::PointXYZ> link_pointcloud_transformed_in_sensor_frame;
-   
-    //////////////////
-    /*pcl::CropHull<pcl::PointXYZ> bb_filter;
-    bb_filter.setDim(3);
-    bb_filter.setInputCloud(scene_ptr);
-    std::vector< std::vector<int> > vec_indices(robot_collision_detector_->numberOfObjectsInCollisionManger());
-    int ct = 0;*/
-
-    ///////////////////////
  
     for(std::map<std::string, RobotLink>::iterator it=robot_state.robot_links_.begin();it!=robot_state.robot_links_.end();it++)
     {
@@ -1611,8 +1607,7 @@ void RobotModel::selfFilterNew(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, st
 		this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
 		KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
 		pcl::transformPointCloud (it->second.getVisualPointCloud().at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
-		subtractingPtCloudsNew(scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(link_pointcloud_transformed_in_sensor_frame) );
-	
+		subtractingPtClouds(scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(link_pointcloud_transformed_in_sensor_frame) );
 	    }
 	}
 	else
@@ -1625,11 +1620,8 @@ void RobotModel::selfFilterNew(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, st
 		this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
 		KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
 		pcl::transformPointCloud (collision_point_cloud.at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
-    		//double temp_start_time = omp_get_wtime();
-		subtractingPtCloudsNew(scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(link_pointcloud_transformed_in_sensor_frame) );		
-    		//double end_time = omp_get_wtime();
-    		//LOG_DEBUG_S<<"[selfFilter:] Subtracting link "<<it->first.c_str()<<" point cloud took "<< end_time - temp_start_time;
-    		//std::cout<<"Output pt size = "<<scene_ptr->size()<<std::endl;
+    		
+		subtractingPtClouds(scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(link_pointcloud_transformed_in_sensor_frame) );
 	    }
 	}        
     }

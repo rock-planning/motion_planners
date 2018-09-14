@@ -73,7 +73,7 @@ struct EnvironmentConfig
     std::string env_frame;
     double octree_resolution;
     std::string env_object_name;
-
+    bool do_self_filter;
 };
 
 struct Config

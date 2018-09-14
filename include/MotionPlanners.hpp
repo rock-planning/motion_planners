@@ -49,6 +49,8 @@ class MotionPlanners
     bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
 			       std::string &planningGroupName, PlannerStatus &planner_status);
     
+    bool assignPlanningScene(const Eigen::Vector3d &sensor_origin);    
+    
     void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);    
     
     bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
@@ -87,11 +89,11 @@ class MotionPlanners
     
     pcl::PointCloud<pcl::PointXYZ>::Ptr env_pcl_cloud_;
     
-    pcl::PointCloud<pcl::PointXYZ>::Ptr self_filtered_env_cloud_;
-    
     bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status);
     
     bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
+    
+    void applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud);
 
 };
 

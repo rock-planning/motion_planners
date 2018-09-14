@@ -13,8 +13,7 @@ using namespace motion_planners;
 MotionPlanners::MotionPlanners(Config config)
 {
     config_ = config;
-    env_pcl_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
-    self_filtered_env_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    env_pcl_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);    
 }
 
 MotionPlanners::~MotionPlanners()
@@ -121,52 +120,67 @@ void MotionPlanners::getSelfFilteredPointcloud(base::samples::Pointcloud &env_pt
 {
     env_ptcloud.points.clear();
     
-    env_ptcloud.points.resize(self_filtered_env_cloud_->size());
+    env_ptcloud.points.resize(env_pcl_cloud_->size());
     
-    for (size_t i = 0;  i < self_filtered_env_cloud_->size() ; ++i)
+    for (size_t i = 0;  i < env_pcl_cloud_->size() ; ++i)
     {	
-	env_ptcloud.points[i].x() = self_filtered_env_cloud_->points[i].x;
-	env_ptcloud.points[i].y() = self_filtered_env_cloud_->points[i].y;
-	env_ptcloud.points[i].z() = self_filtered_env_cloud_->points[i].z;
+	env_ptcloud.points[i].x() = env_pcl_cloud_->points[i].x;
+	env_ptcloud.points[i].y() = env_pcl_cloud_->points[i].y;
+	env_ptcloud.points[i].z() = env_pcl_cloud_->points[i].z;
     }
 
     env_ptcloud.time = base::Time::now();
+}
+
+void MotionPlanners::applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud)
+{
+    pcl::PCLPointCloud2::Ptr point_cloud2(new pcl::PCLPointCloud2 ());
+    pcl::PCLPointCloud2::Ptr filtered_pt2(new pcl::PCLPointCloud2 ());
+    pcl::toPCLPointCloud2(*input_cloud, *point_cloud2);
+    pcl::VoxelGrid<pcl::PCLPointCloud2> voxel_filter;
+    voxel_filter.setInputCloud(point_cloud2);
+    voxel_filter.setLeafSize (0.005f, 0.005f, 0.005f);
+    voxel_filter.filter(*filtered_pt2);
+    pcl::fromPCLPointCloud2(*filtered_pt2, *input_cloud);
+    
 }
 
 void MotionPlanners::updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin)
 {
     //convert pointcloud to PCL-Pointcloud
     env_pcl_cloud_->clear();
-    self_filtered_env_cloud_->clear();
+    
     for (std::vector<base::Vector3d>::const_iterator it = pt_cloud.points.begin() ; it != pt_cloud.points.end(); ++it)
     {
 	pcl::PointXYZ point((*it)[0],(*it)[1],(*it)[2]);
 	env_pcl_cloud_->push_back(point);
-	//self_filtered_env_cloud_->push_back(point);
-    }
-
-    LOG_DEBUG_S<<"[updatePointcloud]: Input pointcloud = "<<env_pcl_cloud_->size();
-    // Pointcloud downsampling using voxel filter
-    pcl::PCLPointCloud2::Ptr point_cloud2(new pcl::PCLPointCloud2 ());
-    pcl::PCLPointCloud2::Ptr filtered_pt2(new pcl::PCLPointCloud2 ());
-    pcl::toPCLPointCloud2(*env_pcl_cloud_, *point_cloud2);
-    pcl::VoxelGrid<pcl::PCLPointCloud2> voxel_filter;
-    voxel_filter.setInputCloud(point_cloud2);
-    voxel_filter.setLeafSize (0.005f, 0.005f, 0.005f);
-    voxel_filter.filter(*filtered_pt2);
-    pcl::fromPCLPointCloud2(*filtered_pt2, *self_filtered_env_cloud_);
-
-    LOG_DEBUG_S<<"[updatePointcloud]: Voxel filtered pointcloud = "<<self_filtered_env_cloud_->size();
-    //self filtering  
-    //robot_model_->selfFilter(env_pcl_cloud_, self_filtered_env_cloud_, config_.env_config.env_frame, motion_planners::COLLISION);
-    robot_model_->selfFilterNew(self_filtered_env_cloud_, config_.env_config.env_frame, motion_planners::COLLISION);
-
-    std::cout<<"im here3 "<<std::endl;
-    // add pointloud to collision model    
-    robot_model_->updatePointcloud(self_filtered_env_cloud_, sensor_origin, config_.env_config.env_frame, 
-    				   config_.env_config.octree_resolution, config_.env_config.env_object_name);   
-    std::cout<<"im here4 "<<std::endl;
+    }    
     
+    //self filtering      
+    LOG_DEBUG_S<<"[MotionPlanners]: Input point cloud is of size = "<<env_pcl_cloud_->size();    
+    
+    //self filtering    
+    if(config_.env_config.do_self_filter)
+    {	
+	// Pointcloud downsampling using voxel filter
+	applyVoxelFilter(env_pcl_cloud_);
+	//self filtering
+	robot_model_->selfFilter(env_pcl_cloud_, config_.env_config.env_frame, motion_planners::COLLISION);
+	LOG_DEBUG_S<<"[MotionPlanners]: Self filtered point cloud is of size = "<<env_pcl_cloud_->size();
+    }   
+    
+    // add pointloud to collision model    
+    robot_model_->updatePointcloud(env_pcl_cloud_, sensor_origin, config_.env_config.env_object_name);   
+    
+}
+
+bool MotionPlanners::assignPlanningScene(const Eigen::Vector3d &sensor_origin)
+{
+    env_pcl_cloud_->clear();       
+    
+    //assign  a empty planning scene;
+    robot_model_->assignPlanningScene(env_pcl_cloud_, sensor_origin, config_.env_config.env_frame, config_.env_config.octree_resolution, 
+				      config_.env_config.env_object_name);
 }
 
 

@@ -132,8 +132,10 @@ class RobotModel
 
         void updateJointGroup(const std::vector<std::string> &joint_names,const std::vector<double> &joint_values);
 	
-	void updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pclCloud, const Eigen::Vector3d &sensor_origin,
-                               const std::string &link_name, const double &octree_resolution, std::string collision_object_name="");
+	void updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin, std::string collision_object_name="");
+
+	void assignPlanningScene(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
+				 const std::string &link_name, const double &octree_resolution, std::string collision_object_name="");
 
         bool isStateValid(int self_collision_num_max_contacts=1, int external_collision_manager_num_max_contacts=1);
 	
@@ -156,8 +158,7 @@ class RobotModel
 
         boost::filesystem::path resolve_path( const boost::filesystem::path& p, const boost::filesystem::path& base = boost::filesystem::current_path());
 
-        std::string getURDFFileAbsolutePath();
-	
+        std::string getURDFFileAbsolutePath();	
 	
 	inline void setRobotCollisionDetector(collision_detection::AbstractCollisionPtr collision_detector){robot_collision_detector_ = collision_detector;}
 	void setWorldCollisionDetector(collision_detection::AbstractCollisionPtr collision_detector);
@@ -165,23 +166,14 @@ class RobotModel
 	inline void setKinematicsSolver(kinematics_library::RobotKinematicsPtr robot_kinematics){robot_kinematics_ = robot_kinematics;}
 	
 	template<class urdfT> 
-	void registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud ); 
-	
-	
-	void subtractingPtCloudsNew(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud);
+	void registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
         
-	void selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
+	void selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
+				std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
 	
-	void selfFilterNew(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
+	void selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
 
         std::vector< collision_detection::DistanceInformation>& getSelfDistanceInfo();
-
-        //void createPointCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &transformed_box_cloud,double x, double y, double z);
-
-        
-	//void createPointCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &transformed_cylinder_cloud, double radius, double height, int number_of_step_alpha=20 );
-
-        //void createPointCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &transformed_sphere_cloud, double radius, int number_of_step_alpha=20, int number_of_step_beta=20);
 
         void createPointCloudFromVisual(std::vector<urdf::VisualSharedPtr > &link_visuals, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
 
@@ -258,7 +250,10 @@ class RobotModel
         void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height,
                                                 Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10 );
 
-        void subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud);
+        void subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
+					 pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud);
+	
+	void subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud);
 
 };
 
