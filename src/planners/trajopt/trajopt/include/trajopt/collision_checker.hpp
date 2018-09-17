@@ -17,14 +17,14 @@ enum CastCollisionType {
 };
 
 struct Collision {
-  const Link* linkA;
-  const Link* linkB;
+  std::string linkA;
+  std::string linkB;
   Vector3d ptA, ptB, normalB2A; /* normal points from 2 to 1 */
   Vector3d ptB1;
   double distance; /* pt1 = pt2 + normal*dist */
   float weight, time;
   CastCollisionType cctype;
-  Collision(const Link* linkA, const Link* linkB, const Vector3d& ptA, const Vector3d& ptB, const Vector3d& normalB2A, double distance, float weight=1, float time=0) :
+  Collision(const std::string linkA, std::string linkB, const Vector3d& ptA, const Vector3d& ptB, const Vector3d& normalB2A, double distance, float weight=1, float time=0) :
     linkA(linkA), linkB(linkB), ptA(ptA), ptB(ptB), normalB2A(normalB2A), distance(distance), weight(weight), time(0), cctype(CCType_None) {}
   Collision(): time(0), cctype(CCType_None) {}
 };

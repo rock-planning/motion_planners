@@ -67,13 +67,13 @@ bool CollisionPairIgnorer::CanCollide(const KinBody::Link& link1, const KinBody:
 //}
 
 std::ostream& operator<<(std::ostream& o, const Collision& c) {
-  o << (c.linkA ? c.linkA->GetName() : "NULL") << "--" <<  (c.linkB ? c.linkB->GetName() : "NULL") <<
-      " distance: " << c.distance <<
-      " normal: " << c.normalB2A <<
-      " ptA: " << c.ptA <<
-      " ptB: " << c.ptB <<
-      " time: " << c.time <<
-      " weight: " << c.weight;
+  o << (!c.linkA.empty() ? c.linkA : "NULL") << "--" <<  (!c.linkB.empty() ? c.linkB : "NULL") << "\n" <<
+      " distance: " << c.distance <<"\n" <<
+      " normal: \n" << c.normalB2A <<"\n" <<
+      " ptA: \n" << c.ptA <<"\n" <<
+      " ptB: \n " << c.ptB <<"\n" <<
+      " time: " << c.time <<"\n" <<
+      " weight: " << c.weight << "\n";
   return o;
 }
 

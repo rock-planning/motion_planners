@@ -19,8 +19,7 @@ using namespace std;
 namespace trajopt {
 
 
-void CollisionsToDistances(const vector<Collision>& collisions, const Link2Name& link2Name,
-    DblVec& dists) {
+void CollisionsToDistances(const vector<Collision>& collisions,  DblVec& dists) {
   // Note: this checking (that the links are in the list we care about) is probably unnecessary
   // since we're using LinksVsAll
   dists.clear();
@@ -40,7 +39,7 @@ void CollisionsToDistances(const vector<Collision>& collisions, const Link2Name&
 }
 
 void CollisionsToDistanceExpressions(const vector<Collision>& collisions, ConfigurationPtr& rad,
-    const Link2Name& link2Name, const VarVector& vars, const DblVec& dofvals, vector<AffExpr>& exprs, bool isTimestep1) {
+    const VarVector& vars, const DblVec& dofvals, vector<AffExpr>& exprs, bool isTimestep1) {
 
   exprs.clear();
   exprs.reserve(collisions.size());
@@ -63,8 +62,8 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
 //      exprs.push_back(dist);
 //    }
 
-    Link2Name::const_iterator itA = link2Name.find(col.linkA);
-    VectorXd dist_grad = col.normalB2A.transpose()*rad->PositionJacobian(itA->second, col.ptA);
+//    Link2Name::const_iterator itA = link2Name.find(col.linkA);
+    VectorXd dist_grad = -col.normalB2A.transpose()*rad->PositionJacobian(col.linkA, col.ptA);
     exprInc(dist, varDot(dist_grad, vars));
     exprInc(dist, -dist_grad.dot(toVectorXd(dofvals)));
     exprs.push_back(dist);
@@ -72,12 +71,12 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
   LOG_DEBUG("%ld distance expressions\n", exprs.size());
 }
 
-void CollisionsToDistanceExpressions(const vector<Collision>& collisions, ConfigurationPtr& rad, const Link2Name& link2ind,
+void CollisionsToDistanceExpressions(const vector<Collision>& collisions, ConfigurationPtr& rad,
     const VarVector& vars0, const VarVector& vars1, const DblVec& vals0, const DblVec& vals1,
     vector<AffExpr>& exprs) {
   vector<AffExpr> exprs0, exprs1;
-  CollisionsToDistanceExpressions(collisions, rad, link2ind, vars0, vals0, exprs0, false);
-  CollisionsToDistanceExpressions(collisions, rad, link2ind, vars1, vals1, exprs1,true);
+  CollisionsToDistanceExpressions(collisions, rad, vars0, vals0, exprs0, false);
+  CollisionsToDistanceExpressions(collisions, rad, vars1, vals1, exprs1,true);
 
   exprs.resize(exprs0.size());
   for (int i=0; i < exprs0.size(); ++i) {
@@ -112,7 +111,6 @@ SingleTimestepCollisionEvaluator::SingleTimestepCollisionEvaluator(Configuration
   m_rad(rad),
   m_cc(coll),
   m_vars(vars),
-  m_link2Name(),
   m_links(),
   m_filterMask(-1) {
 //  vector<LinkPtr> links;
@@ -133,7 +131,7 @@ void SingleTimestepCollisionEvaluator::CalcCollisions(const DblVec& x, vector<Co
 void SingleTimestepCollisionEvaluator::CalcDists(const DblVec& x, DblVec& dists) {
   vector<Collision> collisions;
   GetCollisionsCached(x, collisions);
-  CollisionsToDistances(collisions, m_link2Name, dists);
+  CollisionsToDistances(collisions, dists);
 }
 
 
@@ -141,7 +139,7 @@ void SingleTimestepCollisionEvaluator::CalcDistExpressions(const DblVec& x, vect
   vector<Collision> collisions;
   GetCollisionsCached(x, collisions);
   DblVec dofvals = getDblVec(x, m_vars);
-  CollisionsToDistanceExpressions(collisions, m_rad, m_link2Name, m_vars, dofvals, exprs, false);
+  CollisionsToDistanceExpressions(collisions, m_rad, m_vars, dofvals, exprs, false);
 }
 
 //////////////////////////////////////////
@@ -151,7 +149,6 @@ CastCollisionEvaluator::CastCollisionEvaluator(ConfigurationPtr rad, CollisionCh
   m_cc(coll),
   m_vars0(vars0),
   m_vars1(vars1),
-  m_link2Name(),
   m_links()
 {
 //  vector<LinkPtr> links;
@@ -173,12 +170,12 @@ void CastCollisionEvaluator::CalcDistExpressions(const DblVec& x, vector<AffExpr
   GetCollisionsCached(x, collisions);
   DblVec dofvals0 = getDblVec(x, m_vars0);
   DblVec dofvals1 = getDblVec(x, m_vars1);
-  CollisionsToDistanceExpressions(collisions, m_rad, m_link2Name, m_vars0, m_vars1, dofvals0, dofvals1, exprs);
+  CollisionsToDistanceExpressions(collisions, m_rad, m_vars0, m_vars1, dofvals0, dofvals1, exprs);
 }
 void CastCollisionEvaluator::CalcDists(const DblVec& x, DblVec& dists) {
   vector<Collision> collisions;
   GetCollisionsCached(x, collisions);
-  CollisionsToDistances(collisions, m_link2Name, dists);
+  CollisionsToDistances(collisions, dists);
 }
 
 CollisionCost::CollisionCost(double dist_pen, double coeff, ConfigurationPtr rad, CollisionCheckerPtr coll, const VarVector& vars) :
@@ -191,6 +188,8 @@ CollisionCost::CollisionCost(double dist_pen, double coeff, ConfigurationPtr rad
     m_calc(new CastCollisionEvaluator(rad, coll, vars0, vars1)), m_dist_pen(dist_pen), m_coeff(coeff)
 {}
 ConvexObjectivePtr CollisionCost::convex(const vector<double>& x, Model* model) {
+    LOG_DEBUG("CollisionCost::convex . . . .. . . . . \n");
+
   ConvexObjectivePtr out(new ConvexObjective(model));
   vector<AffExpr> exprs;
   m_calc->CalcDistExpressions(x, exprs);
@@ -201,12 +200,17 @@ ConvexObjectivePtr CollisionCost::convex(const vector<double>& x, Model* model) 
   return out;
 }
 double CollisionCost::value(const vector<double>& x) {
+
+  LOG_DEBUG("CollisionCost::value . . . .. . . . . .. . . . . . .\n");
   DblVec dists;
   m_calc->CalcDists(x, dists);
   double out = 0;
   for (int i=0; i < dists.size(); ++i) {
     out += pospart(m_dist_pen - dists[i]) * m_coeff;
   }
+
+//  LOG_INFO("CollisionCost::value --------------------- %.3e ", out);
+
   return out;
 }
 
