@@ -59,13 +59,13 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     return true;
 }
 
-bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status )
+bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status, double distance )
 {
     // check whether the start state is in collision
     
     robot_model_->updateJointGroup(current_robot_status);
             
-    if(!robot_model_->isStateValid())
+    if(!robot_model_->isStateValid(distance))
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
 	collision_object_names_ = robot_model_->getCollisionObjectNames();
@@ -97,11 +97,11 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     return true;
 }
 
-bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status )
+bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status, double distance )
 {
     // check whether the goal state is in collision        
     robot_model_->updateJointGroup(goal);
-    if(!robot_model_->isStateValid())
+    if(!robot_model_->isStateValid(distance))
     {
 	planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;	    
 	collision_object_names_ = robot_model_->getCollisionObjectNames();
@@ -158,7 +158,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 					      std::string &planningGroupName, PlannerStatus &planner_status)
 {
     
-    if (checkStartState(start_jointvalues, planner_status))
+    if (checkStartState(start_jointvalues, planner_status, config_.planner_config.distance))
     {
 	// assign the goal joint values from the target joint status
 	goal_joint_status_.clear();
@@ -177,7 +177,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 	    }
 	}
 	
-	if(checkGoalState(goal_joint_status_, planner_status))
+    if(checkGoalState(goal_joint_status_, planner_status, config_.planner_config.distance))
 	    return true;
 	else
 	    return false;	
@@ -192,7 +192,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 					      std::string &planningGroupName, PlannerStatus &planner_status)
 {
     
-    if (checkStartState(start_jointvalues, planner_status))
+    if (checkStartState(start_jointvalues, planner_status, config_.planner_config.distance))
     {
 	// assign the goal joint values from the target joint status
 	goal_pose_ = target_pose;	
@@ -219,7 +219,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 		}
 	    }
 	    
-	    if(checkGoalState(goal_joint_status_, planner_status))
+        if(checkGoalState(goal_joint_status_, planner_status, config_.planner_config.distance))
 		return true;
 	    else
 		return false;	    

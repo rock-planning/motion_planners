@@ -87,9 +87,9 @@ class MotionPlanners
     
     pcl::PointCloud<pcl::PointXYZ>::Ptr self_filtered_env_cloud_;
     
-    bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status);
+    bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status, double distance);
     
-    bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
+    bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status, double distance);
 
 };
 

@@ -135,7 +135,7 @@ class RobotModel
         void updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pclCloud, const Eigen::Vector3d &sensor_origin,
                                const std::string &link_name, const double &octree_resolution, std::string collision_object_name="");
 
-        bool isStateValid(int self_collision_num_max_contacts=1, int external_collision_manager_num_max_contacts=1);
+        bool isStateValid(double distance=1e-6, int self_collision_num_max_contacts=1, int external_collision_manager_num_max_contacts=1);
 
         //void ConvertPoseBetweenFrames( const std::string B_Frame_Name, const base::samples::RigidBodyState &F_B_C , const std::string &A_Frame_Name ,
         //				   base::samples::RigidBodyState &F_A_C );
@@ -232,7 +232,8 @@ class RobotModel
 
         void getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation);
 
-    private :
+        bool getChainJointState(std::string base_link, std::string tip_link, std::map<std::string, double> &planning_groups_joints);
+private :
 
         RobotState  robot_state_;
         std::string planning_group_name_;

@@ -26,7 +26,7 @@ public:
     // CollisionChecker interface
     void SetContactDistance(float distance);
     double GetContactDistance();
-    void GetContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions);
+    void GetContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions, double distance_tolerance=0.05);
     void GetDiscreteCollisionInfo(vector<Collision> &collisions);
 };
 

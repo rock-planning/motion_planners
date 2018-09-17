@@ -706,9 +706,15 @@ void RobotModel::manipulabilityIndex(KDL::Jacobian  &jacobian, double &manipulab
 
 void RobotModel::computeJacobain(const std::string &chain_root_link,const  std::string& tip_link, std::map<std::string, double> joints_name_values, KDL::Jacobian  &jacobian)
 {
+
+//    std::cout << "inside computeJacobain. . . .. ." << chain_root_link<< "==" << tip_link<< "\n";
+
+
 //#define COMPUTEJACOBAIN_LOG
     KDL::Chain kdl_chain;
+
     kdl_tree_.getChain(chain_root_link , tip_link , kdl_chain);
+
     std::string joint_name;
     double joint_value;
     KDL::JntArray kdl_chain_joint_array;
@@ -743,6 +749,30 @@ void RobotModel::computeJacobain(const std::string &chain_root_link,const  std::
         }
     }
     #endif
+}
+
+bool RobotModel::getChainJointState(std::string base_link, std::string tip_link,
+                                                  std::map< std::string, double > &planning_groups_joints)
+{
+    //    planning_groups_joints are in  order from base to tip! very important
+
+
+//    std::cout << "inside getChainJointState. . . .. ." << base_link<< "==" << tip_link<< "\n";
+
+    if(!kdl_tree_.getChain(base_link, tip_link , kdl_chain_))
+    return false;
+    for(std::size_t i=0;i<kdl_chain_.segments.size();i++ )
+    {
+        //KDL JointType: RotAxis,RotX,RotY,RotZ,TransAxis,TransX,TransY,TransZ,None;
+        if(! (kdl_chain_.getSegment(i).getJoint().getType()==KDL::Joint::None) )
+        {
+            std::string joint_name=kdl_chain_.getSegment(i).getJoint().getName();
+            double joint_state = getRobotState().robot_joints_[joint_name].getJointValue();
+            planning_groups_joints[joint_name] = joint_state;
+        }
+    }
+
+    return true;
 }
 
 bool RobotModel::getPlanningGroupJointinformation(const std::string planningGroupName,
@@ -1278,20 +1308,63 @@ void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl
     world_collision_detector_->registerPointCloudToCollisionManager(pclCloud, sensor_origin, octree_resolution, collision_object_name );
 }
 
-bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_collision_manager_num_max_contacts)
+bool RobotModel::isStateValid(double distance, int self_collision_num_max_contacts, int external_collision_manager_num_max_contacts)
 {
+    std::cout << "isStateValid:  "<< distance << std::endl;
+    std::vector<collision_detection::DistanceInformation> distance_info;
+    getSelfDistanceInfo(distance_info, distance, true);
+
+    std::cout << "distance_info size: " << distance_info.size() << std::endl;
+    for(int i = 0; i < distance_info.size();  i++){
+        collision_detection::DistanceInformation &d = distance_info.at(i);
+        if(d.distance < 0){
+
+            std::cout << "distance pair : "<< d.object1 << ": " <<  d.object2 << std::endl;
+            std::cout << "distance: " << d.distance << std::endl;
+            std::cout << "min_distance : \n"<< d.min_distance << std::endl;
+            std::cout << "nearest_points : \n"<< d.nearest_points[0] << std::endl;
+            std::cout << "nearest_points : \n"<< d.nearest_points[1] << std::endl;
+            std::cout << "contact_normal : \n"<< d.contact_normal << std::endl;
+
+
+        }
+
+
+    }
+    if (!robot_collision_detector_->checkSelfCollision(self_collision_num_max_contacts))
+    {
+        std::vector<collision_detection::ContactInformation> contacts_info;
+        getSelfCollisionInfo(contacts_info);
+
+        for(int i = 0; i < contacts_info.size(); i++){
+            collision_detection::ContactInformation &con = contacts_info.at(i);
+            std::cout << "collision pair : "<< con.object1 << ": " << con.object2 << std::endl;
+            std::cout << "penetration_depth : "<< con.penetration_depth << std::endl;
+            std::cout << "pos : \n"<< con.contact_position << std::endl;
+            std::cout << "normal : \n"<< con.contact_normal << std::endl;
+
+
+        }
+
+    }
     if (robot_collision_detector_->checkSelfCollision(self_collision_num_max_contacts))
     {
+        std::cout << "isStateValid  1" << std::endl;
 
     LOG_DEBUG("[RobotModel]: There is no self collision, now checking for collision against environment");
 
     if(robot_collision_detector_->checkWorldCollision(external_collision_manager_num_max_contacts))
     {
-            LOG_DEBUG("[RobotModel]: There is no collision against environment" );
+        std::cout << "isStateValid  2" << std::endl;
+
+
+                  LOG_DEBUG("[RobotModel]: There is no collision against environment" );
             return true;
         }
         else
     {
+        std::cout << "isStateValid  3" << std::endl;
+
             LOG_DEBUG("[RobotModel]: There is collision against environment" );
             return false;
         }
@@ -1587,11 +1660,12 @@ bool RobotModel::getSelfCollisionInfo(std::vector<collision_detection::ContactIn
         //            LOG_DEBUG("[RobotModel]: There is collision against environment" );
         //            return false;
         //        }
+        return false;
     }
     else{
         LOG_DEBUG("[RobotModel]: There is a self collision" );
         contact_info = robot_collision_detector_->getSelfContacts();
-        return false;
+        return true;
     }
     return false;
 
@@ -1612,11 +1686,11 @@ bool RobotModel::getWorldCollisionInfo(std::vector<collision_detection::ContactI
     return false;
 }
 
-bool RobotModel::getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance, bool is_signed_dist_needed){
+bool RobotModel::getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance/*=0.05*/, bool is_signed_dist_needed/*=true*/){
     robot_collision_detector_->computeSelfDistanceInfo(distance_tolerance, is_signed_dist_needed);
     distance_info = robot_collision_detector_->getSelfDistanceInfo();
 }
-bool RobotModel::getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance, bool is_signed_dist_needed){
+bool RobotModel::getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance/*=0.05*/, bool is_signed_dist_needed/*=true*/){
     robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo(distance_tolerance, is_signed_dist_needed);
     distance_info = robot_collision_detector_->getClosestObstacleToRobotDistanceInfo();
 }

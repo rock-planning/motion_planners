@@ -35,7 +35,7 @@ public:
     virtual void GetDOFLimits(DblVec& lower, DblVec& upper) const;
     virtual DblVec GetDOFValues();
     virtual int GetDOF() const;
-    virtual DblMatrix PositionJacobian(std::string link_name, const Vector3d& pt) const;
+    virtual DblMatrix PositionJacobian(std::string link_name, const Vector3d& pt) /*const*/;
     virtual DblMatrix RotationJacobian(std::string link_name) const;
 //    virtual bool DoesAffect(const KinBody::Link& link)  {}
 //    virtual vector<T> GetBodies() {}

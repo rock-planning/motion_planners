@@ -39,7 +39,39 @@ bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model,
 
     m_planning_group_name_ = m_robot_model_->getPlanningGroupName();
     m_robot_model_->getPlanningGroupJointsName(m_planning_group_name_, m_planning_group_joints_name_);
-     motion_planners::loadConfigFile(config_file_path, m_input_config);
+    motion_planners::loadConfigFile(config_file_path, m_input_config);
+
+
+    std::string link_name = motion_planners::getValue<std::string>(m_input_config["jacobian"], "link_name"); ;
+
+    std::vector<double> pt1(3);
+    pt1 = motion_planners::getValue<std::vector<double>>(m_input_config["jacobian"], "point");
+
+    Eigen::Vector3d pt(pt1.at(0), pt1.at(1), pt1.at(2));
+
+     DblVec init = m_robot_model_wrapper->GetDOFValues();
+    std::cout << "initial state: "<< init << std::endl;
+
+    std::vector<double> state(m_robot_model_wrapper->GetDOF());
+    state = motion_planners::getValue<std::vector<double>>(m_input_config["jacobian"], "state");
+    m_robot_model_wrapper->SetDOFValues(state);
+
+    std::cout << "set state: " << m_robot_model_wrapper->GetDOFValues() << std::endl;
+
+    std::cout << "jocobian link_name : " << link_name << std::endl;
+
+    std::cout << "jocobian point : \n" << pt << std::endl;
+
+
+    DblMatrix m = m_robot_model_wrapper->PositionJacobian(link_name, pt);
+
+    std::cout << "jocobian : \n" << m << std::endl;
+
+    m_robot_model_wrapper->SetDOFValues(init);
+
+//    vector<Collision> collisions;
+//    m_collision_checker_wrapper->GetContinuousCollisionInfo(DblVec(), DblVec(), collisions);
+
 
      return true;
 }
@@ -74,6 +106,7 @@ bool TrajoptPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &plan
 //    std::cout << "goal_traj.cols() . . . . .. . . . . . . . ." << goal_traj.cols() << std::endl;
 //    std::cout << "m_opt.x() . . . . .. . . . . . . . ." << m_opt.x().size() << std::endl;
 
+    return false;
 }
 
 

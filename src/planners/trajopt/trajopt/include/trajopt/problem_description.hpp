@@ -98,7 +98,7 @@ public:
   }
   inline void initTraj(DblVec start, DblVec goal){
       setInitTraj(start, goal);
-      setGoalTraj(goal);
+//      setGoalTraj(goal);
   }
   TrajArray GetInitTraj() {return m_init_traj;}
 

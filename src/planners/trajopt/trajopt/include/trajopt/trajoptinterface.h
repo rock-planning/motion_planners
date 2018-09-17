@@ -83,7 +83,7 @@ public:
     virtual void GetDOFLimits(DblVec& lower, DblVec& upper) const = 0;
     virtual DblVec GetDOFValues() = 0;
     virtual int GetDOF() const = 0;
-    virtual DblMatrix PositionJacobian(std::string link_name, const Vector3d& pt) const = 0;
+    virtual DblMatrix PositionJacobian(std::string link_name, const Vector3d& pt) /*const*/ = 0;
     virtual DblMatrix RotationJacobian(std::string link_name) const = 0;
     //  virtual bool DoesAffect(const T& link) = 0;
     //  virtual vector<T> GetBodies() = 0;
@@ -129,7 +129,7 @@ public:
     //  virtual void ContinuousCheckTrajectory(const TrajArray& traj, Configuration& rad, vector<Collision>& collisions) {throw std::runtime_error("not implemented");}
 
     /** Find contacts between swept-out shapes of robot links and everything in the environment, as robot goes from startjoints to endjoints */
-    virtual void GetContinuousCollisionInfo(const DblVec& startjoints, const DblVec& endjoints, vector<Collision>& collisions) = 0;
+    virtual void GetContinuousCollisionInfo(const DblVec& startjoints, const DblVec& endjoints, vector<Collision>& collisions, double distance_tolerance=0.05) = 0;
 
     virtual void GetDiscreteCollisionInfo(vector<Collision> &collisions) = 0;
 

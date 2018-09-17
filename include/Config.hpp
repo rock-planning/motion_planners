@@ -64,6 +64,7 @@ struct PlannerConfig
     kinematics_library::KinematicsConfig kinematics_config; 
     RobotModelParameters robot_model;
     std::string planner_specific_config;
+    double distance;
     enum PlannerLibrary planner;
 };
 
