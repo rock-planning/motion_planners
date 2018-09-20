@@ -3,9 +3,6 @@
 
 #include <MotionPlanners.hpp>
 
-/** \file CollisionDetection.hpp
-*    \brief Factory class for the AbstractCollisionDetection class.
-*/
 
 using namespace motion_planners;
 

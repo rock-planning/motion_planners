@@ -1,5 +1,5 @@
-#ifndef TRAJECTORYOPTIMIZATION_HPP_
-#define TRAJECTORYOPTIMIZATION_HPP_
+#ifndef MOTIONPLANNERS_HPP_
+#define MOTIONPLANNERS_HPP_
 
 #include <vector>
 #include <string>
@@ -15,11 +15,6 @@
 #include "PlannerFactory.hpp"
 #include "abstract/AbstractPlanner.hpp"
 
-
-
-/** \file CollisionDetection.hpp
-*    \brief Factory class for the AbstractCollisionDetection class.
-*/
 
 namespace motion_planners
 {
