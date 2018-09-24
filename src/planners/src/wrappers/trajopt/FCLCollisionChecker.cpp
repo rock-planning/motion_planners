@@ -131,14 +131,16 @@ void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, 
 //    }
 //    else
     {
+        collisions.clear();
         std::vector<collision_detection::DistanceInformation> distance_info;
 
         m_robot_model_->getSelfDistanceInfo(distance_info, m_contact_tolerance);
 
-        collisions.resize(distance_info.size());
+//        collisions.resize(distance_info.size());
 
         for(int i=0; i<distance_info.size(); i++){
-            Collision &coll = collisions.at(i);
+//            Collision &coll = collisions.at(i);
+            Collision coll;
             collision_detection::DistanceInformation &dist = distance_info.at(i);
 //            if(dist.distance < 0 || true){
             if(dist.distance < distance_tolerance){
@@ -159,6 +161,8 @@ void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, 
                 coll.linkB = dist.object2;
 //                coll.normalB2A = dist.contact_normal;
                 coll.normalB2A = dist.unit_normal;
+
+                collisions.push_back(coll);
 
 //                std::cout << coll << "\n";
             }
@@ -187,6 +191,8 @@ void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, 
                         coll.linkA = con.object1;
                         coll.linkB = con.object2;
             //            std::cout << coll << "\n";
+
+                        collisions.push_back(coll);
 
                     }
                 }

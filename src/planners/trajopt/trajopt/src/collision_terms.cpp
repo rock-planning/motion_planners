@@ -33,6 +33,7 @@ void CollisionsToDistances(const vector<Collision>& collisions,  DblVec& dists) 
 //  }
 
   BOOST_FOREACH(const Collision& col, collisions) {
+      if(!col.linkA.empty())
         dists.push_back(col.distance);
     }
 
@@ -41,11 +42,12 @@ void CollisionsToDistances(const vector<Collision>& collisions,  DblVec& dists) 
 void CollisionsToDistanceExpressions(const vector<Collision>& collisions, ConfigurationPtr& rad,
     const VarVector& vars, const DblVec& dofvals, vector<AffExpr>& exprs, bool isTimestep1) {
 
+    std::cout << "collisions.size(): . . .. .  " << collisions.size() << std::endl;
   exprs.clear();
   exprs.reserve(collisions.size());
   rad->SetDOFValues(dofvals); // since we'll be calculating jacobians
   BOOST_FOREACH(const Collision& col, collisions) {
-    AffExpr dist(col.distance);
+//    AffExpr dist(col.distance);
 //    Link2Name::const_iterator itA = link2Name.find(col.linkA);
 //    if (itA != link2Name.end()) {
 //      VectorXd dist_grad = col.normalB2A.transpose()*rad->PositionJacobian(itA->second, col.ptA);
@@ -63,10 +65,28 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
 //    }
 
 //    Link2Name::const_iterator itA = link2Name.find(col.linkA);
-    VectorXd dist_grad = -col.normalB2A.transpose()*rad->PositionJacobian(col.linkA, col.ptA);
-    exprInc(dist, varDot(dist_grad, vars));
-    exprInc(dist, -dist_grad.dot(toVectorXd(dofvals)));
-    exprs.push_back(dist);
+
+
+      if(!col.linkA.empty() || col.linkA == ""){
+//          LOG_DEBUG("COLLISION DISTANCE  . .. . . .  %s : %.3e", col.linkA, col.distance);
+          std::cout<< "COLLISION DISTANCE  . .. . . .  "<< col.linkA << " : " <<  col.distance << std::endl;
+
+          AffExpr dist(col.distance);
+
+//          std::cout<< "COLLISION  -col.normalB2A.transpose()  . .. . . .  "<<   -col.normalB2A.transpose() << std::endl;
+//          std::cout<< "COLLISION  rad->PositionJacobian(col.linkA, col.ptA)  . .. . . .  "<<   rad->PositionJacobian(col.linkA, col.ptA) << std::endl;
+
+          VectorXd dist_grad = -col.normalB2A.transpose()*rad->PositionJacobian(col.linkA, col.ptA);
+          std::cout<< "COLLISION dist_grad  . .. . . .  \n"<<  dist_grad << std::endl;
+
+          exprInc(dist, varDot(dist_grad, vars));
+          exprInc(dist, -dist_grad.dot(toVectorXd(dofvals)));
+          exprs.push_back(dist);
+//              exprs.push_back(AffExpr(0));
+
+          LOG_INFO("CollisionsToDistanceExpressions::calc --------------------- %.3e ", dist.constant);
+
+      }
   }
   LOG_DEBUG("%ld distance expressions\n", exprs.size());
 }
@@ -80,6 +100,11 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
 
   exprs.resize(exprs0.size());
   for (int i=0; i < exprs0.size(); ++i) {
+
+      LOG_INFO("CollisionsToDistanceExpressions::exprs0 --------------------- %.3e ", exprs0[i].constant);
+      LOG_INFO("CollisionsToDistanceExpressions::exprs1 --------------------- %.3e ", exprs1[i].constant);
+
+
     exprScale(exprs0[i], (1-collisions[i].time));
     exprScale(exprs1[i], collisions[i].time);
     exprs[i] = AffExpr(0);
@@ -201,7 +226,7 @@ ConvexObjectivePtr CollisionCost::convex(const vector<double>& x, Model* model) 
 }
 double CollisionCost::value(const vector<double>& x) {
 
-  LOG_DEBUG("CollisionCost::value . . . .. . . . . .. . . . . . .\n");
+//  LOG_DEBUG("CollisionCost::value . . . .. . . . . .. . . . . . .\n");
   DblVec dists;
   m_calc->CalcDists(x, dists);
   double out = 0;
@@ -209,7 +234,7 @@ double CollisionCost::value(const vector<double>& x) {
     out += pospart(m_dist_pen - dists[i]) * m_coeff;
   }
 
-//  LOG_INFO("CollisionCost::value --------------------- %.3e ", out);
+  LOG_INFO("CollisionCost::value --------------------- %.3e ", out);
 
   return out;
 }

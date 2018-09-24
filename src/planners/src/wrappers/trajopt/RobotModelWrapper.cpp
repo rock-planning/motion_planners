@@ -4,6 +4,30 @@
 typedef Matrix<float, 3, 4> Matrix4f;
 
 
+template <typename TElem>
+ostream& operator<<(ostream& os, const vector<TElem>& vec) {
+    typedef typename vector<TElem>::const_iterator iter_t;
+    const iter_t iter_begin = vec.begin();
+    const iter_t iter_end   = vec.end();
+    os << "[";
+    for (iter_t iter = iter_begin; iter != iter_end; ++iter) {
+        std::cout << ((iter != iter_begin) ? "," : "") << *iter;
+    }
+    os << "]";
+    return os;
+}
+//template<class key_t, class value_t>
+//ostream& operator<<(ostream& os, const map<key_t, value_t>& m) {
+//    os << "{";
+//    for (typename map<key_t, value_t>::const_iterator it = m.begin();
+//            it != m.end(); it++) {
+//        os << it->first << " : " << it->second << std::endl;
+//    }
+//    os << "}";
+//    return os;
+//}
+
+
 template <typename Map>
 bool key_compare (Map const &lhs, Map const &rhs) {
 
@@ -142,6 +166,7 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
 
     DblMatrix m /*=  Eigen::MatrixXd::Zero()*/;
     m.resize(3, GetDOF());
+    m *= 0.000;
 
     std::vector< std::pair<std::string,urdf::Joint> > planning_groups_joints;
     std::string base_link, tip_link;
@@ -163,9 +188,9 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
     m_robot_model->getChainJointState(base_link, link_name, joint_states_map);
 
 
-    //    std::cout << "joint_states_map size:  " << joint_states_map.empty() << " : "<< joint_states_map.size() << "\n";
+//        std::cout << "joint_states_map size:  " << joint_states_map.empty() << " : "<< joint_states_map.size() << "\n";
 
-    //    std::cout << joint_states_map << "\n";
+//        std::cout << joint_states_map << "\n";
 
     m_robot_model->computeJacobain(base_link, link_name, joint_states_map, jacobian);
 
@@ -173,7 +198,11 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
     KDL::Jacobian  jacobian2 = jacobian;
     KDL::Jacobian  jacobian3 = jacobian;
 
+//    std::cout << "kdl jacobian . . .. . ..  \n " << jacobian.data << std::endl;
+
+//    std::cout << "m before copy. . .. . ..  \n " << m << std::endl;
     m.block(0,0,3, joint_states_map.size()) = jacobian.data.block(0,0,3,  joint_states_map.size());
+//    std::cout << "m after copy . . .. . ..  \n " << m << std::endl;
 
     DblMatrix m0 /*=  Eigen::MatrixXd::Zero()*/;
     m0.resize(3, GetDOF());
@@ -249,13 +278,13 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
 
     skew(pt_rot, &mat_skew);
 
-//    Eigen::Matrix3d M /*=  Eigen::MatrixXd::Zero()*/;
+    Eigen::Matrix3d M /*=  Eigen::MatrixXd::Zero()*/;
 
-//    for(int i = 0; i < 3; i++){
-//        for(int j = 0; j < 3; j++){
-//            M(i, j) = link_frame.M(i, j);
-//        }
-//    }
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            M(i, j) = link_frame.M(i, j);
+        }
+    }
 //    std::cout << "world_rotation_body .  .. . . .. . . \n"<< M << std::endl;
 
 //    std::cout << "skewCrossProduct . . .. . .  . \n"<< mat_skew << std::endl;
@@ -268,10 +297,14 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
     Eigen::Matrix3Xd jac_rot /*=  Eigen::MatrixXd::Zero()*/;
     jac_rot.resize(3, GetDOF());
 
+    jac_rot *= 0.00;
+
     jac_rot.block(0,0,3, joint_states_map.size()) = jacobian1.data.block(3,0,3,  joint_states_map.size());
 
     Eigen::Matrix3Xd jac_rot1 /*=  Eigen::MatrixXd::Zero()*/;
     jac_rot1.resize(3, GetDOF());
+
+    jac_rot1 *= 0.00;
 
     mul(mat_skew, jac_rot, &jac_rot1);
 
@@ -289,11 +322,21 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
 
     jac_new1 = jac_new;
 
-    return jac_new1;
 
 //    std::cout<< "according to bullet physics . . .. . .  ..  \n";
+//    std::cout << "Robot state: . . . .. " << GetDOFValues() << std::endl;
+//    std::cout <<"Jacobian . .. . . . .. . \n";
 
+//    std::cout << m << "\n";
+//    std::cout << "Jacobian for : " << link_name << " at " << pt.transpose()<< std::endl;
 //    std::cout << jac_new << std::endl;
+
+//    std::cout << "Jacobian1 for : " << link_name << " at " << pt.transpose()<< std::endl;
+
+//    std::cout << jac_new1 << std::endl;
+
+    return jac_new1;
+
 
 
 

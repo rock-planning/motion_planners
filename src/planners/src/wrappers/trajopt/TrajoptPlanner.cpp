@@ -6,17 +6,19 @@ namespace motion_planners
 {
 
 template <typename TElem>
-ostream& operator<<(ostream& os, const vector<TElem>& vec) {
-    typedef typename vector<TElem>::const_iterator iter_t;
-    const iter_t iter_begin = vec.begin();
-    const iter_t iter_end   = vec.end();
-    os << "[";
-    for (iter_t iter = iter_begin; iter != iter_end; ++iter) {
-        std::cout << ((iter != iter_begin) ? "," : "") << *iter;
-    }
-    os << "]";
-    return os;
-}
+ ostream& operator<<(ostream& os, const vector<TElem>& vec) {
+     typedef typename vector<TElem>::const_iterator iter_t;
+     const iter_t iter_begin = vec.begin();
+     const iter_t iter_end   = vec.end();
+     os << "[";
+     for (iter_t iter = iter_begin; iter != iter_end; ++iter) {
+         std::cout << ((iter != iter_begin) ? "," : "") << *iter;
+     }
+     os << "]";
+     return os;
+ }
+
+
 
 
 TrajoptPlanner::TrajoptPlanner():
