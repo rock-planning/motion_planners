@@ -74,7 +74,7 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
     noiseless_rollout.total_cost_ = 100.0;
     while ((iter_ct < stomp_config_.num_iterations_) && (noiseless_rollout.total_cost_ > 0.1))
     {	
-	//std::cout<<"Iteration = "<<i<<std::endl;
+	
         //start_time = std::chrono::high_resolution_clock::now();
         stomp_->runSingleIteration(iter_ct);
 	iter_ct ++;
@@ -84,29 +84,29 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	              
 	
         stomp_->getNoiselessRollout(noiseless_rollout);
-	std::cout<<iter_ct <<" Cost ="<<noiseless_rollout.total_cost_<<std::endl;
-
-        if (debug_config_.save_noisy_trajectories_)
-        {
-	    std::vector<stomp::Rollout> rollouts;
-	    stomp_->getAllRollouts(rollouts);
-          fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
-          for (unsigned int j=0; j<rollouts.size(); ++j)
-          {
-            std::stringstream ss2;
-            ss2 << debug_config_.output_dir_ << "/noisy_" << iter_ct << "_" << j << ".txt";
-            //tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
-            tmp_policy.setParameters(rollouts[j].parameters_noise_);
-            tmp_policy.writeToFile(ss2.str());
-          }
-        }
-        
-        if (debug_config_.save_noiseless_trajectories_)
-        {
-          std::stringstream ss;
-          ss << debug_config_.output_dir_ << "/noiseless_" << iter_ct << ".txt";
-          optimization_task_->policy_->writeToFile(ss.str());          
-        }
+ 	std::cout<<iter_ct <<" Cost ="<<noiseless_rollout.total_cost_<<std::endl;
+// 
+//         if (debug_config_.save_noisy_trajectories_)
+//         {
+// 	    std::vector<stomp::Rollout> rollouts;
+// 	    stomp_->getAllRollouts(rollouts);
+//           fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
+//           for (unsigned int j=0; j<rollouts.size(); ++j)
+//           {
+//             std::stringstream ss2;
+//             ss2 << debug_config_.output_dir_ << "/noisy_" << iter_ct << "_" << j << ".txt";
+//             //tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
+//             tmp_policy.setParameters(rollouts[j].parameters_noise_);
+//             tmp_policy.writeToFile(ss2.str());
+//           }
+//         }
+//         
+//         if (debug_config_.save_noiseless_trajectories_)
+//         {
+//           std::stringstream ss;
+//           ss << debug_config_.output_dir_ << "/noiseless_" << iter_ct << ".txt";
+//           optimization_task_->policy_->writeToFile(ss.str());          
+//         }
     }
     
     auto finish_iter_time = std::chrono::high_resolution_clock::now();  

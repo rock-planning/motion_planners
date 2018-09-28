@@ -26,8 +26,8 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
     kinematics_library::RobotKinematicsPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config);
     robot_kinematics->initialise(planner_status.kinematic_status);
-    robot_model_.reset(new RobotModel(config_.planner_config.robot_model.urdf_file, config_.planner_config.robot_model.srdf_file, 
-				      config_.planner_config.robot_model.planning_group_name));
+    robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config.urdf_file, config_.planner_config.robot_model_config.srdf_file, 
+				      config_.planner_config.robot_model_config.planning_group_name));
     robot_model_->setRobotCollisionDetector(robot_collision_detector);
     robot_model_->setWorldCollisionDetector(world_collision_detector); 
     robot_model_->setKinematicsSolver(robot_kinematics);
@@ -36,6 +36,8 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
 	planner_status.statuscode = PlannerStatus::ROBOTMODEL_INITIALISATION_FAILED;
 	return false;
     }
+    
+    robot_model_->setDisabledEnvironmentCollision(config_.env_config.disabled_collision_pair);
     
     PlannerFactory planner_factory;
     
@@ -49,7 +51,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     
     std::string base_link, tip_link;
     planning_group_joints_.clear();
-    robot_model_->getPlanningGroupJointinformation(config_.planner_config.robot_model.planning_group_name, planning_group_joints_, base_link, tip_link);
+    robot_model_->getPlanningGroupJointinformation(config_.planner_config.robot_model_config.planning_group_name, planning_group_joints_, base_link, tip_link);
     
     goal_pose_.position = Eigen::Vector3d::Zero();
     goal_pose_.orientation = Eigen::Quaterniond::Identity();
@@ -256,7 +258,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 }
 
 bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
-{    
+{   
     planner_->updateInitialTrajectory(initial_joint_status_, goal_joint_status_, planner_status);        
     
     planner_->solve(solution, planner_status);    

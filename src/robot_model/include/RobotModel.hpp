@@ -161,7 +161,10 @@ class RobotModel
         std::string getURDFFileAbsolutePath();	
 	
 	inline void setRobotCollisionDetector(collision_detection::AbstractCollisionPtr collision_detector){robot_collision_detector_ = collision_detector;}
+	
 	void setWorldCollisionDetector(collision_detection::AbstractCollisionPtr collision_detector);
+	
+	void setDisabledEnvironmentCollision(std::vector <std::pair<std::string,std::string> > disabled_collision_pair);
 
 	inline void setKinematicsSolver(kinematics_library::RobotKinematicsPtr robot_kinematics){robot_kinematics_ = robot_kinematics;}
 	

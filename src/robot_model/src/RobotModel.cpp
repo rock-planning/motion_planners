@@ -283,15 +283,27 @@ void RobotModel::setRobotState(RobotState &robot_state )
     robot_state_ = robot_state;
 }
 
+void RobotModel::setDisabledEnvironmentCollision(std::vector <std::pair<std::string,std::string> > disabled_collision_pair)
+{    
+     for(int i = 0; i < disabled_collision_pair.size(); i++)
+     {
+	 srdf::Model::DisabledCollision disabled_pair;
+	 disabled_pair.link1_ = disabled_collision_pair.at(i).first;
+	 disabled_pair.link2_ = disabled_collision_pair.at(i).second;
+	    // assign the disabled collision pairs to the collision library
+	 world_collision_detector_->AbstractCollisionDetection::disabled_collisions_.push_back(disabled_pair);
+     } 
+}
+
 void RobotModel::initializeLinksCollisions()
 {     
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
 
     // get the disabled collision pairs from srdf
-    std::vector<srdf::Model::DisabledCollision> DisabledCollisionPairs = srdf_model_->getDisabledCollisionPairs();
+    std::vector<srdf::Model::DisabledCollision> disabled_collision_pairs = srdf_model_->getDisabledCollisionPairs();
     // assign the disabled collision pairs to the collision library
-    robot_collision_detector_->AbstractCollisionDetection::setDisabledCollisionPairs( DisabledCollisionPairs);
+    robot_collision_detector_->AbstractCollisionDetection::setDisabledCollisionPairs( disabled_collision_pairs);
 
     int total_number_of_collision_should_be = 0;    
     std::string link_name,  abs_path_to_mesh_file,  collision_object_name;    
