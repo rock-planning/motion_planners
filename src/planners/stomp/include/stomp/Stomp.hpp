@@ -69,7 +69,7 @@ public:
     void getAllRollouts(std::vector<Rollout>& rollouts);
     void getNoiselessRollout(Rollout& rollout);
     void getAdaptedStddevs(std::vector<double>& stddevs);
-    void getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost);
+    void getBestNoiselessParameters(std::vector<base::VectorXd>& parameters, double& cost);
 
     bool runUntilValid(int max_iterations, int iterations_after_collision_free);
     void setCostCumulation(bool use_cumulative_costs);
@@ -99,25 +99,25 @@ private:
 
     PolicyImprovement policy_improvement_;
 
-    std::vector<Eigen::VectorXd> best_noiseless_parameters_;
+    std::vector<base::VectorXd> best_noiseless_parameters_;
     double best_noiseless_cost_;
 
     bool last_noiseless_rollout_valid_;
 
-    std::vector<std::vector<Eigen::VectorXd> > rollouts_; /**< [num_rollouts][num_dimensions] num_parameters */
-    std::vector<std::vector<Eigen::VectorXd> > projected_rollouts_;
-    std::vector<Eigen::MatrixXd> parameter_updates_;
-    std::vector<Eigen::VectorXd> parameters_;
-    std::vector<Eigen::VectorXd> time_step_weights_;
-    Eigen::MatrixXd rollout_costs_;
+    std::vector<std::vector<base::VectorXd> > rollouts_; /**< [num_rollouts][num_dimensions] num_parameters */
+    std::vector<std::vector<base::VectorXd> > projected_rollouts_;
+    std::vector<base::MatrixXd> parameter_updates_;
+    std::vector<base::VectorXd> parameters_;
+    std::vector<base::VectorXd> time_step_weights_;
+    base::MatrixXd rollout_costs_;
     //std::vector<double> noise_stddev_;
     //std::vector<double> noise_decay_;
     //std::vector<double> noise_min_stddev_;
     double control_cost_weight_;
 
     // temporary variables
-    std::vector<Eigen::VectorXd> tmp_rollout_cost_;
-    std::vector<Eigen::MatrixXd> tmp_rollout_weighted_features_;
+    std::vector<base::VectorXd> tmp_rollout_cost_;
+    std::vector<base::MatrixXd> tmp_rollout_weighted_features_;
 
     bool readParameters();
 

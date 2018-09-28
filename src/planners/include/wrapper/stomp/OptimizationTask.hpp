@@ -30,7 +30,7 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
 	
 	bool stompInitialize(int num_threads, int num_rollouts);
 	
-	//void updateInitialTrajectory(const Eigen::VectorXd &start, const Eigen::VectorXd &goal);
+	//void updateInitialTrajectory(const base::VectorXd &start, const base::VectorXd &goal);
 	void updateTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
 	
 	
@@ -43,18 +43,18 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
 	 * @param weighted_feature_values num_time_steps x num_features matrix of weighted feature values per time step
 	 * @return
 	 */
-	virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
-		             std::vector<Eigen::VectorXd>& projected_parameters,
-		             Eigen::VectorXd& costs,
-		             Eigen::MatrixXd& weighted_feature_values,
+	virtual bool execute(std::vector<base::VectorXd>& parameters,
+		             std::vector<base::VectorXd>& projected_parameters,
+		             base::VectorXd& costs,
+		             base::MatrixXd& weighted_feature_values,
 		             const int iteration_number,
 		             const int rollout_number,
 		             int thread_id,
 		             bool compute_gradients,
-		             std::vector<Eigen::VectorXd>& gradients,
+		             std::vector<base::VectorXd>& gradients,
 		             bool& validity);
 
-	virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int rollout_id, int thread_id);
+	virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id);
 
 	/**
 	 * Get the Policy object of this Task
@@ -85,18 +85,18 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
 
 	double movement_dt_;
 
-	Eigen::MatrixXd vel_diff_matrix_;
-	Eigen::MatrixXd acc_diff_matrix_;
+	base::MatrixXd vel_diff_matrix_;
+	base::MatrixXd acc_diff_matrix_;
 
-	std::vector<Eigen::MatrixXd> derivative_costs_;
-	std::vector<Eigen::VectorXd> initial_trajectory_;
-
-
-	Eigen::MatrixXd proj_pos_, pos_;
-	Eigen::MatrixXd vel_, acc_;
+	std::vector<base::MatrixXd> derivative_costs_;
+	std::vector<base::VectorXd> initial_trajectory_;
 
 
-	Eigen::VectorXd collision_costs_;
+	base::MatrixXd proj_pos_, pos_;
+	base::MatrixXd vel_, acc_;
+
+
+	base::VectorXd collision_costs_;
 
 
 	void computeCollisionCost();

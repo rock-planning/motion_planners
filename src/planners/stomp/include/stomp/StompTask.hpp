@@ -68,15 +68,15 @@ public:
      * @param weighted_feature_values num_time_steps x num_features matrix of weighted feature values per time step
      * @return
      */
-    virtual bool execute(std::vector<Eigen::VectorXd>& parameters,
-                         std::vector<Eigen::VectorXd>& projected_parameters,
-                         Eigen::VectorXd& costs,
-                         Eigen::MatrixXd& weighted_feature_values,
+    virtual bool execute(std::vector<base::VectorXd>& parameters,
+                         std::vector<base::VectorXd>& projected_parameters,
+                         base::VectorXd& costs,
+                         base::MatrixXd& weighted_feature_values,
                          const int iteration_number,
                          const int rollout_number,
                          int thread_id,
                          bool compute_gradients,
-                         std::vector<Eigen::VectorXd>& gradients,
+                         std::vector<base::VectorXd>& gradients,
                          bool& validity) = 0;
 
     /**
@@ -85,8 +85,8 @@ public:
      * @param parameters
      * @return false if no filtering was done
      */
-    //virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int rollout_id, int thread_id) {return false;};
-    virtual bool filter(std::vector<Eigen::VectorXd>& parameters, int rollout_id, int thread_id)=0;
+    //virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id) {return false;};
+    virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id)=0;
 
     /**
      * Get the Policy object of this Task

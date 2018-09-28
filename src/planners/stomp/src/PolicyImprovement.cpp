@@ -93,7 +93,7 @@ bool PolicyImprovement::initialize(const int num_time_steps,
     noise_generators_.push_back(mvg);
     adapted_covariances_.push_back(inv_control_costs_[d]);
   }
-
+  
   noiseless_rollout_valid_ = false;
 
   STOMP_VERIFY(setNumRollouts(min_rollouts, max_rollouts, num_rollouts_per_iteration));
@@ -308,7 +308,7 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
   return true;
 }
 
-bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, const std::vector<double>& noise_variance)
+bool PolicyImprovement::getRollouts(std::vector<std::vector<base::VectorXd> >& rollouts, const std::vector<double>& noise_variance)
 {
     if (!generateRollouts(noise_variance))
     {
@@ -325,7 +325,7 @@ bool PolicyImprovement::getRollouts(std::vector<std::vector<Eigen::VectorXd> >& 
     return true;
 }
 
-bool PolicyImprovement::getProjectedRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts)
+bool PolicyImprovement::getProjectedRollouts(std::vector<std::vector<base::VectorXd> >& rollouts)
 {
   rollouts.clear();
   for (int r=0; r<num_rollouts_gen_; ++r)
@@ -337,7 +337,7 @@ bool PolicyImprovement::getProjectedRollouts(std::vector<std::vector<Eigen::Vect
 }
 
 
-bool PolicyImprovement::setRollouts(const std::vector<std::vector<Eigen::VectorXd> >& rollouts)
+bool PolicyImprovement::setRollouts(const std::vector<std::vector<base::VectorXd> >& rollouts)
 {
   //ROS_ASSERT((int)rollouts.size() == num_rollouts_gen_);
   for (int r=0; r<num_rollouts_gen_; ++r)
@@ -353,7 +353,7 @@ void PolicyImprovement::clearReusedRollouts()
   num_rollouts_ = 0;
 }
 
-bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total)
+bool PolicyImprovement::setRolloutCosts(const base::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total)
 {
   //ROS_ASSERT(initialized_);
 
@@ -375,7 +375,7 @@ bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const doub
   return true;
 }
 
-//bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs)
+//bool PolicyImprovement::addExtraRollouts(std::vector<std::vector<base::VectorXd> >& rollouts, std::vector<base::VectorXd>& rollout_costs)
 //{
 //    ROS_ASSERT(int(rollouts.size()) == num_rollouts_extra_);
 //
@@ -396,19 +396,19 @@ bool PolicyImprovement::setRolloutCosts(const Eigen::MatrixXd& costs, const doub
 //    return true;
 //}
 
-bool PolicyImprovement::setNoiselessRolloutCosts(const Eigen::VectorXd& costs, double& total_cost)
+bool PolicyImprovement::setNoiselessRolloutCosts(const base::VectorXd& costs, double& total_cost)
 {
   policy_->getParameters(noiseless_rollout_.parameters_);
   for (int d=0; d<num_dimensions_; ++d)
   {
-    noiseless_rollout_.noise_[d] = Eigen::VectorXd::Zero(num_parameters_[d]);
-    noiseless_rollout_.noise_projected_[d] = Eigen::VectorXd::Zero(num_parameters_[d]);
+    noiseless_rollout_.noise_[d] = base::VectorXd::Zero(num_parameters_[d]);
+    noiseless_rollout_.noise_projected_[d] = base::VectorXd::Zero(num_parameters_[d]);
     noiseless_rollout_.parameters_noise_[d] = noiseless_rollout_.parameters_[d];
     noiseless_rollout_.parameters_noise_projected_[d] = noiseless_rollout_.parameters_[d];
   }
   noiseless_rollout_.state_costs_ = costs;
   noiseless_rollout_.importance_weight_ = 1.0;
-  computeRolloutControlCosts(noiseless_rollout_);  
+  computeRolloutControlCosts(noiseless_rollout_);
   computeRolloutCumulativeCosts(noiseless_rollout_);
   total_cost = noiseless_rollout_.total_cost_;
   noiseless_rollout_valid_ = true;
@@ -440,7 +440,7 @@ bool PolicyImprovement::computeRolloutControlCosts()
 {
     for (int r=0; r<num_rollouts_; ++r)
     {
-        computeRolloutControlCosts(rollouts_[r]);
+        computeRolloutControlCosts(rollouts_[r]);	
     }
     return true;
 }
@@ -463,7 +463,8 @@ bool PolicyImprovement::computeRolloutCumulativeCosts(Rollout& rollout)
   {
       rollout.total_costs_[d] = rollout.state_costs_ + rollout.control_costs_[d];
       rollout.cumulative_costs_[d] = rollout.total_costs_[d];
-      if (use_cumulative_costs_)
+
+    if (use_cumulative_costs_)
       {
 
         // this is forward cumulation
@@ -473,7 +474,7 @@ bool PolicyImprovement::computeRolloutCumulativeCosts(Rollout& rollout)
 //          }
 
         // this is total cumulation
-        rollout.cumulative_costs_[d] = Eigen::VectorXd::Ones(num_time_steps_) * rollout.total_costs_[d].sum();
+        rollout.cumulative_costs_[d] = base::VectorXd::Ones(num_time_steps_) * rollout.total_costs_[d].sum();
       }
   }
   return true;
@@ -592,7 +593,7 @@ bool PolicyImprovement::computeParameterUpdates()
     {
 
       // true CMA method
-//      adapted_covariances_[d] = Eigen::MatrixXd::Zero(num_time_steps_, num_time_steps_);
+//      adapted_covariances_[d] = base::MatrixXd::Zero(num_time_steps_, num_time_steps_);
 //      for (int r=0; r<num_rollouts_; ++r)
 //      {
 //        adapted_covariances_[d] += rollouts_[r].full_probabilities_[d] *
@@ -621,7 +622,7 @@ bool PolicyImprovement::computeParameterUpdates()
 
       /*
       // true CMA method + minimization of frobenius norm
-      adapted_covariances_[d] = Eigen::MatrixXd::Zero(num_time_steps_, num_time_steps_);
+      adapted_covariances_[d] = base::MatrixXd::Zero(num_time_steps_, num_time_steps_);
       for (int r=0; r<num_rollouts_; ++r)
       {
         adapted_covariances_[d] += rollouts_[r].full_probabilities_[d] *
@@ -701,7 +702,7 @@ bool PolicyImprovement::computeParameterUpdates()
   return true;
 }
 
-bool PolicyImprovement::improvePolicy(std::vector<Eigen::MatrixXd>& parameter_updates)
+bool PolicyImprovement::improvePolicy(std::vector<base::MatrixXd>& parameter_updates)
 {
 //    ROS_ASSERT(initialized_);
 
@@ -748,7 +749,7 @@ bool PolicyImprovement::preComputeProjectionMatrices()
     // just use identities
     for (int d=0; d<num_dimensions_; ++d)
     {
-      projection_matrix_[d] = Eigen::MatrixXd::Identity(num_parameters_[d], num_parameters_[d]);
+      projection_matrix_[d] = base::MatrixXd::Identity(num_parameters_[d], num_parameters_[d]);
       inv_projection_matrix_[d] = projection_matrix_[d];
     }
 
@@ -817,7 +818,7 @@ bool PolicyImprovement::copyParametersFromPolicy()
     return true;
 }
 
-bool PolicyImprovement::getTimeStepWeights(std::vector<Eigen::VectorXd>& time_step_weights)
+bool PolicyImprovement::getTimeStepWeights(std::vector<base::VectorXd>& time_step_weights)
 {
   time_step_weights = time_step_weights_;
   return true;

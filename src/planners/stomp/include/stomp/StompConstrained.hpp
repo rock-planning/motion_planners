@@ -42,7 +42,7 @@ public:
    * @param free_vars_end          at which time index in the trajectory do we stop optimizing
    * @param num_samples            number of samples to generate per iteration
    */
-  void initialize(const Eigen::MatrixXd& initial_trajectory,
+  void initialize(const base::MatrixXd& initial_trajectory,
                   const double dt,
                   const int free_vars_start,
                   const int free_vars_end,
@@ -70,31 +70,31 @@ public:
    * @param A num_constraints x num_variables
    * @param b num_constraints
    */
-  void setEqualityConstraints(const Eigen::MatrixXd& A, const Eigen::VectorXd& b);
+  void setEqualityConstraints(const base::MatrixXd& A, const base::VectorXd& b);
 
   /**
    * Gets random samples around the mean (conditioned on the equality constraints)
    * @param samples - num_variables x num_samples
    */
-  void getSamples(Eigen::MatrixXd& samples);
+  void getSamples(base::MatrixXd& samples);
 
   /**
    * Gets random samples around the mean (conditioned on the equality constraints)
    * @param samples - [num_samples] num_time_steps_all x num_joints
    */
-  void getSamples(std::vector<Eigen::MatrixXd*>& samples);
+  void getSamples(std::vector<base::MatrixXd*>& samples);
 
   /**
    * Sets the random samples (eg after clipping joint limits, or satisfying some other constraints)
    * @param samples - [num_samples] num_time_steps_all x num_joints
    */
-  void setSamples(const std::vector<Eigen::MatrixXd*>& samples);
+  void setSamples(const std::vector<base::MatrixXd*>& samples);
 
   /**
    * Set the costs of samples retrieved
    * @param sample_costs - num_samples
    */
-  void setSampleCosts(Eigen::VectorXd& sample_costs);
+  void setSampleCosts(base::VectorXd& sample_costs);
 
   /**
    * Update the mean policy based on the sample costs
@@ -105,7 +105,7 @@ public:
    * Get the mean trajectory
    * @param trajectory (num_time_steps_all x num_joints)
    */
-  void getMeanTrajectory(Eigen::MatrixXd& trajectory);
+  void getMeanTrajectory(base::MatrixXd& trajectory);
 
   double noise_stddev_;
 
@@ -118,7 +118,7 @@ private:
    * Sets initial_trajectory, computes const parts of differentiation vectors, and policy mean
    * @param initial_trajectory            num_time_steps_all x num_joints
    */
-  void setInitialTrajectory(const Eigen::MatrixXd& initial_trajectory);
+  void setInitialTrajectory(const base::MatrixXd& initial_trajectory);
 
   void createDiffMatrices();
   void createCostMatrix();
@@ -128,11 +128,11 @@ private:
   void generateSamples();
 
   template<typename Derived>
-  void trajectoryVectorToMatrix(const Eigen::MatrixBase<Derived>& vector, Eigen::MatrixXd& matrix,
+  void trajectoryVectorToMatrix(const base::MatrixBase<Derived>& vector, base::MatrixXd& matrix,
                                 bool only_free_vars=false);
 
   template<typename Derived>
-  void trajectoryMatrixToVector(const Eigen::MatrixXd& matrix, const Eigen::MatrixBase<Derived>& vector);
+  void trajectoryMatrixToVector(const base::MatrixXd& matrix, const base::MatrixBase<Derived>& vector);
 
   /**
    * matrices for numerical differentiation
@@ -141,35 +141,35 @@ private:
    */
   std::vector<int> diff_num_outputs_; /**< how big is the vector of derivatives after differentiating */
   std::vector<int> diff_output_offset_; /**< where does timestep 0 lie in the output derivative vector */
-  std::vector<Eigen::SparseMatrix<double> > sparse_diff_matrix_; /**< [num_diff_rules] diff_num_outputs x num_time_steps */
-  std::vector<Eigen::SparseMatrix<double> > sparse_diff_matrix_const_; /**< [num_diff_rules] diff_num_outputs x num_time_steps_all */
-  std::vector<Eigen::SparseMatrix<double> > sparse_diff_vectors_const_; /**< [num_diff_rules] diff_num_outputs x num_joints  - this happens after multiplying matrix_const * initial_trajectory */
+  std::vector<base::SparseMatrix<double> > sparse_diff_matrix_; /**< [num_diff_rules] diff_num_outputs x num_time_steps */
+  std::vector<base::SparseMatrix<double> > sparse_diff_matrix_const_; /**< [num_diff_rules] diff_num_outputs x num_time_steps_all */
+  std::vector<base::SparseMatrix<double> > sparse_diff_vectors_const_; /**< [num_diff_rules] diff_num_outputs x num_joints  - this happens after multiplying matrix_const * initial_trajectory */
 
   std::vector<double> derivative_costs_;
-  Eigen::SparseMatrix<double> sparse_quad_cost_;
-  Eigen::SparseVector<double> sparse_linear_cost_;
-  Eigen::VectorXd dense_linear_cost_;
-  Eigen::SimplicialLLT<Eigen::SparseMatrix<double> > sparse_quad_cost_cholesky_;
+  base::SparseMatrix<double> sparse_quad_cost_;
+  base::SparseVector<double> sparse_linear_cost_;
+  base::VectorXd dense_linear_cost_;
+  base::SimplicialLLT<base::SparseMatrix<double> > sparse_quad_cost_cholesky_;
 
   // constraints are dense for now
   bool has_equality_constraints_;
-  Eigen::MatrixXd dense_constraints_, dense_constraint_projector_;
-  Eigen::VectorXd dense_constraints_const_;
-  Eigen::MatrixXd dense_V_;   // intermediate matrix for constraint projector computation
-  Eigen::MatrixXd dense_AV_;  // intermediate matrix for constraint projector computation
-  Eigen::LDLT<Eigen::MatrixXd> dense_AV_solver_;
+  base::MatrixXd dense_constraints_, dense_constraint_projector_;
+  base::VectorXd dense_constraints_const_;
+  base::MatrixXd dense_V_;   // intermediate matrix for constraint projector computation
+  base::MatrixXd dense_AV_;  // intermediate matrix for constraint projector computation
+  base::LDLT<base::MatrixXd> dense_AV_solver_;
 
-  Eigen::MatrixXd initial_trajectory_;
+  base::MatrixXd initial_trajectory_;
 
-  Eigen::VectorXd policy_mean_;
-  Eigen::VectorXd min_control_cost_trajectory_;
+  base::VectorXd policy_mean_;
+  base::VectorXd min_control_cost_trajectory_;
 
-  Eigen::MatrixXd normal_samples_;
-  Eigen::MatrixXd unconditioned_samples_;
-  Eigen::MatrixXd conditioned_samples_;
+  base::MatrixXd normal_samples_;
+  base::MatrixXd unconditioned_samples_;
+  base::MatrixXd conditioned_samples_;
 
-  Eigen::VectorXd sample_costs_;
-  Eigen::VectorXd sample_probabilities_;
+  base::VectorXd sample_costs_;
+  base::VectorXd sample_probabilities_;
 
   boost::mt19937 rng_;
   boost::normal_distribution<> normal_dist_;
