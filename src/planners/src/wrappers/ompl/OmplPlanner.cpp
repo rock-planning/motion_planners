@@ -716,7 +716,6 @@ bool OmplPlanner::solveTaskInCartesianSpace(base::JointsTrajectory &solution, Pl
 	
 	//////////  END URLAUB
 	
-	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
     }
     else
     {
@@ -736,11 +735,11 @@ bool OmplPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner
 {
     if(hasCartesianConstraint_)
     {
-        return this->solveTaskInCartesianSpace(solution, planner_status);
+        return solveTaskInCartesianSpace(solution, planner_status);
     }
     else
     {
-       return this->solveTaskInJointSpace(solution, planner_status);
+       return solveTaskInJointSpace(solution, planner_status);
     }
 }
 

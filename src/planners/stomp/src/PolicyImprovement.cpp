@@ -279,8 +279,9 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
       //rollouts_[r].noise_[d] = new_stddev*tmp_noise_[d];
       rollouts_[r].parameters_[d] = parameters_[d];// + rollouts_[r].noise_[d];
       rollouts_[r].noise_[d] = rollouts_[r].parameters_noise_[d] - rollouts_[r].parameters_[d];
-      //rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];
+      //rollouts_[r].parameters_noise_[d] = parameters_[d] + rollouts_[r].noise_[d];      
     }
+    
   }
 
   // compute likelihoods of new rollouts
@@ -399,12 +400,13 @@ bool PolicyImprovement::setRolloutCosts(const base::MatrixXd& costs, const doubl
 bool PolicyImprovement::setNoiselessRolloutCosts(const base::VectorXd& costs, double& total_cost)
 {
   policy_->getParameters(noiseless_rollout_.parameters_);
+  
   for (int d=0; d<num_dimensions_; ++d)
   {
     noiseless_rollout_.noise_[d] = base::VectorXd::Zero(num_parameters_[d]);
     noiseless_rollout_.noise_projected_[d] = base::VectorXd::Zero(num_parameters_[d]);
     noiseless_rollout_.parameters_noise_[d] = noiseless_rollout_.parameters_[d];
-    noiseless_rollout_.parameters_noise_projected_[d] = noiseless_rollout_.parameters_[d];
+    noiseless_rollout_.parameters_noise_projected_[d] = noiseless_rollout_.parameters_[d];    
   }
   noiseless_rollout_.state_costs_ = costs;
   noiseless_rollout_.importance_weight_ = 1.0;
@@ -498,6 +500,7 @@ bool PolicyImprovement::computeRolloutProbabilities()
       // find min and max cost over all rollouts:
       double min_cost = rollouts_[0].cumulative_costs_[d].minCoeff();
       double max_cost = rollouts_[0].cumulative_costs_[d].maxCoeff();
+      
       for (int r=1; r<num_rollouts_; ++r)
       {
         double min_r = rollouts_[r].cumulative_costs_[d].minCoeff();
@@ -587,7 +590,11 @@ bool PolicyImprovement::computeParameterUpdates()
     {
       parameter_updates_[d].row(0).transpose() +=
           (rollouts_[r].noise_[d].array() * rollouts_[r].probabilities_[d].array()).matrix();
+	  
+	  
     }
+    
+    
 
     if (use_covariance_matrix_adaptation_)
     {

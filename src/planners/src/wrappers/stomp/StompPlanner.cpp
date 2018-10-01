@@ -60,59 +60,52 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
         std::stringstream sss;
         sss << debug_config_.output_dir_ << "/noiseless_0.txt";
         optimization_task_->policy_->writeToFile(sss.str());
-    }
-    
-    stomp::CovariantMovementPrimitive tmp_policy = *optimization_task_->policy_;
-   
-    auto start_time = std::chrono::high_resolution_clock::now();
-    auto finish_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish_time - start_time;
+	tmp_policy = *optimization_task_->policy_;
+    }  
 
-    auto start_iter_time = std::chrono::high_resolution_clock::now();
     int iter_ct = 0;
     stomp::Rollout noiseless_rollout;
-    noiseless_rollout.total_cost_ = 100.0;
-    while ((iter_ct < stomp_config_.num_iterations_) && (noiseless_rollout.total_cost_ > 0.1))
-    {	
-	
-        //start_time = std::chrono::high_resolution_clock::now();
+    double old_cost = 0.0; 
+    double cost_improvement = std::numeric_limits<double>::max();
+    
+    while ((iter_ct < stomp_config_.num_iterations_) && (cost_improvement > stomp_config_.min_cost_improvement_))
+    {
         stomp_->runSingleIteration(iter_ct);
 	iter_ct ++;
-	//finish_time = std::chrono::high_resolution_clock::now();
-	//elapsed = finish_time - start_time;
-	//std::cout << "Elapsed time Iter: " << elapsed.count() << " s\n";
-	              
-	
-        stomp_->getNoiselessRollout(noiseless_rollout);
- 	std::cout<<iter_ct <<" Cost ="<<noiseless_rollout.total_cost_<<std::endl;
-// 
-//         if (debug_config_.save_noisy_trajectories_)
-//         {
-// 	    std::vector<stomp::Rollout> rollouts;
-// 	    stomp_->getAllRollouts(rollouts);
-//           fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
-//           for (unsigned int j=0; j<rollouts.size(); ++j)
-//           {
-//             std::stringstream ss2;
-//             ss2 << debug_config_.output_dir_ << "/noisy_" << iter_ct << "_" << j << ".txt";
-//             //tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
-//             tmp_policy.setParameters(rollouts[j].parameters_noise_);
-//             tmp_policy.writeToFile(ss2.str());
-//           }
-//         }
-//         
-//         if (debug_config_.save_noiseless_trajectories_)
-//         {
-//           std::stringstream ss;
-//           ss << debug_config_.output_dir_ << "/noiseless_" << iter_ct << ".txt";
-//           optimization_task_->policy_->writeToFile(ss.str());          
-//         }
+
+	stomp_->getNoiselessRollout(noiseless_rollout);
+	cost_improvement = noiseless_rollout.total_cost_ - old_cost;
+	old_cost = noiseless_rollout.total_cost_;
+ 	//std::cout<<iter_ct <<" Cost ="<<noiseless_rollout.total_cost_<<"  "<<noiseless_rollout.state_costs_<<std::endl;
+
+        if (debug_config_.save_noisy_trajectories_)
+        {
+	    std::vector<stomp::Rollout> rollouts;
+	    stomp_->getAllRollouts(rollouts);
+	    fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
+	    for (unsigned int j=0; j<rollouts.size(); ++j)
+	    {
+		std::stringstream ss2;
+		ss2 << debug_config_.output_dir_ << "/noisy_" << iter_ct << "_" << j << ".txt";
+		//tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
+		tmp_policy.setParameters(rollouts[j].parameters_noise_);
+		tmp_policy.writeToFile(ss2.str());
+	    }
+        }
+        
+        if (debug_config_.save_noiseless_trajectories_)
+        {
+          std::stringstream ss;
+          ss << debug_config_.output_dir_ << "/noiseless_" << iter_ct << ".txt";
+          optimization_task_->policy_->writeToFile(ss.str());          
+        }
     }
     
-    auto finish_iter_time = std::chrono::high_resolution_clock::now();  
-    elapsed = finish_iter_time - start_iter_time;
-    std::cout << "Elapsed time solve tim: " << elapsed.count() << " s\n";
-	
+    if (debug_config_.save_noisy_trajectories_)
+	fclose(num_rollouts_file);
+    
+    stomp_.reset();    
+
     int start = stomp::DIFF_RULE_LENGTH -1;
     int end = (start + stomp_config_.num_time_steps_ -1);
     int diff = (end -start) +1;
@@ -132,10 +125,15 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	
     }   
 
-  if (debug_config_.save_noisy_trajectories_)
-    fclose(num_rollouts_file);
-  stomp_.reset();
-  
+    if (cost_improvement <= stomp_config_.min_cost_improvement_)
+    {
+	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
+	return true;
+    }
+    else
+	planner_status.statuscode = motion_planners::PlannerStatus::NO_PATH_FOUND;
+    
+    return false;  
 }
 
 

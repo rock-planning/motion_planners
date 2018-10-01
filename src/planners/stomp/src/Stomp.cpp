@@ -289,12 +289,12 @@ bool Stomp::runSingleIteration(const int iteration_number)
   STOMP_VERIFY(doNoiselessRollout(iteration_number));
 
 
-  if (debug_config_.write_to_file_)
-  {
-    // store updated policy to disc
-    //STOMP_VERIFY(writePolicy(iteration_number));
-    //STOMP_VERIFY(writePolicyImprovementStatistics(stats_msg));
-  }
+//   if (debug_config_.write_to_file_)
+//   {
+//     // store updated policy to disc
+//     //STOMP_VERIFY(writePolicy(iteration_number));
+//     //STOMP_VERIFY(writePolicyImprovementStatistics(stats_msg));
+//   }
 
   return true;
 }

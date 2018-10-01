@@ -257,12 +257,18 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
-bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
+bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken)
 {   
-    planner_->updateInitialTrajectory(initial_joint_status_, goal_joint_status_, planner_status);        
+    planner_->updateInitialTrajectory(initial_joint_status_, goal_joint_status_, planner_status);
     
-    planner_->solve(solution, planner_status);    
+    auto start_time = std::chrono::high_resolution_clock::now();
     
-    return true;    
+    bool res = planner_->solve(solution, planner_status);    
+    
+    auto finish_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish_time - start_time;    
+    time_taken = elapsed.count();    
+    
+    return res;    
     
 }

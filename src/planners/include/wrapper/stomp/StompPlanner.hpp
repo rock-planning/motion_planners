@@ -31,6 +31,7 @@ class StompPlanner: public motion_planners::AbstractPlanner
 		stomp::StompConfig stomp_config_;
 		stomp::DebugConfig debug_config_;
 		std::shared_ptr<OptimizationTask> optimization_task_;
+		stomp::CovariantMovementPrimitive tmp_policy;
 
 		std::string planning_group_name_;
 		std::vector< std::string> planning_group_joints_name_;

@@ -123,6 +123,7 @@ bool CovariantMovementPrimitive::computeMinControlCostParameters()
   {
     parameters_all_[d].segment(free_vars_start_index_, num_vars_free_) =
         -0.5 * inv_control_costs_[d] * linear_control_costs_[d];
+
   }
   min_control_cost_parameters_all_ = parameters_all_;
   min_control_cost_parameters_free_.resize(num_dimensions_);
@@ -200,11 +201,12 @@ bool CovariantMovementPrimitive::initializeCosts()
     control_costs_all_.push_back(cost_all);
 
     // extract the quadratic cost just for the free variables:    
-    base::MatrixXd cost_free = cost_all.block(DIFF_RULE_LENGTH-1, DIFF_RULE_LENGTH-1, num_vars_free_, num_vars_free_);
+    base::MatrixXd cost_free = cost_all.block(DIFF_RULE_LENGTH-1, DIFF_RULE_LENGTH-1, num_vars_free_, num_vars_free_);    
     control_costs_.push_back(cost_free);   
     
     //inv_control_costs_.push_back(cost_free.colPivHouseholderQr().inverse());    
-    inv_control_costs_.push_back(cost_free.fullPivLu().inverse());
+    inv_control_costs_.push_back(cost_free.fullPivLu().inverse());   
+    
   }
   
   computeLinearControlCosts();
@@ -270,7 +272,7 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<base::Vec
     VectorXd params_free = parameters[d] + noise[d];
     VectorXd costs_all = VectorXd::Zero(num_vars_all_);
     params_all.segment(free_vars_start_index_, num_vars_free_) = parameters[d] + noise[d];
-
+        
 //    costs_all = weight * (params_all.array() *
 //        (control_costs_all_[d] * params_all).array()).matrix();
 //    control_costs[d] = costs_all.segment(free_vars_start_index_, num_vars_free_);
@@ -309,7 +311,7 @@ bool CovariantMovementPrimitive::computeControlCosts(const std::vector<base::Vec
       control_costs[d](num_vars_free_-1) += costs_all(num_vars_all_-(i+1));
     }
 
-
+    
     //printf("Control costs for dim %d = %f\n", d, control_costs[d].sum());
 
     // add linear costs:
@@ -407,9 +409,12 @@ bool CovariantMovementPrimitive::updateParameters(const std::vector<base::Matrix
   //double divisor = 1.0 / num_vars_free_;
   double divisor = 1.0;
   for (int d=0; d<num_dimensions_; ++d)
-  {
+  {      
     parameters_all_[d].segment(free_vars_start_index_, num_vars_free_).transpose() +=
         divisor * updates[d].row(0);
+	
+		
+	
   }
 
   //    for (int d=0; d<num_dimensions_; ++d)

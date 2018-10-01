@@ -48,7 +48,7 @@ class MotionPlanners
     
     void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);    
     
-    bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
+    bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken);
     
     void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);
     
