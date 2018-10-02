@@ -12,6 +12,7 @@ class FCLCollisionChecker : public CollisionChecker
 
     double m_contact_tolerance;
     std::shared_ptr<RobotModel> m_robot_model_;
+
 protected:
 //    FCLCollisionChecker();
 //    FCLCollisionChecker(const FCLCollisionChecker&); // Prevent construction by copying
@@ -23,6 +24,7 @@ public:
     virtual ~FCLCollisionChecker();
 
     void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model_ = robot_model; }
+
     // CollisionChecker interface
     void SetContactDistance(float distance);
     double GetContactDistance();

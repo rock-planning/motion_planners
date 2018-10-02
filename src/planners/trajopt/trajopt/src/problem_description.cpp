@@ -277,6 +277,7 @@ TrajArray getStraightLineTrajData(int n_steps, int n_dof, DblVec startpoint, Dbl
     for (int idof = 0; idof < n_dof; ++idof) {
         data.col(idof) = VectorXd::LinSpaced(n_steps, startpoint[idof], endpoint[idof]);
     }
+    std::cout <<  "getStraightLineTrajData  ... . . . .. . .. \n" << data  << std::endl;
     return data;
 }
 
@@ -419,26 +420,26 @@ TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo& pci) {
 
   TrajOptProbPtr prob(new TrajOptProb(n_steps, pci.rad, pci.collision_checker));
 
-  int n_dof = prob->m_rad->GetDOF();
+//  int n_dof = prob->m_rad->GetDOF();
 
-  DblVec cur_dofvals = prob->m_rad->GetDOFValues();
+//  DblVec cur_dofvals = prob->m_rad->GetDOFValues();
 
-  if (bi.start_fixed) {
-    if (pci.init_info.data.rows() > 0 && cur_dofvals.size() > 0 && !allClose(toVectorXd(cur_dofvals), pci.init_info.data.row(0))) {
-      PRINT_AND_THROW( "robot dof values don't match initialization. I don't know what you want me to use for the dof values");
-    }
-    for (int j=0; j < n_dof; ++j) {
-      prob->addLinearConstraint(exprSub(AffExpr(prob->m_traj_vars(0,j)), cur_dofvals[j]), EQ);
-    }
-  }
+//  if (bi.start_fixed) {
+//    if (pci.init_info.data.rows() > 0 && cur_dofvals.size() > 0 && !allClose(toVectorXd(cur_dofvals), pci.init_info.data.row(0))) {
+//      PRINT_AND_THROW( "robot dof values don't match initialization. I don't know what you want me to use for the dof values");
+//    }
+//    for (int j=0; j < n_dof; ++j) {
+//      prob->addLinearConstraint(exprSub(AffExpr(prob->m_traj_vars(0,j)), cur_dofvals[j]), EQ);
+//    }
+//  }
 
-  if (!bi.dofs_fixed.empty()) {
-    BOOST_FOREACH(const int& dof_ind, bi.dofs_fixed) {
-      for (int i=1; i < prob->GetNumSteps(); ++i) {
-        prob->addLinearConstraint(exprSub(AffExpr(prob->m_traj_vars(i,dof_ind)), AffExpr(prob->m_traj_vars(0,dof_ind))), EQ);
-      }
-    }
-  }
+//  if (!bi.dofs_fixed.empty()) {
+//    BOOST_FOREACH(const int& dof_ind, bi.dofs_fixed) {
+//      for (int i=1; i < prob->GetNumSteps(); ++i) {
+//        prob->addLinearConstraint(exprSub(AffExpr(prob->m_traj_vars(i,dof_ind)), AffExpr(prob->m_traj_vars(0,dof_ind))), EQ);
+//      }
+//    }
+//  }
 
   BOOST_FOREACH(const TermInfoPtr& ci, pci.cost_infos) {
     ci->hatch(*prob);
@@ -708,14 +709,26 @@ void JointVelConstraintInfo::fromYaml(const YAML::Node& v) {
 
   int n_steps = gPCI->basic_info.n_steps;
   int n_dof = gPCI->rad->GetDOF();
+
+  m_dof = gPCI->rad->GetDOF();
+
+  gPCI->rad->GetDOFLimits(m_lb_limits, m_ub_limits);
+
+  m_samples = gPCI->basic_info.n_steps;
+
+  childFromYaml(params, m_duration, "duration", 10);
+
   childFromYaml(params, vals, "vals");
   childFromYaml(params, first_step, "first_step", 0);
   childFromYaml(params, last_step, "last_step", n_steps-1);
+
+  if (vals.size() == 1) vals = DblVec(n_dof, vals[0]);
+
   FAIL_IF_FALSE(vals.size() == n_dof);
   FAIL_IF_FALSE((first_step >= 0) && (first_step < n_steps));
   FAIL_IF_FALSE((last_step >= first_step) && (last_step < n_steps));
 
-  const char* all_fields[] = {"vals", "first_step", "last_step"};
+  const char* all_fields[] = {"vals", "first_step", "last_step", "duration"};
   ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 
 }
@@ -724,10 +737,38 @@ void JointVelConstraintInfo::hatch(TrajOptProb& prob) {
   for (int i = first_step; i <= last_step-1; ++i) {
     for (int j=0; j < vals.size(); ++j)  {
       AffExpr vel = prob.GetVar(i+1,j) -  prob.GetVar(i,j);
+      vel.constant *= (10 / 20);
       prob.addLinearConstraint(vel - vals[j], INEQ);
       prob.addLinearConstraint(-vel - vals[j], INEQ);
     }
   }
+
+//    std::cout << "in  JointVelConstraintInfo::hatch ------------------------------------- \n";
+
+//    for (int i = first_step; i <= last_step-1; ++i) {
+//        for (int j=0; j <m_dof; ++j)  {
+//            //        min_vel = min_vel * self.duration / float(self.samples - 1)
+
+//            AffExpr vel = prob.GetVar(i+1,j) -  prob.GetVar(i,j);
+//            double l_vel = m_lb_limits[j] * (m_duration / m_samples);
+
+//            double u_vel = m_ub_limits[j] * (m_duration / m_samples);
+
+//            std::cout << "JointVelConstraintInfo . . .. . . " << m_lb_limits[j] << ", " << m_ub_limits[j] << ", " << m_duration << ", " << m_samples  << std::endl;
+
+//            std::cout << "JointVelConstraintInfo . . .. . . " << l_vel << ", " << u_vel<< std::endl;
+
+
+//            //        prob.addLinearConstraint(vel , INEQ);
+//            //        prob.addLinearConstraint(-vel , INEQ);
+
+//            vel.constant = u_vel * 10 ;
+//            prob.addLinearConstraint(vel, INEQ);
+//            vel.constant = l_vel * 10;
+//            prob.addLinearConstraint(-vel, INEQ);
+//        }
+//    }
+//    std::cout << "exiting JointVelConstraintInfo::hatch ------------------------------------- \n";
 }
 
 void CollisionCostInfo::fromJson(const Value& v) {

@@ -1,5 +1,4 @@
 #include <wrapper/trajopt/TrajoptPlanner.hpp>
-
 #include <algorithm>
 
 namespace motion_planners
@@ -62,10 +61,12 @@ bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model,
 
     std::cout << "jocobian link_name : " << link_name << std::endl;
 
-    std::cout << "jocobian point : \n" << pt << std::endl;
+    std::cout << "jocobian point : \n" << pt.transpose() << std::endl;
 
 
     DblMatrix m = m_robot_model_wrapper->PositionJacobian(link_name, pt);
+
+
 
     std::cout << "jocobian : \n" << m << std::endl;
 
@@ -85,17 +86,17 @@ bool TrajoptPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &plan
 
     if(m_results->status != OptStatus::INVALID){
         const TrajArray& goal_traj  = m_results->traj;
+        std::cout << "goal_traj : \n" << goal_traj << std::endl;
         solution.names.resize(m_planning_group_joints_name_.size());
         solution.elements.resize(m_planning_group_joints_name_.size());
 
-        for(int d = 0; d < goal_traj.cols(); d++)
+        for(int col = 0; col < goal_traj.cols(); col++)
         {
-            solution.names.at(d) = m_planning_group_joints_name_.at(d);
-
-            solution.elements.at(d).resize(goal_traj.col(d).size());
-            for( int i = 0; i < goal_traj.rows(); i++)
+            solution.names.at(col) = m_planning_group_joints_name_.at(col);
+            solution.elements.at(col).resize(goal_traj.col(col).size());
+            for( int row = 0; row < goal_traj.rows(); row++)
             {
-                solution.elements.at(d).at(i).position =  goal_traj.coeff(i, d);
+                solution.elements.at(col).at(row).position =  goal_traj.coeff(row, col);
             }
         }
         return true;

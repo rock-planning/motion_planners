@@ -85,16 +85,27 @@ public:
 
   inline void setInitTraj(DblVec start, DblVec goal) {
       m_init_traj = trajopt::getStraightLineTrajData(GetNumSteps(), GetNumDOF(), start, goal);
-                                              }
+      VarVector vars = GetVarRow(GetNumSteps()-1);
+      int n_dof = vars.size();
+
+      for (int j=0; j < n_dof; ++j) {
+
+          //        addLinearConstraint(sco::exprSub(AffExpr(vars[j]), goal_traj[j]), EQ);
+          addLinearConstraint(exprSub(AffExpr(m_traj_vars(0,j)), start[j]), EQ);
+
+      }
+  }
   inline void setGoalTraj(DblVec goal_traj) {
       VarVector vars = GetVarRow(GetNumSteps()-1);
       int n_dof = vars.size();
 
       for (int j=0; j < n_dof; ++j) {
 
-        addLinearConstraint(sco::exprSub(AffExpr(vars[j]), goal_traj[j]), EQ);
+//        addLinearConstraint(sco::exprSub(AffExpr(vars[j]), goal_traj[j]), EQ);
+          addLinearConstraint(exprSub(AffExpr(m_traj_vars(GetNumSteps()-1,j)), goal_traj[j]), EQ);
 
       }
+      std::cout << "init traj . . .. . .. . . \n" << m_init_traj << std::endl;
   }
   inline void initTraj(DblVec start, DblVec goal){
       setInitTraj(start, goal);
@@ -275,7 +286,10 @@ struct JointVelCostInfo : public TermInfo, public MakesCost {
 
 struct JointVelConstraintInfo : public TermInfo, public MakesConstraint {
   DblVec vals;
+  DblVec m_lb_limits, m_ub_limits;
+
   int first_step, last_step;
+  int m_samples, m_duration, m_dof;
   void fromJson(const Value& v);
   void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);

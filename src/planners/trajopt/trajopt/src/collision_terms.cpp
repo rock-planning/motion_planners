@@ -42,7 +42,7 @@ void CollisionsToDistances(const vector<Collision>& collisions,  DblVec& dists) 
 void CollisionsToDistanceExpressions(const vector<Collision>& collisions, ConfigurationPtr& rad,
     const VarVector& vars, const DblVec& dofvals, vector<AffExpr>& exprs, bool isTimestep1) {
 
-    std::cout << "collisions.size(): . . .. .  " << collisions.size() << std::endl;
+//    std::cout << "collisions.size(): . . .. .  " << collisions.size() << std::endl;
   exprs.clear();
   exprs.reserve(collisions.size());
   rad->SetDOFValues(dofvals); // since we'll be calculating jacobians
@@ -69,7 +69,7 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
 
       if(!col.linkA.empty() || col.linkA == ""){
 //          LOG_DEBUG("COLLISION DISTANCE  . .. . . .  %s : %.3e", col.linkA, col.distance);
-          std::cout<< "COLLISION DISTANCE  . .. . . .  "<< col.linkA << " : " <<  col.distance << std::endl;
+//          std::cout<< "COLLISION DISTANCE  . .. . . .  "<< col.linkA << " : " <<  col.distance << std::endl;
 
           AffExpr dist(col.distance);
 
@@ -77,14 +77,14 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
 //          std::cout<< "COLLISION  rad->PositionJacobian(col.linkA, col.ptA)  . .. . . .  "<<   rad->PositionJacobian(col.linkA, col.ptA) << std::endl;
 
           VectorXd dist_grad = -col.normalB2A.transpose()*rad->PositionJacobian(col.linkA, col.ptA);
-          std::cout<< "COLLISION dist_grad  . .. . . .  \n"<<  dist_grad << std::endl;
+//          std::cout<< "COLLISION dist_grad  . .. . . .  \n"<<  dist_grad << std::endl;
 
           exprInc(dist, varDot(dist_grad, vars));
           exprInc(dist, -dist_grad.dot(toVectorXd(dofvals)));
           exprs.push_back(dist);
 //              exprs.push_back(AffExpr(0));
 
-          LOG_INFO("CollisionsToDistanceExpressions::calc --------------------- %.3e ", dist.constant);
+//          LOG_INFO("CollisionsToDistanceExpressions::calc --------------------- %.3e ", dist.constant);
 
       }
   }
@@ -101,8 +101,8 @@ void CollisionsToDistanceExpressions(const vector<Collision>& collisions, Config
   exprs.resize(exprs0.size());
   for (int i=0; i < exprs0.size(); ++i) {
 
-      LOG_INFO("CollisionsToDistanceExpressions::exprs0 --------------------- %.3e ", exprs0[i].constant);
-      LOG_INFO("CollisionsToDistanceExpressions::exprs1 --------------------- %.3e ", exprs1[i].constant);
+//      LOG_INFO("CollisionsToDistanceExpressions::exprs0 --------------------- %.3e ", exprs0[i].constant);
+//      LOG_INFO("CollisionsToDistanceExpressions::exprs1 --------------------- %.3e ", exprs1[i].constant);
 
 
     exprScale(exprs0[i], (1-collisions[i].time));
@@ -234,7 +234,7 @@ double CollisionCost::value(const vector<double>& x) {
     out += pospart(m_dist_pen - dists[i]) * m_coeff;
   }
 
-  LOG_INFO("CollisionCost::value --------------------- %.3e ", out);
+//  LOG_INFO("CollisionCost::value --------------------- %.3e ", out);
 
   return out;
 }
