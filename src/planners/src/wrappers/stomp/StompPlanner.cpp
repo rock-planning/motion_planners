@@ -142,4 +142,12 @@ void StompPlanner::updateInitialTrajectory(const base::samples::Joints &start, c
     optimization_task_->updateTrajectory(start, goal);
 }
 
+double StompPlanner::getMovementDeltaTime()
+{
+    if(optimization_task_)
+	return optimization_task_->policy_->getMovementDt();
+    return 0.0;
+}
+
+
 }// end namespace 

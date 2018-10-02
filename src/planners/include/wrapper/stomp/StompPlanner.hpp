@@ -23,6 +23,8 @@ class StompPlanner: public motion_planners::AbstractPlanner
 		bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
 		
 		void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
+		
+		double getMovementDeltaTime();
 
 	
 	private:	
