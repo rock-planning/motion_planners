@@ -47,13 +47,9 @@ add_library(trajopt SHARED
         ${TRAJOPT_PLANNER_DIR_PATH}/src/collision_terms.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/json_marshal.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/problem_description.cpp
-#        ${TRAJOPT_PLANNER_DIR_PATH}/src/bullet_collision_checker.cpp
-        # configuration_space.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/utils.cpp
-        # rave_utils.cpp
-        ${TRAJOPT_PLANNER_DIR_PATH}/src/collision_checker.cpp
-        # plot_callback.cpp
-        # bullet_unity.cpp
+#        ${TRAJOPT_PLANNER_DIR_PATH}/src/collision_checker.cpp
+
 )
  target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} sco utils)
 

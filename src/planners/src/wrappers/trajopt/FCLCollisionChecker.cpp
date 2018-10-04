@@ -46,7 +46,7 @@ double FCLCollisionChecker::GetContactDistance()
 void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions, double distance_tolerance/*=0.05*/)
 {
 
-//    std::cout << "****************GetContinuousCollisionInfo****************\n";
+    std::cout << "**************** starting GetContinuousCollisionInfo****************\n";
 //    std::vector<collision_detection::DistanceInformation> distance_info;
 
 //    m_robot_model_->getSelfDistanceInfo(distance_info, distance_tolerance);
@@ -133,56 +133,46 @@ void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, 
     {
         collisions.clear();
         std::vector<collision_detection::DistanceInformation> distance_info;
-
+        std::cout << "GetContinuousCollisionInfo: before getSelfDistanceInfo ****************\n";
         m_robot_model_->getSelfDistanceInfo(distance_info, m_contact_tolerance);
-
+        std::cout << "GetContinuousCollisionInfo: after getSelfDistanceInfo ****************\n";
 //        collisions.resize(distance_info.size());
-
         for(int i=0; i<distance_info.size(); i++){
 //            Collision &coll = collisions.at(i);
             Collision coll;
             collision_detection::DistanceInformation &dist = distance_info.at(i);
 //            if(dist.distance < 0 || true){
-            if(dist.distance < distance_tolerance){
+//            if(dist.distance < distance_tolerance){
+//                std::cout << "distance between . . . ." << dist.object1 << " and " << dist.object2 << " : " << dist.distance << "\n";
 
-                std::cout << "distance between . . . ." << dist.object1 << " and " << dist.object2 << " : " << dist.distance << "\n";
-
-                std::cout << dist << "\n";
-            }
+//                std::cout << dist << "\n";
+//            }
 
             if(dist.distance > 0 && dist.distance < distance_tolerance)
             {
                 coll.distance = dist.distance;
-                //            coll.normalB2A = dist.;
                 coll.ptA = dist.nearest_points.at(0);
                 coll.ptB = dist.nearest_points.at(1);
                 coll.time = 0;
                 coll.linkA = dist.object1;
                 coll.linkB = dist.object2;
-//                coll.normalB2A = dist.contact_normal;
                 coll.normalB2A = dist.unit_normal;
-
                 collisions.push_back(coll);
-
 //                std::cout << coll << "\n";
             }
-
             else if (dist.distance <= 0)
             {
                 std::vector<collision_detection::ContactInformation> contact_info;
-
+                std::cout << "GetContinuousCollisionInfo: before getSelfCollisionInfo ****************\n";
                 bool is_collided = m_robot_model_->getSelfCollisionInfo(contact_info);
-
+                std::cout << "GetContinuousCollisionInfo: after getSelfCollisionInfo ****************\n";
                 if(is_collided){
                     collisions.resize(contact_info.size());
                     for(int i=0; i<contact_info.size(); i++){
                         Collision &coll = collisions.at(i);
-
                         collision_detection::ContactInformation &con = contact_info.at(i);
-                        std::cout << "Collision between . . . ." << con.object1 << " and " << con.object2 << " : " << - con.penetration_depth  << "\n";
-
-                         std::cout << con << "\n";
-
+//                        std::cout << "Collision between . . . ." << con.object1 << " and " << con.object2 << " : " << - con.penetration_depth  << "\n";
+//                         std::cout << con << "\n";
                         coll.distance = - con.penetration_depth;
                         coll.normalB2A = con.contact_normal;
                         coll.ptA = con.contact_position;
@@ -191,7 +181,6 @@ void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, 
                         coll.linkA = con.object1;
                         coll.linkB = con.object2;
             //            std::cout << coll << "\n";
-
                         collisions.push_back(coll);
 
                     }
@@ -201,6 +190,8 @@ void FCLCollisionChecker::GetContinuousCollisionInfo(const DblVec &startjoints, 
         }
 
     }
+
+    std::cout << "**************** ending GetContinuousCollisionInfo****************\n";
 }
 
 void FCLCollisionChecker::GetDiscreteCollisionInfo(vector<Collision> &collisions)

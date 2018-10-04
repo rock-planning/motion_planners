@@ -89,7 +89,6 @@ public:
       int n_dof = vars.size();
 
       for (int j=0; j < n_dof; ++j) {
-
           //        addLinearConstraint(sco::exprSub(AffExpr(vars[j]), goal_traj[j]), EQ);
           addLinearConstraint(exprSub(AffExpr(m_traj_vars(0,j)), start[j]), EQ);
 
@@ -98,14 +97,10 @@ public:
   inline void setGoalTraj(DblVec goal_traj) {
       VarVector vars = GetVarRow(GetNumSteps()-1);
       int n_dof = vars.size();
-
       for (int j=0; j < n_dof; ++j) {
-
 //        addLinearConstraint(sco::exprSub(AffExpr(vars[j]), goal_traj[j]), EQ);
           addLinearConstraint(exprSub(AffExpr(m_traj_vars(GetNumSteps()-1,j)), goal_traj[j]), EQ);
-
       }
-      std::cout << "init traj . . .. . .. . . \n" << m_init_traj << std::endl;
   }
   inline void initTraj(DblVec start, DblVec goal){
       setInitTraj(start, goal);
@@ -116,8 +111,6 @@ public:
   void setRobotModel(ConfigurationPtr rad){ m_rad = rad; }
   void setCollisionChecker(CollisionCheckerPtr coll){m_collision_checker = coll; }
 
-//  TrajPlotterPtr GetPlotter() {return m_trajplotter;}
-
   friend TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo&);
 
 private:
@@ -127,8 +120,6 @@ private:
   TrajArray m_init_traj;
   CollisionCheckerPtr m_collision_checker;
 };
-
-//void TRAJOPT_API SetupPlotting(TrajOptProb& prob, Optimizer& opt);
 
 struct TRAJOPT_API TrajOptResult {
   OptStatus status;

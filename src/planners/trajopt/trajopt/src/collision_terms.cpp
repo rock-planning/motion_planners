@@ -18,6 +18,16 @@ using namespace std;
 
 namespace trajopt {
 
+std::ostream& operator<<(std::ostream& o, const Collision& c) {
+  o << (!c.linkA.empty() ? c.linkA : "NULL") << "--" <<  (!c.linkB.empty() ? c.linkB : "NULL") << "\n" <<
+      " distance: " << c.distance <<"\n" <<
+      " normal: \n" << c.normalB2A <<"\n" <<
+      " ptA: \n" << c.ptA <<"\n" <<
+      " ptB: \n " << c.ptB <<"\n" <<
+      " time: " << c.time <<"\n" <<
+      " weight: " << c.weight << "\n";
+  return o;
+}
 
 void CollisionsToDistances(const vector<Collision>& collisions,  DblVec& dists) {
   // Note: this checking (that the links are in the list we care about) is probably unnecessary

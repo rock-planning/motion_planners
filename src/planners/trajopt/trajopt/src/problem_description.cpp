@@ -724,6 +724,10 @@ void JointVelConstraintInfo::fromYaml(const YAML::Node& v) {
 
   if (vals.size() == 1) vals = DblVec(n_dof, vals[0]);
 
+//  double temp = (m_duration / (m_samples - 1));
+//  std::cout << "temp multiplier  .. . .. . .. . . .. " << temp << std::endl;
+//  if (vals.size() == 1) vals = DblVec(n_dof, temp);
+
   FAIL_IF_FALSE(vals.size() == n_dof);
   FAIL_IF_FALSE((first_step >= 0) && (first_step < n_steps));
   FAIL_IF_FALSE((last_step >= first_step) && (last_step < n_steps));

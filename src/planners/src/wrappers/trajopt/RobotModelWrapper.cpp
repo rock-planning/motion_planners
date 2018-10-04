@@ -5,7 +5,7 @@ typedef Matrix<float, 3, 4> Matrix4f;
 
 
 template <typename TElem>
-ostream& operator<<(ostream& os, const vector<TElem>& vec) {
+ostream& operator<<(ostream& os, const std::vector<TElem>& vec) {
     typedef typename vector<TElem>::const_iterator iter_t;
     const iter_t iter_begin = vec.begin();
     const iter_t iter_end   = vec.end();
@@ -116,22 +116,12 @@ void RobotModelWrapper::SetDOFValues(const DblVec &dofs) {
 }
 
 void RobotModelWrapper::GetDOFLimits(DblVec &lower, DblVec &upper) const {
-    //    lower.resize(m_planning_group_joints_names_.size());
-    //    upper.resize(m_planning_group_joints_names_.size());
-
-    //    for (int i; i < m_planning_group_joints_names_.size(); i++){
-    //        lower.at(i) = m_robot_model->getRobotState().robot_joints_[m_planning_group_joints_names_[i]].getJointInfo().limits->lower;
-    //        upper.at(i) = m_robot_model->getRobotState().robot_joints_[m_planning_group_joints_names_[i]].getJointInfo().limits->upper;
-    //    }
     m_robot_model->getJointLimits(lower, upper);
 }
 void RobotModelWrapper::GetDOFValues(std::map<std::string, double> &joint_states_map) {
-
-    vector<std::string> joint_names(m_planning_group_joints_names_.size());
+    std::vector<std::string> joint_names(m_planning_group_joints_names_.size());
     DblVec joint_values(m_planning_group_joints_names_.size());
-
     GetDOFValues(joint_names, joint_values);
-
     assert(joint_names.size() == joint_values.size());
     for (size_t i = 0; i < joint_names.size(); ++i)
         joint_states_map[joint_names.at(i)] = joint_values.at(i);
@@ -337,55 +327,12 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
 
     return jac_new1;
 
-
-
-
-
-    //    std::map<std::string, double> joint_states_map1;
-
-    //        KDL::Jacobian  jacobian1;
-
-    //    m_robot_model->getChainJointState(base_link, tip_link, joint_states_map1);
-
-    //     std::cout <<" before compute jaco . . .. . . \n";
-    //    m_robot_model->computeJacobain(base_link, tip_link, joint_states_map1, jacobian1);
-    //    std::cout <<" after compute jaco . . .. . . \n";
-
-    //    std::cout << jacobian1.data << "\n";
-
-    //    KDL::Jacobian  jacobian1;
-
-    //    std::string base_link1 =base_link, tip_link1= tip_link;
-
-
-    //    std::map<std::string, double> joint_states_map1;
-
-    //    m_robot_model->getChainJointState(base_link1, tip_link1, joint_states_map1);
-
-    //    std::cout <<" before compute jaco . . .. . . \n";
-
-    //    m_robot_model->computeJacobain(base_link1, tip_link1, joint_states_map, jacobian1);
-
-    //    std::cout <<" after compute jaco . . .. . . \n";
-
-    //        std::cout <<"jacobian1.data . .. . . . .. . \n";
-
-    //        std::cout << jacobian1.data << "\n";
-
-    //        std::cout <<"---------------------------- \n";
-
-
-//    return m;
-
 }
 
 DblMatrix RobotModelWrapper::RotationJacobian(std::string link_name) const {}
 
 void RobotModelWrapper::GetAffectedLinks(std::vector<LinkPtr> &links, bool only_with_geom, vector<std::string> &link_inds)
 {
-
-    //    std::map<std::string, RobotLink> robot_links_ = m_robot_model->getRobotState().robot_links_;
-
 
 }
 
