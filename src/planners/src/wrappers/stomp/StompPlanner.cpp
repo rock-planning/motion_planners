@@ -63,20 +63,26 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	tmp_policy = *optimization_task_->policy_;
     }  
 
-    int iter_ct = 0;
-    stomp::Rollout noiseless_rollout;
-    double old_cost = 0.0; 
-    double cost_improvement = std::numeric_limits<double>::max();
     
-    while ((iter_ct < stomp_config_.num_iterations_) && (cost_improvement > stomp_config_.min_cost_improvement_))
+    stomp::Rollout noiseless_rollout;
+    double old_cost = 0.0;
+    double cost_improvement = 0.0;
+    
+    for(int i = 0; i < stomp_config_.num_iterations_; i++)
     {
-        stomp_->runSingleIteration(iter_ct);
-	iter_ct ++;
+        stomp_->runSingleIteration(i);	
 
 	stomp_->getNoiselessRollout(noiseless_rollout);
 	cost_improvement = noiseless_rollout.total_cost_ - old_cost;
 	old_cost = noiseless_rollout.total_cost_;
- 	//std::cout<<iter_ct <<" Cost ="<<noiseless_rollout.total_cost_<<"  "<<noiseless_rollout.state_costs_<<std::endl;
+
+ 	//std::cout<<i <<" Cost ="<<noiseless_rollout.total_cost_<<"  "<<cost_improvement<<"  "<<noiseless_rollout.state_costs_<<std::endl;
+	
+	// Stop Criteria 
+	// Here the noiseless_rollout.total_cost_ < 1 means there is no collision.
+	// We assign a collision cost of value "1" 
+	if((noiseless_rollout.total_cost_ < 1 ) && (fabs(cost_improvement) < stomp_config_.min_cost_improvement_))
+	    break;
 
         if (debug_config_.save_noisy_trajectories_)
         {
@@ -86,7 +92,7 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	    for (unsigned int j=0; j<rollouts.size(); ++j)
 	    {
 		std::stringstream ss2;
-		ss2 << debug_config_.output_dir_ << "/noisy_" << iter_ct << "_" << j << ".txt";
+		ss2 << debug_config_.output_dir_ << "/noisy_" << i+1 << "_" << j << ".txt";
 		//tmp_policy.setParameters(rollouts[j].parameters_noise_projected_);
 		tmp_policy.setParameters(rollouts[j].parameters_noise_);
 		tmp_policy.writeToFile(ss2.str());
@@ -96,7 +102,7 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
         if (debug_config_.save_noiseless_trajectories_)
         {
           std::stringstream ss;
-          ss << debug_config_.output_dir_ << "/noiseless_" << iter_ct << ".txt";
+          ss << debug_config_.output_dir_ << "/noiseless_" << i+1 << ".txt";
           optimization_task_->policy_->writeToFile(ss.str());          
         }
     }
@@ -123,9 +129,9 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	for( int i = 0; i <= diff+1; i++)	
 	    solution.elements.at(d).at(i).position =  optimization_task_->policy_->parameters_all_[d](i+(start-1));
 	
-    }   
+    }     
 
-    if (cost_improvement <= stomp_config_.min_cost_improvement_)
+    if ((noiseless_rollout.total_cost_ < 1) && (cost_improvement <= stomp_config_.min_cost_improvement_))
     {
 	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
 	return true;
