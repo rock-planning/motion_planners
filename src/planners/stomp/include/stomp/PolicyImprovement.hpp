@@ -94,7 +94,7 @@ public:
                     const int num_rollouts_per_iteration,
                     boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
                     bool use_noise_adaptation,
-                    const std::vector<double>& noise_min_stddev);
+                    const std::vector<double>& noise_min_stddev, double control_cost_weight=0.0);
 
     /**
      * Resets the number of rollouts

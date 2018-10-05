@@ -67,13 +67,14 @@ bool PolicyImprovement::initialize(const int num_time_steps,
                                    const int num_rollouts_per_iteration,
                                    boost::shared_ptr<CovariantMovementPrimitive> policy,
                                    bool use_noise_adaptation,
-                                   const std::vector<double>& noise_min_stddev)
+                                   const std::vector<double>& noise_min_stddev, double control_cost_weight)
 {
   num_time_steps_ = num_time_steps;
   noise_min_stddev_ = noise_min_stddev;
   policy_ = policy;
   use_covariance_matrix_adaptation_ = use_noise_adaptation;
   adapted_covariance_valid_ = false;
+  control_cost_weight_ = control_cost_weight;
 
   STOMP_VERIFY(policy_->setNumTimeSteps(num_time_steps_));
   STOMP_VERIFY(policy_->getControlCosts(control_costs_));
@@ -261,12 +262,12 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
     double l1 = control_cost_weight_;
     double l2 = 1.0/(adapted_stddevs_[d]*adapted_stddevs_[d]);
     double new_stddev = 1.0/sqrt(l1 + l2);
-
+    
     //new_stddev = adapted_stddevs_[d];
 
     double p1 = l1 / (l1 + l2);
     double p2 = l2 / (l1 + l2);
-    //ROS_INFO("d = %d, l1 = %f, l2 = %f, p1 = %f, p2 = %f", d, l1, l2, p1, p2);
+    //printf("d = %d, l1 = %f, l2 = %f, p1 = %f, p2 = %f\n", d, l1, l2, p1, p2);
 
     for (int r=0; r<num_rollouts_gen_; ++r)
     {
@@ -304,8 +305,8 @@ bool PolicyImprovement::generateRollouts(const std::vector<double>& noise_stddev
   {
     rollouts_[num_rollouts_] = noiseless_rollout_;
     ++num_rollouts_;
-  }
-
+  } 
+ 
   return true;
 }
 
@@ -313,10 +314,10 @@ bool PolicyImprovement::getRollouts(std::vector<std::vector<base::VectorXd> >& r
 {
     if (!generateRollouts(noise_variance))
     {
-        //ROS_ERROR("Failed to generate rollouts.");
+        std::cout<<"[PolicyImprovement]: Failed to generate rollouts.";
         return false;
-    }
-
+    }    
+    
     rollouts.clear();
     for (int r=0; r<num_rollouts_gen_; ++r)
     {

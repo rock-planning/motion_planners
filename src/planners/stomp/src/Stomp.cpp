@@ -70,7 +70,7 @@ bool Stomp::initialize(const StompConfig& config, std::shared_ptr<stomp::StompTa
    
 
     policy_improvement_.initialize(stomp_config_.num_time_steps_, stomp_config_.min_rollouts_, stomp_config_.max_rollouts_, stomp_config_.num_rollouts_per_iteration_,
-                                 policy_, stomp_config_.use_noise_adaptation_, stomp_config_.noise_min_stddev_);
+                                 policy_, stomp_config_.use_noise_adaptation_, stomp_config_.noise_min_stddev_, control_cost_weight_);
 
     rollout_costs_ = base::MatrixXd::Zero(stomp_config_.max_rollouts_, stomp_config_.num_time_steps_);
 
@@ -186,10 +186,11 @@ bool Stomp::doGenRollouts(int iteration_number)
   // filter rollouts and set them back if filtered:
   bool filtered = false;
   for (unsigned int r=0; r<rollouts_.size(); ++r)
-  {
+  {     
     if (stomp_task_->filter(rollouts_[r], r, 0))
       filtered = true;
   }
+  
   if (filtered)
   {
     policy_improvement_.setRollouts(rollouts_);
@@ -198,7 +199,7 @@ bool Stomp::doGenRollouts(int iteration_number)
 
   // overwrite the rollouts with the projected versions
   policy_improvement_.getProjectedRollouts(projected_rollouts_);
-
+  
   return true;
 }
 
