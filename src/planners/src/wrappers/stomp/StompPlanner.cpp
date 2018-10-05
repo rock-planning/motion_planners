@@ -76,7 +76,8 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	cost_improvement = noiseless_rollout.total_cost_ - old_cost;
 	old_cost = noiseless_rollout.total_cost_;
 
- 	//std::cout<<i <<" Cost ="<<noiseless_rollout.total_cost_<<"  "<<cost_improvement<<"  "<<noiseless_rollout.state_costs_<<std::endl;
+ 	LOG_DEBUG_S <<"Iteration = "<<i <<". Total Cost = "<<noiseless_rollout.total_cost_<<" . Cost improvement = "<<cost_improvement
+		    <<" . State costs = "<<noiseless_rollout.state_costs_;
 	
 	// Stop Criteria 
 	// Here the noiseless_rollout.total_cost_ < 1 means there is no collision.
@@ -131,7 +132,7 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 	
     }     
 
-    if ((noiseless_rollout.total_cost_ < 1) && (cost_improvement <= stomp_config_.min_cost_improvement_))
+    if ((noiseless_rollout.total_cost_ < 1) && (fabs(cost_improvement) <= stomp_config_.min_cost_improvement_))
     {
 	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
 	return true;
