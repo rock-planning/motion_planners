@@ -1,6 +1,6 @@
 # find_package(Eigen REQUIRED)
 # include_directories(${Eigen_INCLUDE_DIRS})
-project(sco)
+project(trajopt_sco)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/FindEigen2.cmake")
 
@@ -55,12 +55,12 @@ if (GUROBI_FOUND)
   list(APPEND SCO_SOURCE_FILES ${TRAJOPT_SCO_DIR_PATH}/src/gurobi_interface.cpp)
 endif(GUROBI_FOUND)
 
-add_library(sco SHARED
+add_library(${PROJECT_NAME} SHARED
   ${SCO_SOURCE_FILES}
 )
 
 
-set (SCO_LINK_LIBS utils)
+set (SCO_LINK_LIBS trajopt_utils)
 if (GUROBI_FOUND)
   list(APPEND SCO_LINK_LIBS ${GUROBI_LIBRARIES})
 endif()
@@ -68,9 +68,9 @@ if (HAVE_BPMPD)
   list(APPEND SCO_LINK_LIBS ${BPMPD_LIBRARY})
 endif()
 
-target_link_libraries(sco ${SCO_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME} ${SCO_LINK_LIBS})
 
-install(DIRECTORY include/ DESTINATION include/trajectory_optimization/planner)
+install(DIRECTORY include/ DESTINATION include/motion_planners/planner/trajopt/)
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 
 # add_subdirectory(test)

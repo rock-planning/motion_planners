@@ -11,17 +11,13 @@ using namespace Eigen;
 
 namespace {
 
-
 static MatrixXd diffAxis0(const MatrixXd& in) {
   return in.middleRows(1, in.rows()-1) - in.middleRows(0, in.rows()-1);
 }
 
-
 }
 
 namespace trajopt {
-
-
 
 //////////// Quadratic cost functions /////////////////
 
@@ -66,8 +62,6 @@ ConvexObjectivePtr JointVelCost::convex(const vector<double>& x, Model* model) {
   return out;
 }
 
-
-
 JointAccCost::JointAccCost(const VarArray& vars, const VectorXd& coeffs) :
     Cost("JointAcc"), vars_(vars), coeffs_(coeffs) {
   for (int i=0; i < vars.rows()-2; ++i) {
@@ -80,10 +74,12 @@ JointAccCost::JointAccCost(const VarArray& vars, const VectorXd& coeffs) :
     }
   }
 }
+
 double JointAccCost::value(const vector<double>& xvec) {
   MatrixXd traj = getTraj(xvec, vars_);
   return (diffAxis0(diffAxis0(traj)).array().square().matrix() * coeffs_.asDiagonal()).sum();
 }
+
 ConvexObjectivePtr JointAccCost::convex(const vector<double>& x, Model* model) {
   ConvexObjectivePtr out(new ConvexObjective(model));
   out->addQuadExpr(expr_);

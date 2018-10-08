@@ -217,7 +217,7 @@ struct PoseCostInfo : public TermInfo, public MakesCost, public MakesConstraint 
   Vector4d wxyz;
   Vector3d pos_coeffs, rot_coeffs;
    double coeff;
-  LinkPtr link;
+  Link link;
   void fromJson(const Value& v);
   void fromYaml(const YAML::Node& v);
   void hatch(TrajOptProb& prob);
@@ -251,7 +251,7 @@ struct JointPosCostInfo : public TermInfo, public MakesCost {
  */
 struct CartVelCntInfo : public TermInfo, public MakesConstraint {
   int first_step, last_step;
-  LinkPtr link;
+  Link link;
   double max_displacement;
   void fromJson(const Value& v);
   void fromYaml(const YAML::Node& v);

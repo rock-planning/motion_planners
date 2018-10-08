@@ -135,7 +135,7 @@ class RobotModel
         void updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pclCloud, const Eigen::Vector3d &sensor_origin,
                                const std::string &link_name, const double &octree_resolution, std::string collision_object_name="");
 
-        bool isStateValid(double distance=1e-6, int self_collision_num_max_contacts=1, int external_collision_manager_num_max_contacts=1);
+        bool isStateValid(int self_collision_num_max_contacts=1, int external_collision_manager_num_max_contacts=1);
 
         //void ConvertPoseBetweenFrames( const std::string B_Frame_Name, const base::samples::RigidBodyState &F_B_C , const std::string &A_Frame_Name ,
         //				   base::samples::RigidBodyState &F_A_C );
@@ -227,8 +227,8 @@ class RobotModel
         bool getSelfCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int self_collision_num_max_contacts=1);
         bool getWorldCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int world_collision_num_max_contacts=1);
 
-        bool getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance=0.05, bool is_signed_dist_needed=true);
-        bool getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, double distance_tolerance=0.05, bool is_signed_dist_needed=true);
+        void getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed=true, double distance_tolerance=1e-6);
+        void getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed=true, double distance_tolerance=1e-6);
 
         void getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation);
 

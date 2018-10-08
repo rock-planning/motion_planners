@@ -24,12 +24,7 @@ using namespace util;
 using namespace yaml_marshal;
 
 namespace {
-
-
 bool gRegisteredMakers = false;
-
-
-
 void ensure_only_members(const Value& v, const char** fields, int nvalid) {
   for (Json::ValueConstIterator it = v.begin(); it != v.end(); ++it) {
     bool valid = false;
@@ -60,7 +55,6 @@ void ensure_only_members(const YAML::Node& v, const char** fields, int nvalid) {
   }
 }
 
-
 void RegisterMakers() {
 
   TermInfo::RegisterMaker("pose", &PoseCostInfo::create);
@@ -74,33 +68,6 @@ void RegisterMakers() {
 
   gRegisteredMakers = true;
 }
-
-//RobotAndDOFPtr RADFromName(const string& name, RobotBasePtr robot) {
-//  if (name == "active") {
-//    return RobotAndDOFPtr(new RobotAndDOF(robot, robot->GetActiveDOFIndices(), robot->GetAffineDOF(), robot->GetAffineRotationAxis()));
-//  }
-//  vector<int> dof_inds;
-//  int affinedofs = 0;
-//  Vector rotationaxis(0,0,1);
-//  vector<string> components;
-//  boost::split(components, name, boost::is_any_of("+"));
-//  for (int i=0; i < components.size(); ++i) {
-//    std::string& component = components[i];
-//    if (RobotBase::ManipulatorPtr manip = GetManipulatorByName(*robot, component)) {
-//      vector<int> inds = manip->GetArmIndices();
-//      dof_inds.insert(dof_inds.end(), inds.begin(), inds.end());
-//    }
-//    else if (component == "base") {
-//      affinedofs |= DOF_X | DOF_Y | DOF_RotationAxis;
-//    }
-//    else if (KinBody::JointPtr joint = robot->GetJoint(component)) {
-//      dof_inds.push_back(joint->GetDOFIndex());
-//    }
-//    else PRINT_AND_THROW( boost::format("error in reading manip description: %s must be a manipulator, link, or 'base'")%component );
-//  }
-//  return RobotAndDOFPtr(new RobotAndDOF(robot, dof_inds, affinedofs, rotationaxis));
-//}
-
 
 #if 0
 BoolVec toMask(const VectorXd& x) {
@@ -132,12 +99,12 @@ void fromJson(const Json::Value& v, Vector3d& x) {
   fromJsonArray(v, vx, 3);
   x = Vector3d(vx[0], vx[1], vx[2]);
 }
+
 void fromJson(const Json::Value& v, Vector4d& x) {
   vector<double> vx;
   fromJsonArray(v, vx, 4);
     x = Vector4d(vx[0], vx[1], vx[2], vx[3]);
 }
-
 }
 
 namespace YAML{
@@ -151,8 +118,6 @@ namespace YAML{
 //    {
 //        std::cout << e.what() << "\n";
 //    }
-
-
 //}
 
 void fromYaml(const YAML::Node& v, Vector3d& x) {
@@ -179,8 +144,6 @@ void readYamlFile(char* filename, YAML::Node &config)
     {
         std::cout << e.what() << "\n";
     }
-
-
 }
 TRAJOPT_API ProblemConstructionInfo* gPCI;
 
@@ -277,7 +240,6 @@ TrajArray getStraightLineTrajData(int n_steps, int n_dof, DblVec startpoint, Dbl
     for (int idof = 0; idof < n_dof; ++idof) {
         data.col(idof) = VectorXd::LinSpaced(n_steps, startpoint[idof], endpoint[idof]);
     }
-    std::cout <<  "getStraightLineTrajData  ... . . . .. . .. \n" << data  << std::endl;
     return data;
 }
 
@@ -285,9 +247,9 @@ void InitInfo::fromJson(const Json::Value& v) {
     string type_str;
     childFromJson(v, type_str, "type");
     int n_steps = gPCI->basic_info.n_steps;
-    int n_dof = gPCI->rad->GetDOF();
+    int n_dof = gPCI->rad->getDOF();
     if (type_str == "stationary") {
-        data = getStationaryTrajData(gPCI->rad->GetDOFValues());
+        data = getStationaryTrajData(gPCI->rad->getDOFValues());
     }
     else if (type_str == "given_traj") {
         FAIL_IF_FALSE(v.isMember("data"));
@@ -309,20 +271,18 @@ void InitInfo::fromJson(const Json::Value& v) {
         if (endpoint.size() != n_dof) {
             PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j")%n_dof%endpoint.size());
         }
-        data = getStraightLineTrajData(n_steps, n_dof, gPCI->rad->GetDOFValues(), endpoint);
+        data = getStraightLineTrajData(n_steps, n_dof, gPCI->rad->getDOFValues(), endpoint);
     }
-
 }
-
 
 void InitInfo::fromYaml(const YAML::Node& v) {
   string type_str;
   childFromYaml(v, type_str, "type");
   int n_steps = gPCI->basic_info.n_steps;
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
 
   if (type_str == "stationary") {
-    data = getStationaryTrajData(gPCI->rad->GetDOFValues());
+    data = getStationaryTrajData(gPCI->rad->getDOFValues());
   }
   else if (type_str == "given_traj") {
     FAIL_IF_FALSE(v["data"]);
@@ -344,7 +304,7 @@ void InitInfo::fromYaml(const YAML::Node& v) {
     if (endpoint.size() != n_dof) {
       PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j")%n_dof%endpoint.size());
     }
-    data = getStraightLineTrajData(n_steps, n_dof, gPCI->rad->GetDOFValues(), endpoint);
+    data = getStraightLineTrajData(n_steps, n_dof, gPCI->rad->getDOFValues(), endpoint);
   }
 
 }
@@ -470,11 +430,9 @@ TrajOptProbPtr ConstructProblem(const YAML::Node& root, ConfigurationPtr rad, Co
 
 TrajOptProb::TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll) : n_steps(n_steps), m_rad(rad), m_collision_checker(coll) {
 
-    //  m_trajplotter.reset(new TrajPlotter(m_rad->GetEnv(), m_rad, m_traj_vars));
-
     DblVec lower, upper;
-    m_rad->GetDOFLimits(lower, upper);
-    int n_dof = m_rad->GetDOF();
+    m_rad->getDOFLimits(lower, upper);
+    int n_dof = m_rad->getDOF();
 
     vector<double> vlower, vupper;
     vector<string> names;
@@ -498,16 +456,13 @@ void PoseCostInfo::fromJson(const Value& v) {
   childFromJson(params, wxyz,"wxyz");
   childFromJson(params, pos_coeffs,"pos_coeffs", (Vector3d)Vector3d::Ones());
   childFromJson(params, rot_coeffs,"rot_coeffs", (Vector3d)Vector3d::Ones());
+  childFromJson(params, link, "link");
+  if (!gPCI->rad->checkIfLinkExists(link)) {
+    PRINT_AND_THROW(boost::format("invalid link name: %s")%link);
+  }
 
-  string linkstr;
-  childFromJson(params, linkstr, "link");
-//  link = GetLinkMaybeAttached(gPCI->rad->GetRobot(), linkstr);
-//  if (!link) {
-//    PRINT_AND_THROW(boost::format("invalid link name: %s")%linkstr);
-//  }
-
-//  const char* all_fields[] = {"timestep", "xyz", "wxyz", "pos_coeffs", "rot_coeffs","link"};
-//  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
+  const char* all_fields[] = {"timestep", "xyz", "wxyz", "pos_coeffs", "rot_coeffs","link"};
+  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 
 }
 
@@ -520,15 +475,13 @@ void PoseCostInfo::fromYaml(const YAML::Node& v) {
   childFromYaml(params, pos_coeffs,"pos_coeffs", (Vector3d)Vector3d::Ones());
   childFromYaml(params, rot_coeffs,"rot_coeffs", (Vector3d)Vector3d::Ones());
 
-  string linkstr;
-  childFromYaml(params, linkstr, "link");
-//  link = GetLinkMaybeAttached(gPCI->rad->GetRobot(), linkstr);
-//  if (!link) {
-//    PRINT_AND_THROW(boost::format("invalid link name: %s")%linkstr);
-//  }
+  childFromYaml(params, link, "link");
+  if (!gPCI->rad->checkIfLinkExists(link)) {
+    PRINT_AND_THROW(boost::format("invalid link name: %s")%link);
+  }
 
-//  const char* all_fields[] = {"timestep", "xyz", "wxyz", "pos_coeffs", "rot_coeffs","link"};
-//  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
+  const char* all_fields[] = {"timestep", "xyz", "wxyz", "pos_coeffs", "rot_coeffs","link"};
+  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 
 }
 
@@ -540,10 +493,6 @@ void PoseCostInfo::hatch(TrajOptProb& prob) {
   else if (term_type == TT_CNT) {
     prob.addConstraint(ConstraintPtr(new ConstraintFromFunc(f, prob.GetVarRow(timestep), concat(rot_coeffs, pos_coeffs), EQ, name)));
   }
-
-//  prob.GetPlotter()->Add(PlotterPtr(new CartPoseErrorPlotter(f, prob.GetVarRow(timestep))));
-//  prob.GetPlotter()->AddLink(link);
-
 }
 
 
@@ -555,7 +504,7 @@ void JointPosCostInfo::fromJson(const Value& v) {
   childFromJson(params, coeffs, "coeffs");
   if (coeffs.size() == 1) coeffs = DblVec(n_steps, coeffs[0]);
 
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   if (vals.size() != n_dof) {
     PRINT_AND_THROW( boost::format("wrong number of dof vals. expected %i got %i")%n_dof%vals.size());
   }
@@ -573,7 +522,7 @@ void JointPosCostInfo::fromYaml(const YAML::Node& v) {
   childFromYaml(params, coeffs, "coeffs");
   if (coeffs.size() == 1) coeffs = DblVec(n_steps, coeffs[0]);
 
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   if (vals.size() != n_dof) {
     PRINT_AND_THROW( boost::format("wrong number of dof vals. expected %i got %i")%n_dof%vals.size());
   }
@@ -600,17 +549,13 @@ void CartVelCntInfo::fromJson(const Value& v) {
   FAIL_IF_FALSE((first_step >= 0) && (first_step <= gPCI->basic_info.n_steps-1) && (first_step < last_step));
   FAIL_IF_FALSE((last_step > 0) && (last_step <= gPCI->basic_info.n_steps-1));
 
-  string linkstr;
-  childFromJson(params, linkstr, "link");
-//  link = gPCI->rad->GetRobot()->GetLink(linkstr);
-//  if (!link) {
-//    PRINT_AND_THROW( boost::format("invalid link name: %s")%linkstr);
-//  }
+  childFromJson(params, link, "link");
+  if (!gPCI->rad->checkIfLinkExists(link)) {
+    PRINT_AND_THROW(boost::format("invalid link name: %s")%link);
+  }
 
-//  const char* all_fields[] = {"first_step", "last_step", "max_displacement","link"};
-//  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
-
-
+  const char* all_fields[] = {"first_step", "last_step", "max_displacement","link"};
+  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 }
 
 void CartVelCntInfo::fromYaml(const YAML::Node& v) {
@@ -623,15 +568,12 @@ void CartVelCntInfo::fromYaml(const YAML::Node& v) {
   FAIL_IF_FALSE((first_step >= 0) && (first_step <= gPCI->basic_info.n_steps-1) && (first_step < last_step));
   FAIL_IF_FALSE((last_step > 0) && (last_step <= gPCI->basic_info.n_steps-1));
 
-  string linkstr;
-  childFromYaml(params, linkstr, "link");
-//  link = gPCI->rad->GetRobot()->GetLink(linkstr);
-//  if (!link) {
-//    PRINT_AND_THROW( boost::format("invalid link name: %s")%linkstr);
-//  }
-
-//  const char* all_fields[] = {"first_step", "last_step", "max_displacement","link"};
-//  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
+  childFromYaml(params, link, "link");
+  if (!gPCI->rad->checkIfLinkExists(link)) {
+    PRINT_AND_THROW(boost::format("invalid link name: %s")%link);
+  }
+  const char* all_fields[] = {"first_step", "last_step", "max_displacement","link"};
+  ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 
 
 }
@@ -650,7 +592,7 @@ void JointVelCostInfo::fromJson(const Value& v) {
   const Value& params = v["params"];
 
   childFromJson(params, coeffs,"coeffs");
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   if (coeffs.size() == 1) coeffs = DblVec(n_dof, coeffs[0]);
   else if (coeffs.size() != n_dof) {
     PRINT_AND_THROW( boost::format("wrong number of coeffs. expected %i got %i")%n_dof%coeffs.size());
@@ -667,7 +609,7 @@ void JointVelCostInfo::fromYaml(const YAML::Node& v) {
   const YAML::Node& params = v["params"];
 
   childFromYaml(params, coeffs,"coeffs");
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   if (coeffs.size() == 1) coeffs = DblVec(n_dof, coeffs[0]);
   else if (coeffs.size() != n_dof) {
     PRINT_AND_THROW( boost::format("wrong number of coeffs. expected %i got %i")%n_dof%coeffs.size());
@@ -690,7 +632,7 @@ void JointVelConstraintInfo::fromJson(const Value& v) {
   const Value& params = v["params"];
 
   int n_steps = gPCI->basic_info.n_steps;
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   childFromJson(params, vals, "vals");
   childFromJson(params, first_step, "first_step", 0);
   childFromJson(params, last_step, "last_step", n_steps-1);
@@ -708,11 +650,11 @@ void JointVelConstraintInfo::fromYaml(const YAML::Node& v) {
   const YAML::Node& params = v["params"];
 
   int n_steps = gPCI->basic_info.n_steps;
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
 
-  m_dof = gPCI->rad->GetDOF();
+  m_dof = gPCI->rad->getDOF();
 
-  gPCI->rad->GetDOFLimits(m_lb_limits, m_ub_limits);
+  gPCI->rad->getDOFLimits(m_lb_limits, m_ub_limits);
 
   m_samples = gPCI->basic_info.n_steps;
 
@@ -721,13 +663,7 @@ void JointVelConstraintInfo::fromYaml(const YAML::Node& v) {
   childFromYaml(params, vals, "vals");
   childFromYaml(params, first_step, "first_step", 0);
   childFromYaml(params, last_step, "last_step", n_steps-1);
-
   if (vals.size() == 1) vals = DblVec(n_dof, vals[0]);
-
-//  double temp = (m_duration / (m_samples - 1));
-//  std::cout << "temp multiplier  .. . .. . .. . . .. " << temp << std::endl;
-//  if (vals.size() == 1) vals = DblVec(n_dof, temp);
-
   FAIL_IF_FALSE(vals.size() == n_dof);
   FAIL_IF_FALSE((first_step >= 0) && (first_step < n_steps));
   FAIL_IF_FALSE((last_step >= first_step) && (last_step < n_steps));
@@ -746,33 +682,6 @@ void JointVelConstraintInfo::hatch(TrajOptProb& prob) {
       prob.addLinearConstraint(-vel - vals[j], INEQ);
     }
   }
-
-//    std::cout << "in  JointVelConstraintInfo::hatch ------------------------------------- \n";
-
-//    for (int i = first_step; i <= last_step-1; ++i) {
-//        for (int j=0; j <m_dof; ++j)  {
-//            //        min_vel = min_vel * self.duration / float(self.samples - 1)
-
-//            AffExpr vel = prob.GetVar(i+1,j) -  prob.GetVar(i,j);
-//            double l_vel = m_lb_limits[j] * (m_duration / m_samples);
-
-//            double u_vel = m_ub_limits[j] * (m_duration / m_samples);
-
-//            std::cout << "JointVelConstraintInfo . . .. . . " << m_lb_limits[j] << ", " << m_ub_limits[j] << ", " << m_duration << ", " << m_samples  << std::endl;
-
-//            std::cout << "JointVelConstraintInfo . . .. . . " << l_vel << ", " << u_vel<< std::endl;
-
-
-//            //        prob.addLinearConstraint(vel , INEQ);
-//            //        prob.addLinearConstraint(-vel , INEQ);
-
-//            vel.constant = u_vel * 10 ;
-//            prob.addLinearConstraint(vel, INEQ);
-//            vel.constant = l_vel * 10;
-//            prob.addLinearConstraint(-vel, INEQ);
-//        }
-//    }
-//    std::cout << "exiting JointVelConstraintInfo::hatch ------------------------------------- \n";
 }
 
 void CollisionCostInfo::fromJson(const Value& v) {
@@ -860,12 +769,8 @@ void CollisionCostInfo::hatch(TrajOptProb& prob) {
       }
     }
   }
-//  CollisionCheckerPtr cc = CollisionChecker::GetOrCreate();
-//  cc->SetContactDistance(*std::max_element(dist_pen.begin(), dist_pen.end()) + .04);
-  prob.GetCollisionChecker()->SetContactDistance(*std::max_element(dist_pen.begin(), dist_pen.end()) + .04);
+  prob.GetCollisionChecker()->setDistanceTolerance(*std::max_element(dist_pen.begin(), dist_pen.end()) + .04);
 }
-
-
 
 
 void JointConstraintInfo::fromJson(const Value& v) {
@@ -873,7 +778,7 @@ void JointConstraintInfo::fromJson(const Value& v) {
   const Value& params = v["params"];
   childFromJson(params, vals, "vals");
 
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   if (vals.size() != n_dof) {
     PRINT_AND_THROW( boost::format("wrong number of dof vals. expected %i got %i")%n_dof%vals.size());
   }
@@ -889,7 +794,7 @@ void JointConstraintInfo::fromYaml(const YAML::Node& v) {
   const YAML::Node& params = v["params"];
   childFromYaml(params, vals, "vals");
 
-  int n_dof = gPCI->rad->GetDOF();
+  int n_dof = gPCI->rad->getDOF();
   if (vals.size() != n_dof) {
     PRINT_AND_THROW( boost::format("wrong number of dof vals. expected %i got %i")%n_dof%vals.size());
   }
@@ -901,7 +806,6 @@ void JointConstraintInfo::fromYaml(const YAML::Node& v) {
 }
 
 void JointConstraintInfo::hatch(TrajOptProb& prob) {
-    std::cout << "timestep . . . .. . . . .. " << timestep << "\n";
   VarVector vars = prob.GetVarRow(timestep);
   int n_dof = vars.size();
   for (int j=0; j < n_dof; ++j) {

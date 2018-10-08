@@ -1,6 +1,5 @@
 #pragma once
 #include "trajopt/common.hpp"
-#include "trajopt/collision_checker.hpp"
 #include "sco/modeling.hpp"
 #include "sco/sco_fwd.hpp"
 #include "cache.hxx"
@@ -42,8 +41,6 @@ public:
   CollisionCheckerPtr m_cc;
   ConfigurationPtr m_rad;
   VarVector m_vars;
-//  Link2Name m_link2Name;
-  vector<LinkPtr> m_links;
   short m_filterMask;
 };
 
@@ -61,8 +58,6 @@ public:
   ConfigurationPtr m_rad;
   VarVector m_vars0;
   VarVector m_vars1;
-//  Link2Name m_link2Name;
-  vector<LinkPtr> m_links;
   short m_filterMask;
 
 };

@@ -1,7 +1,7 @@
 #ifndef FCLCOLLISIONCHECKER_H
 #define FCLCOLLISIONCHECKER_H
 
-#include "trajopt/collision_checker.hpp"
+#include "trajopt/trajoptinterface.h"
 #include "RobotModel.hpp"
 
 using namespace trajopt;
@@ -10,7 +10,7 @@ using namespace motion_planners;
 class FCLCollisionChecker : public CollisionChecker
 {
 
-    double m_contact_tolerance;
+    double m_distance_tolerance;
     std::shared_ptr<RobotModel> m_robot_model_;
 
 protected:
@@ -26,10 +26,10 @@ public:
     void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model_ = robot_model; }
 
     // CollisionChecker interface
-    void SetContactDistance(float distance);
-    double GetContactDistance();
-    void GetContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions, double distance_tolerance=0.05);
-    void GetDiscreteCollisionInfo(vector<Collision> &collisions);
+    void setDistanceTolerance(float distance);
+    double getContactDistance();
+    void getContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions);
+    void getDiscreteCollisionInfo(vector<Collision> &collisions);
 };
 
 typedef boost::shared_ptr<FCLCollisionChecker> FCLCollisionCheckerPtr;

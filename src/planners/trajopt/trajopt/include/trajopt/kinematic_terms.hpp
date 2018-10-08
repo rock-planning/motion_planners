@@ -30,8 +30,8 @@ public:
 struct CartPoseErrCalculator : public VectorOfVector {
   geometry::Transform pose_inv_;
   ConfigurationPtr manip_;
-  LinkPtr link_;
-  CartPoseErrCalculator(const geometry::Transform& pose, ConfigurationPtr manip, LinkPtr link) :
+  Link link_;
+  CartPoseErrCalculator(const geometry::Transform& pose, ConfigurationPtr manip, Link link) :
     pose_inv_(pose.inverse()),
     manip_(manip),
     link_(link) {}
@@ -48,9 +48,9 @@ struct CartPoseErrorPlotter/* : public Plotter*/ {
 
 struct CartVelJacCalculator : MatrixOfVector {
   ConfigurationPtr manip_;
-  LinkPtr link_;
+  Link link_;
   double limit_;
-  CartVelJacCalculator(ConfigurationPtr manip, LinkPtr link, double limit) :
+  CartVelJacCalculator(ConfigurationPtr manip, Link link, double limit) :
     manip_(manip), link_(link), limit_(limit) {}
 
   MatrixXd operator()(const VectorXd& dof_vals) const;
@@ -58,9 +58,9 @@ struct CartVelJacCalculator : MatrixOfVector {
 
 struct CartVelCalculator : VectorOfVector {
   ConfigurationPtr manip_;
-  LinkPtr link_;
+  Link link_;
   double limit_;
-  CartVelCalculator(ConfigurationPtr manip, LinkPtr link, double limit) :
+  CartVelCalculator(ConfigurationPtr manip, Link link, double limit) :
     manip_(manip), link_(link), limit_(limit) {}
 
   VectorXd operator()(const VectorXd& dof_vals) const;

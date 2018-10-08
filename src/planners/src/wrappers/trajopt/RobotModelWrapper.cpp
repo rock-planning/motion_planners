@@ -16,17 +16,6 @@ ostream& operator<<(ostream& os, const std::vector<TElem>& vec) {
     os << "]";
     return os;
 }
-//template<class key_t, class value_t>
-//ostream& operator<<(ostream& os, const map<key_t, value_t>& m) {
-//    os << "{";
-//    for (typename map<key_t, value_t>::const_iterator it = m.begin();
-//            it != m.end(); it++) {
-//        os << it->first << " : " << it->second << std::endl;
-//    }
-//    os << "}";
-//    return os;
-//}
-
 
 template <typename Map>
 bool key_compare (Map const &lhs, Map const &rhs) {
@@ -39,6 +28,15 @@ bool key_compare (Map const &lhs, Map const &rhs) {
 }
 
 void skew(Eigen::Vector3d& v, Eigen::Matrix3d* result) {
+    /*
+    Skew-symmetric matrix:
+    A^T = −A.
+
+    x=[a b c]' is a 3*1 vector, and its 3*3 skew symmetric matrix is
+    X=[0   -c   b ;
+         c    0  -a ;
+        -b    a   0  ]
+*/
     (*result)(0, 0) = 0.0;
     (*result)(0, 1) = -v(2);
     (*result)(0, 2) = v(1);
@@ -50,11 +48,9 @@ void skew(Eigen::Vector3d& v, Eigen::Matrix3d* result) {
     (*result)(2, 2) = 0.0;
 }
 
-
 void mul(const Eigen::Matrix3d &a, const Eigen::Matrix3Xd &b, Eigen::Matrix3Xd *result) {
     if (b.cols() != result->cols()) {
         std::cerr<<"size missmatch. b.cols()= " << static_cast<int>(b.cols()) << "result->cols()= " << static_cast<int>(result->cols()) << std::endl;
-        //        abort();
     }
 
     for (int col = 0; col < b.cols(); col++) {
@@ -70,7 +66,6 @@ void mul(const Eigen::Matrix3d &a, const Eigen::Matrix3Xd &b, Eigen::Matrix3Xd *
 void sub(const Eigen::Matrix3Xd &a, const Eigen::Matrix3Xd &b, Eigen::Matrix3Xd *result) {
     if (a.cols() != b.cols()) {
         std::cerr<<"size missmatch. a.cols()= "<< static_cast<int>(a.cols()) <<"b.cols()= " << static_cast<int>(b.cols());
-        //        abort();
     }
     for (int col = 0; col < b.cols(); col++) {
         for (int row = 0; row < 3; row++) {
@@ -79,19 +74,7 @@ void sub(const Eigen::Matrix3Xd &a, const Eigen::Matrix3Xd &b, Eigen::Matrix3Xd 
     }
 }
 
-ostream& operator<<(ostream& os, const std::map<std::string, double>& vec) {
-    typedef typename std::map<std::string, double>::const_iterator iter_t;
-    const iter_t iter_begin = vec.begin();
-    const iter_t iter_end   = vec.end();
-    os << "\n---------------\n";
-    for (iter_t iter = iter_begin; iter != iter_end; ++iter) {
-        std::cout << iter->first << " : " << iter->second << "\n";
-    }
-    os << "\n---------------\n";
-    return os;
-}
-
-void RobotModelWrapper::DblVecToEigenVectorXd(const DblVec &in, Eigen::VectorXd &out){
+void RobotModelWrapper::dblVecToEigenVectorXd(const DblVec &in, Eigen::VectorXd &out){
     out = Eigen::VectorXd::Map(in.data(), in.size());
 }
 RobotModelWrapper::RobotModelWrapper(std::shared_ptr<RobotModel> &robot_model):
@@ -108,26 +91,26 @@ void RobotModelWrapper::setRobotModel(std::shared_ptr<RobotModel> robot_model)
     robot_model->getPlanningGroupJointsName(robot_model->getPlanningGroupName(), m_planning_group_joints_names_);
 }
 
-void RobotModelWrapper::SetDOFValues(const DblVec &dofs) {
+void RobotModelWrapper::setDOFValues(const DblVec &dofs) {
     Eigen::VectorXd joint_values;
-    DblVecToEigenVectorXd(dofs, joint_values);
+    dblVecToEigenVectorXd(dofs, joint_values);
     m_robot_model->updateJointGroup(m_planning_group_joints_names_, joint_values);
 
 }
 
-void RobotModelWrapper::GetDOFLimits(DblVec &lower, DblVec &upper) const {
+void RobotModelWrapper::getDOFLimits(DblVec &lower, DblVec &upper) const {
     m_robot_model->getJointLimits(lower, upper);
 }
-void RobotModelWrapper::GetDOFValues(std::map<std::string, double> &joint_states_map) {
+void RobotModelWrapper::getDOFValues(std::map<std::string, double> &joint_states_map) {
     std::vector<std::string> joint_names(m_planning_group_joints_names_.size());
     DblVec joint_values(m_planning_group_joints_names_.size());
-    GetDOFValues(joint_names, joint_values);
+    getDOFValues(joint_names, joint_values);
     assert(joint_names.size() == joint_values.size());
     for (size_t i = 0; i < joint_names.size(); ++i)
         joint_states_map[joint_names.at(i)] = joint_values.at(i);
 }
 
-void RobotModelWrapper::GetDOFValues(vector<std::string> &joint_names, DblVec &joint_values) {
+void RobotModelWrapper::getDOFValues(vector<std::string> &joint_names, DblVec &joint_values) {
     joint_names.resize(m_planning_group_joints_names_.size());
     joint_values.resize(m_planning_group_joints_names_.size());
 
@@ -137,25 +120,23 @@ void RobotModelWrapper::GetDOFValues(vector<std::string> &joint_names, DblVec &j
     }
 }
 
-DblVec RobotModelWrapper::GetDOFValues() {
+DblVec RobotModelWrapper::getDOFValues() {
     vector<std::string> joint_names(m_planning_group_joints_names_.size());
     DblVec joint_values(m_planning_group_joints_names_.size());
 
-    GetDOFValues(joint_names, joint_values);
+    getDOFValues(joint_names, joint_values);
     return joint_values;
 }
 
-int RobotModelWrapper::GetDOF() const {
+int RobotModelWrapper::getDOF() const {
     return m_planning_group_joints_names_.size();
 }
 
-DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vector3d &pt) /*const*/ {
-
-    //    std::cout <<"inside Position jacobian   .. .  .. .. " << link_name<< "\n";
+DblMatrix RobotModelWrapper::getPositionJacobian(std::string link_name, const Vector3d &pt) /*const*/ {
 
 
     DblMatrix m /*=  Eigen::MatrixXd::Zero()*/;
-    m.resize(3, GetDOF());
+    m.resize(3, getDOF());
     m *= 0.000;
 
     std::vector< std::pair<std::string,urdf::Joint> > planning_groups_joints;
@@ -164,179 +145,59 @@ DblMatrix RobotModelWrapper::PositionJacobian(std::string link_name, const Vecto
     m_robot_model->getPlanningGroupJointinformation(m_planning_group_name_, planning_groups_joints,
                                                     base_link, tip_link);
 
-    //    std::cout <<base_link << "==" << tip_link<< "==" << link_name<< "\n";
-
-
-    //    if(planning_groups_joints.size() > 0){
-    //        tip_link = planning_groups_joints.at(link_name).second.name;
-    //    }
-
     KDL::Jacobian  jacobian;
 
     std::map<std::string, double> joint_states_map;
 
     m_robot_model->getChainJointState(base_link, link_name, joint_states_map);
-
-
-//        std::cout << "joint_states_map size:  " << joint_states_map.empty() << " : "<< joint_states_map.size() << "\n";
-
-//        std::cout << joint_states_map << "\n";
-
     m_robot_model->computeJacobain(base_link, link_name, joint_states_map, jacobian);
+//    jacobian.changeRefPoint(KDL::Vector(pt.x(), pt.y(), pt.z()));
 
-    KDL::Jacobian  jacobian1 = jacobian;
-    KDL::Jacobian  jacobian2 = jacobian;
-    KDL::Jacobian  jacobian3 = jacobian;
-
-//    std::cout << "kdl jacobian . . .. . ..  \n " << jacobian.data << std::endl;
-
-//    std::cout << "m before copy. . .. . ..  \n " << m << std::endl;
     m.block(0,0,3, joint_states_map.size()) = jacobian.data.block(0,0,3,  joint_states_map.size());
-//    std::cout << "m after copy . . .. . ..  \n " << m << std::endl;
-
-    DblMatrix m0 /*=  Eigen::MatrixXd::Zero()*/;
-    m0.resize(3, GetDOF());
-
-    DblMatrix m1 /*=  Eigen::MatrixXd::Zero()*/;
-    m1.resize(3, GetDOF());
-
-    DblMatrix m2 /*=  Eigen::MatrixXd::Zero()*/;
-    m2.resize(3, GetDOF());
-
-    DblMatrix m3 /*=  Eigen::MatrixXd::Zero()*/;
-    m3.resize(3, GetDOF());
-
-    m0 = m;
-
-//    std::cout <<"before change ref point . .. . . . .. . \n";
-
-//    std::cout << m << "\n";
 
     KDL::Frame link_frame = m_robot_model->getRobotState().robot_links_[link_name].getLinkFrame();
 
-
     KDL::Vector pt_in_local(pt.x(), pt.y(), pt.z());
-
-    //    KDL::Vector pt_in_local(0, 0, 0);
-
-
-    KDL::Vector pt_in_global = link_frame.Inverse() * pt_in_local;
-    KDL::Vector pt_in_global1 = link_frame * pt_in_local;
-
-    //    jacobian.changeRefPoint(KDL::Vector(pt.x(), pt.y(), pt.z()));
-
-    jacobian1.changeRefPoint(pt_in_global);
-
-    jacobian2.changeRefPoint(pt_in_global1);
-
-//    std::cout << "original jacobian . .. . \n"<< jacobian1.data << std::endl;
-
-    m1.block(0,0,3, joint_states_map.size()) = jacobian1.data.block(0,0,3,  joint_states_map.size());
-
-//    std::cout <<"after change ref point global frame 1. .. . . . .. . \n";
-//    std::cout << m1 << "\n";
-
-    jacobian2.changeRefPoint(pt_in_local);
-    m2.block(0,0,3, joint_states_map.size()) = jacobian2.data.block(0,0,3,  joint_states_map.size());
-
-
-//    std::cout <<"after change ref point global frame 2. .. . . . .. . \n";
-//    std::cout << m2 << "\n";
-
-    jacobian3.changeRefPoint(pt_in_local);
-
-
-
-    m3.block(0,0,3, joint_states_map.size()) = jacobian3.data.block(0,0,3,  joint_states_map.size());
-
-//    std::cout <<"after change ref point local frame. .. . . . .. . \n";
-//    std::cout << m3 << "\n";
-
-
 
     KDL::Vector pt_rotated = link_frame.M * pt_in_local;
 
-//    std::cout << "local point before .. . .. . " << pt << std::endl;
-
-
     Eigen::Vector3d pt_rot(pt_rotated[0], pt_rotated[1], pt_rotated[2]);
-
-//    std::cout << "local point after.. . .. . " << pt_rot << std::endl;
-
 
     Eigen::Matrix3d mat_skew;
 
     skew(pt_rot, &mat_skew);
 
-    Eigen::Matrix3d M /*=  Eigen::MatrixXd::Zero()*/;
-
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; j++){
-            M(i, j) = link_frame.M(i, j);
-        }
-    }
-//    std::cout << "world_rotation_body .  .. . . .. . . \n"<< M << std::endl;
-
-//    std::cout << "skewCrossProduct . . .. . .  . \n"<< mat_skew << std::endl;
-
-
-    Eigen::Matrix3Xd m5 /*=  Eigen::MatrixXd::Zero()*/;
-    m5.resize(3, GetDOF());
-
-
     Eigen::Matrix3Xd jac_rot /*=  Eigen::MatrixXd::Zero()*/;
-    jac_rot.resize(3, GetDOF());
+    jac_rot.resize(3, getDOF());
 
     jac_rot *= 0.00;
 
-    jac_rot.block(0,0,3, joint_states_map.size()) = jacobian1.data.block(3,0,3,  joint_states_map.size());
+    jac_rot.block(0,0,3, joint_states_map.size()) = jacobian.data.block(3,0,3,  joint_states_map.size());
 
     Eigen::Matrix3Xd jac_rot1 /*=  Eigen::MatrixXd::Zero()*/;
-    jac_rot1.resize(3, GetDOF());
+    jac_rot1.resize(3, getDOF());
 
     jac_rot1 *= 0.00;
 
     mul(mat_skew, jac_rot, &jac_rot1);
 
-//    std::cout << "jac_rot .  .. . . .. . . \n"<< jac_rot << std::endl;
-
-//    std::cout << "jac_rot1 .  .. . . .. . . \n"<< jac_rot1 << std::endl;
-
     Eigen::Matrix3Xd jac_new /*=  Eigen::MatrixXd::Zero()*/;
-    jac_new.resize(3, GetDOF());
+    jac_new.resize(3, getDOF());
 
-    sub(m0, jac_rot1, &jac_new);
+    sub(m, jac_rot1, &jac_new);
 
     DblMatrix jac_new1 /*=  Eigen::MatrixXd::Zero()*/;
-    jac_new1.resize(3, GetDOF());
+    jac_new1.resize(3, getDOF());
 
     jac_new1 = jac_new;
-
-
-//    std::cout<< "according to bullet physics . . .. . .  ..  \n";
-//    std::cout << "Robot state: . . . .. " << GetDOFValues() << std::endl;
-//    std::cout <<"Jacobian . .. . . . .. . \n";
-
-//    std::cout << m << "\n";
-//    std::cout << "Jacobian for : " << link_name << " at " << pt.transpose()<< std::endl;
-//    std::cout << jac_new << std::endl;
-
-//    std::cout << "Jacobian1 for : " << link_name << " at " << pt.transpose()<< std::endl;
-
-//    std::cout << jac_new1 << std::endl;
 
     return jac_new1;
 
 }
 
-DblMatrix RobotModelWrapper::RotationJacobian(std::string link_name) const {}
+DblMatrix RobotModelWrapper::getRotationJacobian(std::string link_name) const {}
 
-void RobotModelWrapper::GetAffectedLinks(std::vector<LinkPtr> &links, bool only_with_geom, vector<std::string> &link_inds)
-{
-
-}
-
-DblVec RobotModelWrapper::RandomDOFValues() {
+DblVec RobotModelWrapper::setRandomDOFValues() {
     std::map<std::string, double> planning_groups_joints_with_random_values;
 
     m_robot_model->generateRandomJointValue(m_planning_group_name_, planning_groups_joints_with_random_values);
@@ -349,7 +210,7 @@ DblVec RobotModelWrapper::RandomDOFValues() {
     return random_joint_values;
 }
 
-geometry::Transform RobotModelWrapper::GetLinkTransformByName(std::string link_name){
+geometry::Transform RobotModelWrapper::getLinkTransformByName(std::string link_name){
 
     Eigen::Vector3d pos;
     Eigen::Vector4d orn;
@@ -358,4 +219,14 @@ geometry::Transform RobotModelWrapper::GetLinkTransformByName(std::string link_n
 
     return geometry::Transform(geometry::Vector(orn[0], orn[1], orn[2], orn[3]), geometry::Vector(pos[0], pos[1], pos[2]));
 
+}
+
+bool RobotModelWrapper::checkIfLinkExists(const std::string link_name)
+{
+//    if ( m_robot_model->getRobotState().robot_links_.find(link_name) != m_robot_model->getRobotState().robot_links_.end() ) {
+    if (m_robot_model->getRobotState().robot_links_.count(link_name)){
+        return true;
+    }
+
+    return false;
 }
