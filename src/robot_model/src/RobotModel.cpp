@@ -1740,11 +1740,11 @@ bool RobotModel::getWorldCollisionInfo(std::vector<collision_detection::ContactI
 }
 
 void RobotModel::getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed/*=true*/, double distance_tolerance/*=1e-6*/){
-    robot_collision_detector_->computeSelfDistanceInfo(distance_tolerance, is_signed_dist_needed);
+    robot_collision_detector_->computeSelfDistanceInfo();
     distance_info = robot_collision_detector_->getSelfDistanceInfo();
 }
 void RobotModel::getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed/*=true*/, double distance_tolerance/*=1e-6*/){
-    robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo(distance_tolerance, is_signed_dist_needed);
+    robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
     distance_info = robot_collision_detector_->getClosestObstacleToRobotDistanceInfo();
 }
 
