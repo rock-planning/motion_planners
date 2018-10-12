@@ -22,20 +22,20 @@ OptimizationTask::~OptimizationTask()
 bool OptimizationTask::stompInitialize(int num_threads, int num_rollouts)
 {
     derivative_costs_.resize(stomp_config_.num_dimensions_, 
-    Eigen::MatrixXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING, stomp::NUM_DIFF_RULES));
+    base::MatrixXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING, stomp::NUM_DIFF_RULES));
     initial_trajectory_.resize(stomp_config_.num_dimensions_, 
-    Eigen::VectorXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING));
+    base::VectorXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING));
     
     
     for (int d=0; d < stomp_config_.num_dimensions_; ++d)    
-	derivative_costs_[d].col(stomp::STOMP_ACCELERATION) = Eigen::VectorXd::Ones(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING);
+	derivative_costs_[d].col(stomp::STOMP_ACCELERATION) = base::VectorXd::Ones(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING);
     
     proj_pos_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     pos_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     vel_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     acc_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     
-    collision_costs_ = Eigen::VectorXd::Zero(stomp_config_.num_time_steps_);
+    collision_costs_ = base::VectorXd::Zero(stomp_config_.num_time_steps_);
         
     return true;
 }
@@ -46,13 +46,13 @@ void OptimizationTask::updateTrajectory(const base::samples::Joints &start, cons
 
     for (int d=0; d < stomp_config_.num_dimensions_; ++d)
     {
-	initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start.elements.at(d).position * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
-	initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal.elements.at(d).position  * Eigen::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
+	initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start.elements.at(d).position * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
+	initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal.elements.at(d).position  * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
 
 	increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_ - 1);
 	
 	for (int i=0; i < stomp_config_.num_time_steps_; i++)
-	    initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);	
+	    initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);		
     } 
 }
 
@@ -73,7 +73,7 @@ double OptimizationTask::getControlCostWeight()
     return stomp_config_.control_cost_weight_;
 }
 
-bool OptimizationTask::filter(std::vector<Eigen::VectorXd>& parameters, int rollout_id, int thread_id) 
+bool OptimizationTask::filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id) 
 {  
     bool filtered = false;
 
@@ -109,20 +109,20 @@ void OptimizationTask::createPolicy()
 
 }
 
-bool OptimizationTask::execute( std::vector<Eigen::VectorXd>& parameters,
-			    std::vector<Eigen::VectorXd>& projected_parameters,
-			    Eigen::VectorXd& costs,
-			    Eigen::MatrixXd& weighted_feature_values,
+bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
+			    std::vector<base::VectorXd>& projected_parameters,
+			    base::VectorXd& costs,
+			    base::MatrixXd& weighted_feature_values,
 			    const int iteration_number,
 			    const int rollout_number,
 			    int thread_id,
 			    bool compute_gradients,
-			    std::vector<Eigen::VectorXd>& gradients,
+			    std::vector<base::VectorXd>& gradients,
 			    bool& validity)
 
 {
     
-    costs = Eigen::VectorXd::Zero(stomp_config_.num_time_steps_);
+    costs = base::VectorXd::Zero(stomp_config_.num_time_steps_);
     collision_costs_.setZero();
     validity = true;
     double collision_cost=0.0;
@@ -134,6 +134,7 @@ bool OptimizationTask::execute( std::vector<Eigen::VectorXd>& parameters,
 	//printf("lvalue size = %d, %d, rvalue size = %d, %d", 1, stomp_config.num_time_steps_, projected_parameters[d].rows(), projected_parameters[d].cols());
 	proj_pos_.block(d, stomp::TRAJECTORY_PADDING, 1, stomp_config_.num_time_steps_) = projected_parameters[d].transpose();
 	pos_.block(d, stomp::TRAJECTORY_PADDING, 1, stomp_config_.num_time_steps_) = parameters[d].transpose();
+
     }
     
     for (int t = stomp::TRAJECTORY_PADDING; t < stomp::TRAJECTORY_PADDING + stomp_config_.num_time_steps_; ++t)
@@ -143,7 +144,7 @@ bool OptimizationTask::execute( std::vector<Eigen::VectorXd>& parameters,
     
 	if(!robot_model_->isStateValid())
 	{
-	    collision_cost = 10.0;
+	    collision_cost = 1.0;
 	    validity = false;
 	}
 	else
@@ -152,6 +153,7 @@ bool OptimizationTask::execute( std::vector<Eigen::VectorXd>& parameters,
 	    validity = true;
 	}
 	costs(t-stomp::TRAJECTORY_PADDING) = collision_cost;
+	
     }
     
     //auto finish_time = std::chrono::high_resolution_clock::now();

@@ -3,9 +3,9 @@
 namespace stomp
 {
 
-void getDifferentiationMatrix(int num_time_steps, CostComponents order, double dt, Eigen::MatrixXd& diff_matrix)
+void getDifferentiationMatrix(int num_time_steps, CostComponents order, double dt, base::MatrixXd& diff_matrix)
 {
-  diff_matrix = Eigen::MatrixXd::Zero(num_time_steps, num_time_steps);
+  diff_matrix = base::MatrixXd::Zero(num_time_steps, num_time_steps);
  //std::cout<<" dt = "<<1.0/pow(dt,(int)order)<<"  dt ="<<dt<<"  oder="<<(int)order<<std::endl;
   double multiplier = 1.0/pow(dt,(int)order);
   for (int i=0; i<num_time_steps; ++i)

@@ -38,7 +38,10 @@
 #define STOMP_COVARIANT_MOVEMENT_PRIMITIVE_H_
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <stomp/StompUtils.hpp>
+#include <base/Eigen.hpp>
+
 
 namespace stomp
 {
@@ -46,6 +49,7 @@ namespace stomp
 class CovariantMovementPrimitive
 {
 public:
+
     CovariantMovementPrimitive();
     virtual ~CovariantMovementPrimitive();
 
@@ -67,10 +71,10 @@ public:
     bool initialize(const int num_time_steps,
                   const int num_dimensions,
                   const double movement_duration,
-                  const std::vector<Eigen::MatrixXd>& derivative_costs,
-                  const std::vector<Eigen::VectorXd>& initial_trajectory);
+                  const std::vector<base::MatrixXd>& derivative_costs,
+                  const std::vector<base::VectorXd>& initial_trajectory);
     bool setToMinControlCost();
-    bool getParametersAll(std::vector<Eigen::VectorXd>& parameters);
+    bool getParametersAll(std::vector<base::VectorXd>& parameters);
 
     /**
      * Sets the number of time steps used in reinforcement learning
@@ -106,7 +110,7 @@ public:
      * @param basis_function_matrix_array (output) Array of "num_time_steps x num_parameters" matrices, per dimension
      * @return true on success, false on failure
      */
-    bool getBasisFunctions(std::vector<Eigen::MatrixXd>& basis_functions);
+    bool getBasisFunctions(std::vector<base::MatrixXd>& basis_functions);
 
     /**
      * Gets the positive semi-definite matrix of the quadratic control cost
@@ -115,36 +119,36 @@ public:
      * @param control_cost_matrix (output) Array of square, positive semi-definite matrix: num_params x num_params
      * @return true on success, false on failure
      */
-    bool getControlCosts(std::vector<Eigen::MatrixXd>& control_costs);
+    bool getControlCosts(std::vector<base::MatrixXd>& control_costs);
 
-    bool getInvControlCosts(std::vector<Eigen::MatrixXd>& control_costs);
+    bool getInvControlCosts(std::vector<base::MatrixXd>& control_costs);
     /**
      * Update the policy parameters based on the updates per timestep
      * @param updates (input) parameter updates per time-step, num_time_steps x num_parameters
      * @return true on success, false on failure
      */
-    bool updateParameters(const std::vector<Eigen::MatrixXd>& updates, const std::vector<Eigen::VectorXd>& time_step_weights);
+    bool updateParameters(const std::vector<base::MatrixXd>& updates, const std::vector<base::VectorXd>& time_step_weights);
 
     /**
      * Get the policy parameters per dimension
      * @param parameters (output) array of parameter vectors
      * @return true on success, false on failure
      */
-    bool getParameters(std::vector<Eigen::VectorXd>& parameters);
+    bool getParameters(std::vector<base::VectorXd>& parameters);
 
     /**
      * Set the policy parameters per dimension
      * @param parameters (input) array of parameter vectors
      * @return true on success, false on failure
      */
-    bool setParameters(const std::vector<Eigen::VectorXd>& parameters);
+    bool setParameters(const std::vector<base::VectorXd>& parameters);
 
     /**
      * Set the policy parameters per dimension
      * @param parameters (input) array of parameter vectors
      * @return true on success, false on failure
      */
-    bool setParametersAll(const std::vector<Eigen::VectorXd>& parameters_all);
+    bool setParametersAll(const std::vector<base::VectorXd>& parameters_all);
 
     /**
      * Compute the control costs over time, given the control cost matrix per dimension and parameters over time
@@ -154,15 +158,15 @@ public:
      * @param control_costs (output) [num_dimensions] num_time_steps: Control costs over time
      * @return
      */
-//    bool computeControlCosts(const std::vector<Eigen::MatrixXd>& control_cost_matrices, const std::vector<std::vector<Eigen::VectorXd> >& parameters,
-//                                     const double weight, std::vector<Eigen::VectorXd>& control_costs);
+//    bool computeControlCosts(const std::vector<base::MatrixXd>& control_cost_matrices, const std::vector<std::vector<base::VectorXd> >& parameters,
+//                                     const double weight, std::vector<base::VectorXd>& control_costs);
 
-    bool computeControlCosts(const std::vector<Eigen::VectorXd>& parameters,
-                             const std::vector<Eigen::VectorXd>& noise, const double weight, std::vector<Eigen::VectorXd>& control_costs);
+    bool computeControlCosts(const std::vector<base::VectorXd>& parameters,
+                             const std::vector<base::VectorXd>& noise, const double weight, std::vector<base::VectorXd>& control_costs);
 
-    bool computeControlCostGradient(const std::vector<Eigen::VectorXd>& parameters,
+    bool computeControlCostGradient(const std::vector<base::VectorXd>& parameters,
                                     const double weight,
-                                    std::vector<Eigen::VectorXd>& gradient);
+                                    std::vector<base::VectorXd>& gradient);
 
     bool writeToFile(const std::string abs_file_name);
 
@@ -172,16 +176,16 @@ public:
      * @param derivatives - output trajectories [num_vars_free]
      * @return true on success, false on failure
      */
-    bool getDerivatives(int derivative_number, std::vector<Eigen::VectorXd>& derivatives) const;
+    bool getDerivatives(int derivative_number, std::vector<base::VectorXd>& derivatives) const;
 
-    const Eigen::MatrixXd& getDifferentiationMatrix(int derivative_number) const;
+    const base::MatrixXd& getDifferentiationMatrix(int derivative_number) const;
 
-    const std::vector<Eigen::VectorXd>& getMinControlCostParameters() const;
+    const std::vector<base::VectorXd>& getMinControlCostParameters() const;
 
     double getMovementDuration() const;
     double getMovementDt() const;
     
-    std::vector<Eigen::VectorXd> parameters_all_;
+    std::vector<base::VectorXd> parameters_all_;
 private:
 
     std::string file_name_base_;
@@ -196,21 +200,21 @@ private:
     double movement_dt_;
 
     std::vector<int> num_parameters_;
-    std::vector<Eigen::MatrixXd> derivative_costs_;
-    std::vector<Eigen::MatrixXd> derivative_costs_sqrt_;
-    std::vector<Eigen::MatrixXd> basis_functions_;
-    std::vector<Eigen::MatrixXd> control_costs_;
-    std::vector<Eigen::MatrixXd> inv_control_costs_;
-    std::vector<Eigen::MatrixXd> control_costs_all_;
+    std::vector<base::MatrixXd> derivative_costs_;
+    std::vector<base::MatrixXd> derivative_costs_sqrt_;
+    std::vector<base::MatrixXd> basis_functions_;
+    std::vector<base::MatrixXd> control_costs_;
+    std::vector<base::MatrixXd> inv_control_costs_;
+    std::vector<base::MatrixXd> control_costs_all_;
 
-    std::vector<Eigen::VectorXd> linear_control_costs_;
+    std::vector<base::VectorXd> linear_control_costs_;
     std::vector<double> constant_control_costs_; // to make the control cost not appear negative!
 
 
-    std::vector<Eigen::VectorXd> min_control_cost_parameters_all_;
-    std::vector<Eigen::VectorXd> min_control_cost_parameters_free_;
+    std::vector<base::VectorXd> min_control_cost_parameters_all_;
+    std::vector<base::VectorXd> min_control_cost_parameters_free_;
 
-    std::vector<Eigen::MatrixXd> differentiation_matrices_;
+    std::vector<base::MatrixXd> differentiation_matrices_;
     void createDifferentiationMatrices();
     bool initializeVariables();
     bool initializeCosts();
@@ -222,31 +226,20 @@ private:
 
 // inline functions follow
 
-inline bool CovariantMovementPrimitive::getParameters(std::vector<Eigen::VectorXd>& parameters)
-{
-    if (int(parameters.size()) != num_dimensions_)
-    {
-        parameters.resize(num_dimensions_, Eigen::VectorXd::Zero(num_time_steps_));
-    }
-    for (int d=0; d<num_dimensions_; ++d)
-    {
-        parameters[d] = parameters_all_[d].segment(free_vars_start_index_, num_vars_free_);
-    }
-    return true;
-}
+bool getParameters(std::vector<base::VectorXd>& parameters);
 
-inline bool CovariantMovementPrimitive::getParametersAll(std::vector<Eigen::VectorXd>& parameters)
+inline bool CovariantMovementPrimitive::getParametersAll(std::vector<base::VectorXd>& parameters)
 {
     parameters = parameters_all_;
     return true;
 }
 
-inline const std::vector<Eigen::VectorXd>& CovariantMovementPrimitive::getMinControlCostParameters() const
+inline const std::vector<base::VectorXd>& CovariantMovementPrimitive::getMinControlCostParameters() const
 {
   return min_control_cost_parameters_free_;
 }
 
-inline bool CovariantMovementPrimitive::setParameters(const std::vector<Eigen::VectorXd>& parameters)
+inline bool CovariantMovementPrimitive::setParameters(const std::vector<base::VectorXd>& parameters)
 {
     //ROS_ASSERT(int(parameters.size()) == num_dimensions_);
     for (int d=0; d<num_dimensions_; ++d)
@@ -256,26 +249,26 @@ inline bool CovariantMovementPrimitive::setParameters(const std::vector<Eigen::V
     return true;
 }
 
-inline bool CovariantMovementPrimitive::setParametersAll(const std::vector<Eigen::VectorXd>& parameters_all)
+inline bool CovariantMovementPrimitive::setParametersAll(const std::vector<base::VectorXd>& parameters_all)
 {
   //ROS_ASSERT(int(parameters_all.size()) == num_dimensions_);
   parameters_all_ = parameters_all;
   return true;
 }
 
-inline bool CovariantMovementPrimitive::getBasisFunctions(std::vector<Eigen::MatrixXd>& basis_functions)
+inline bool CovariantMovementPrimitive::getBasisFunctions(std::vector<base::MatrixXd>& basis_functions)
 {
     basis_functions = basis_functions_;
     return true;
 }
 
-inline bool CovariantMovementPrimitive::getControlCosts(std::vector<Eigen::MatrixXd>& control_costs)
+inline bool CovariantMovementPrimitive::getControlCosts(std::vector<base::MatrixXd>& control_costs)
 {
     control_costs = control_costs_;
     return true;
 }
 
-inline bool CovariantMovementPrimitive::getInvControlCosts(std::vector<Eigen::MatrixXd>& inv_control_costs)
+inline bool CovariantMovementPrimitive::getInvControlCosts(std::vector<base::MatrixXd>& inv_control_costs)
 {
   inv_control_costs = inv_control_costs_;
   return true;

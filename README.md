@@ -2,5 +2,5 @@ motion_planners
 =============
 
 
-![Motion Planner Framework](/uploads/575d5db34e872c1eebc090ca03f79964/framework.png)
+![motion_planner_framework](/uploads/4ef1b5e1de6351329b48b31ef9a1f5a0/motion_planner_framework.png)
 

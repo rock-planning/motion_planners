@@ -70,9 +70,9 @@ bool Stomp::initialize(const StompConfig& config, std::shared_ptr<stomp::StompTa
    
 
     policy_improvement_.initialize(stomp_config_.num_time_steps_, stomp_config_.min_rollouts_, stomp_config_.max_rollouts_, stomp_config_.num_rollouts_per_iteration_,
-                                 policy_, stomp_config_.use_noise_adaptation_, stomp_config_.noise_min_stddev_);
+                                 policy_, stomp_config_.use_noise_adaptation_, stomp_config_.noise_min_stddev_, control_cost_weight_);
 
-    rollout_costs_ = Eigen::MatrixXd::Zero(stomp_config_.max_rollouts_, stomp_config_.num_time_steps_);
+    rollout_costs_ = base::MatrixXd::Zero(stomp_config_.max_rollouts_, stomp_config_.num_time_steps_);
 
     policy_iteration_counter_ = 0;
 
@@ -84,8 +84,8 @@ bool Stomp::initialize(const StompConfig& config, std::shared_ptr<stomp::StompTa
         omp_set_num_threads(1);
     }
     
-    tmp_rollout_cost_.resize(stomp_config_.max_rollouts_, Eigen::VectorXd::Zero(stomp_config_.num_time_steps_));
-    tmp_rollout_weighted_features_.resize(stomp_config_.max_rollouts_, Eigen::MatrixXd::Zero(stomp_config_.num_time_steps_, 1));
+    tmp_rollout_cost_.resize(stomp_config_.max_rollouts_, base::VectorXd::Zero(stomp_config_.num_time_steps_));
+    tmp_rollout_weighted_features_.resize(stomp_config_.max_rollouts_, base::MatrixXd::Zero(stomp_config_.num_time_steps_, 1));
 
     best_noiseless_cost_ = std::numeric_limits<double>::max();
 
@@ -112,7 +112,7 @@ bool Stomp::initialize(const StompConfig& config, std::shared_ptr<stomp::StompTa
 //  policy_improvement_.initialize(num_time_steps_, min_rollouts_, max_rollouts_, num_rollouts_per_iteration_,
 //                                 policy_, use_noise_adaptation_, noise_min_stddev_);
 //
-//  rollout_costs_ = Eigen::MatrixXd::Zero(max_rollouts_, num_time_steps_);
+//  rollout_costs_ = base::MatrixXd::Zero(max_rollouts_, num_time_steps_);
 //
 //  policy_iteration_counter_ = 0;
 //
@@ -124,8 +124,8 @@ bool Stomp::initialize(const StompConfig& config, std::shared_ptr<stomp::StompTa
 //    omp_set_num_threads(1);
 //  }
 //  //ROS_INFO("STOMP: using %d threads", num_threads_);
-//  tmp_rollout_cost_.resize(max_rollouts_, Eigen::VectorXd::Zero(num_time_steps_));
-//  tmp_rollout_weighted_features_.resize(max_rollouts_, Eigen::MatrixXd::Zero(num_time_steps_, 1));
+//  tmp_rollout_cost_.resize(max_rollouts_, base::VectorXd::Zero(num_time_steps_));
+//  tmp_rollout_weighted_features_.resize(max_rollouts_, base::MatrixXd::Zero(num_time_steps_, 1));
 //
 //  best_noiseless_cost_ = std::numeric_limits<double>::max();
 //
@@ -186,10 +186,11 @@ bool Stomp::doGenRollouts(int iteration_number)
   // filter rollouts and set them back if filtered:
   bool filtered = false;
   for (unsigned int r=0; r<rollouts_.size(); ++r)
-  {
+  {     
     if (stomp_task_->filter(rollouts_[r], r, 0))
       filtered = true;
   }
+  
   if (filtered)
   {
     policy_improvement_.setRollouts(rollouts_);
@@ -198,14 +199,14 @@ bool Stomp::doGenRollouts(int iteration_number)
 
   // overwrite the rollouts with the projected versions
   policy_improvement_.getProjectedRollouts(projected_rollouts_);
-
+  
   return true;
 }
 
 bool Stomp::doExecuteRollouts(int iteration_number)
 {
 
-  std::vector<Eigen::VectorXd> gradients;
+  std::vector<base::VectorXd> gradients;
   #pragma omp parallel for num_threads(stomp_config_.num_threads_)
 
   for (int r=0; r<int(rollouts_.size()); ++r)
@@ -252,16 +253,15 @@ bool Stomp::doUpdate(int iteration_number)
 bool Stomp::doNoiselessRollout(int iteration_number)
 {
   // get a noise-less rollout to check the cost
-  std::vector<Eigen::VectorXd> gradients;
+  std::vector<base::VectorXd> gradients;
   STOMP_VERIFY(policy_->getParameters(parameters_));
   bool validity = false;
   STOMP_VERIFY(stomp_task_->execute(parameters_, parameters_, tmp_rollout_cost_[0], tmp_rollout_weighted_features_[0], iteration_number,
                             -1, 0, false, gradients, validity));
   double total_cost;
   policy_improvement_.setNoiselessRolloutCosts(tmp_rollout_cost_[0], total_cost);
-
-  //ROS_INFO("Noiseless cost = %lf", total_cost);
-
+  
+  //printf("Noiseless cost = %lf", total_cost);
   if (total_cost < best_noiseless_cost_)
   {
     best_noiseless_parameters_ = parameters_;
@@ -290,12 +290,12 @@ bool Stomp::runSingleIteration(const int iteration_number)
   STOMP_VERIFY(doNoiselessRollout(iteration_number));
 
 
-  if (debug_config_.write_to_file_)
-  {
-    // store updated policy to disc
-    //STOMP_VERIFY(writePolicy(iteration_number));
-    //STOMP_VERIFY(writePolicyImprovementStatistics(stats_msg));
-  }
+//   if (debug_config_.write_to_file_)
+//   {
+//     // store updated policy to disc
+//     //STOMP_VERIFY(writePolicy(iteration_number));
+//     //STOMP_VERIFY(writePolicyImprovementStatistics(stats_msg));
+//   }
 
   return true;
 }
@@ -315,7 +315,7 @@ void Stomp::getAdaptedStddevs(std::vector<double>& stddevs)
   policy_improvement_.getAdaptedStddevs(stddevs);
 }
 
-void Stomp::getBestNoiselessParameters(std::vector<Eigen::VectorXd>& parameters, double& cost)
+void Stomp::getBestNoiselessParameters(std::vector<base::VectorXd>& parameters, double& cost)
 {
   parameters = best_noiseless_parameters_;
   cost = best_noiseless_cost_;

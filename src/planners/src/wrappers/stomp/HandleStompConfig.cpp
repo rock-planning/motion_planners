@@ -40,7 +40,8 @@ stomp::StompConfig getStompConfig(const YAML::Node &yaml_data)
     config.control_cost_weight_         = motion_planners::getValue<double>(yaml_data, "control_cost_weight_"); 
     config.delay_per_iteration_         = motion_planners::getValue<double>(yaml_data, "delay_per_iteration_"); 
     config.resolution_                  = motion_planners::getValue<double>(yaml_data, "resolution_"); 
-
+    config.min_cost_improvement_        = motion_planners::getValue<double>(yaml_data, "min_cost_improvement_");
+    
     config.use_noise_adaptation_        = motion_planners::getValue<bool>(yaml_data, "use_noise_adaptation_");
     config.use_openmp_                  = motion_planners::getValue<bool>(yaml_data, "use_openmp_");
 

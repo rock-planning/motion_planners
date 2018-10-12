@@ -1,8 +1,10 @@
-#ifndef TRAJECTORYOPTIMIZATION_HPP_
-#define TRAJECTORYOPTIMIZATION_HPP_
+#ifndef MOTIONPLANNERS_HPP_
+#define MOTIONPLANNERS_HPP_
 
 #include <vector>
 #include <string>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/conversions.h>
 #include <base/samples/Joints.hpp>
 #include "Config.hpp"
 #include <base/JointsTrajectory.hpp>
@@ -13,11 +15,6 @@
 #include "PlannerFactory.hpp"
 #include "abstract/AbstractPlanner.hpp"
 
-
-
-/** \file CollisionDetection.hpp
-*    \brief Factory class for the AbstractCollisionDetection class.
-*/
 
 namespace motion_planners
 {
@@ -47,11 +44,13 @@ class MotionPlanners
     bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
 			       std::string &planningGroupName, PlannerStatus &planner_status);
     
+    bool assignPlanningScene(const Eigen::Vector3d &sensor_origin);    
+    
     void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);    
     
-    bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
+    bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken);
     
-    void getEnviornmentPointcloud(base::samples::Pointcloud &env_ptcloud);
+    void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);
     
     std::vector< std::pair<std::string, std::string> > getCollisionObjectNames()
     {
@@ -83,13 +82,13 @@ class MotionPlanners
     
     base::commands::Joints ik_solution_;
     
-    pcl::PointCloud<pcl::PointXYZ> env_pcl_cloud_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr env_pcl_cloud_;
     
-    pcl::PointCloud<pcl::PointXYZ>::Ptr self_filtered_env_cloud_;
+    bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status);
     
-    bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status, double distance);
+    bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
     
-    bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status, double distance);
+    void applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud);
 
 };
 

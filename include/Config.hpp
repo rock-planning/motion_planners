@@ -1,6 +1,7 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
+#include <utility>
 #include <string>
 #include <vector>
 #include <kinematics_library/KinematicsConfig.hpp>
@@ -62,7 +63,7 @@ enum PlannerLibrary
 struct PlannerConfig
 {
     kinematics_library::KinematicsConfig kinematics_config; 
-    RobotModelParameters robot_model;
+    RobotModelParameters robot_model_config;
     std::string planner_specific_config;
     double distance;
     enum PlannerLibrary planner;
@@ -74,7 +75,9 @@ struct EnvironmentConfig
     std::string env_frame;
     double octree_resolution;
     std::string env_object_name;
-
+    bool do_self_filter;
+    std::vector <std::pair<std::string,std::string> > disabled_collision_pair;
+    
 };
 
 struct Config

@@ -43,6 +43,7 @@
 #include <vector>
 #include <stdio.h>
 #include <Eigen/Core>
+#include <base/Eigen.hpp>
 
 
 #define STOMP_VERIFY(cond) cond
@@ -78,7 +79,7 @@ enum CostComponents
   STOMP_JERK = 3
 };
 
-void getDifferentiationMatrix(int num_time_steps, CostComponents order, double dt, Eigen::MatrixXd& diff_matrix);
+void getDifferentiationMatrix(int num_time_steps, CostComponents order, double dt, base::MatrixXd& diff_matrix);
 //bool readDoubleArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<double>& array, const bool verbose=true);
 //bool readStringArray(ros::NodeHandle& node_handle, const std::string& parameter_name, std::vector<std::string>& str_array, const bool verbose=true);
 //bool getParam(XmlRpc::XmlRpcValue& config, const std::string& key, double& value);

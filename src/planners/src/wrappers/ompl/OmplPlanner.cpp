@@ -17,10 +17,12 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, st
     robot_model_ = robot_model;      
     
     planning_group_name_ = robot_model_->getPlanningGroupName();         
+    LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised for the planning group ="<<planning_group_name_;
     
     planning_group_joints_.clear();
     robot_model_->getPlanningGroupJointinformation(planning_group_name_, planning_group_joints_, chain_link_, tip_link_);
     base_link_ = robot_model_->getURDF()->getRoot()->name;
+    LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised with size = "<<planning_group_joints_.size();
     
     LOG_DEBUG_S<<"[OmplPlanner]: Reading OMPL planner config ";
     // assign the config
@@ -280,7 +282,7 @@ bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, Planne
 		solution.elements.at(j).at(i).position = x->values[j];    
             
         }    
-	std::cout<<"Solution found with size = "<<solution.size()<<std::endl;
+	std::cout<<"Solution found with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
 	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
     }
     else
@@ -709,12 +711,11 @@ bool OmplPlanner::solveTaskInCartesianSpace(base::JointsTrajectory &solution, Pl
 		solution.elements.at(j).at(i).position = x->values[j];    
             
         }    
-	std::cout<<"Solution found with size = "<<solution.size()<<std::endl;
+	std::cout<<"Solution found with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
 	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
 	
 	//////////  END URLAUB
 	
-	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
     }
     else
     {
@@ -734,11 +735,11 @@ bool OmplPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner
 {
     if(hasCartesianConstraint_)
     {
-        return this->solveTaskInCartesianSpace(solution, planner_status);
+        return solveTaskInCartesianSpace(solution, planner_status);
     }
     else
     {
-       return this->solveTaskInJointSpace(solution, planner_status);
+       return solveTaskInJointSpace(solution, planner_status);
     }
 }
 

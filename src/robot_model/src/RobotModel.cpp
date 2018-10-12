@@ -27,53 +27,53 @@ RobotModel::RobotModel(std::string urdf_file, std::string srdf_file, std::string
 
 void RobotModel::setWorldCollisionDetector(collision_detection::AbstractCollisionPtr collision_detector)
 {
-    world_collision_detector_ = collision_detector;
-    robot_collision_detector_->assignWorldDetector(world_collision_detector_);
+    world_collision_detector_ = collision_detector;    
+    robot_collision_detector_->assignWorldDetector(world_collision_detector_);    
 }
 
 bool RobotModel::initialiseURDFandSRDF()
 {
-    std::string xml_string;
-    std::fstream xml_file(urdf_file_abs_path_.c_str(), std::fstream::in);
-    bool srdf_ok_ = false ;
+	std::string xml_string;
+	std::fstream xml_file(urdf_file_abs_path_.c_str(), std::fstream::in);
+	bool srdf_ok_ = false ;
 
-    srdf_model_.reset(new srdf::Model());
-    if (xml_file.is_open())
-    {
-        while ( xml_file.good() )
-        {
-            std::string line;
-            std::getline( xml_file, line);
-            xml_string += (line + "\n");
-        }
-        xml_file.close();
-        urdf_model_ = urdf::parseURDF(xml_string);
-        if(urdf_model_.get() == NULL)
-        {
-        LOG_ERROR("[RobotModel] Error while getting urdf model. urdf_model is empty");
-            return false;
-        }
-    }
-    else
-    {
-        LOG_ERROR("[RobotModel] Cannot open urdf file.");
-        return false;
-    }
+	srdf_model_.reset(new srdf::Model());
+	if (xml_file.is_open())
+	{
+	    while ( xml_file.good() )
+	    {
+	        std::string line;
+	        std::getline( xml_file, line);
+	        xml_string += (line + "\n");
+	    }
+	    xml_file.close();
+	    urdf_model_ = urdf::parseURDF(xml_string);
+	    if(urdf_model_.get() == NULL)
+	    {
+	    LOG_ERROR("[RobotModel] Error while getting urdf model. urdf_model is empty");
+		    return false;
+	    }
+	}
+	else
+	{
+	    LOG_ERROR("[RobotModel] Cannot open urdf file.");
+	    return false;
+	}
 
-    srdf_ok_ = srdf_model_->initFile(*urdf_model_, srdf_file_abs_path_);
+	srdf_ok_ = srdf_model_->initFile(*urdf_model_, srdf_file_abs_path_);
 
-    if(!srdf_ok_)
-    {
-        LOG_ERROR("[RobotModel] Error while initialising srdf model");
-        return srdf_ok_;
-    }
+	if(!srdf_ok_)
+	{
+	    LOG_ERROR("[RobotModel] Error while initialising srdf model");
+	    return srdf_ok_;
+	}
 
-    if (!kdl_parser::treeFromFile(urdf_file_abs_path_, kdl_tree_))
-    {
-        LOG_ERROR("[RobotModel] Error while initialising kdl treey");
-        return false;
-    }
-    return true;
+	if (!kdl_parser::treeFromFile(urdf_file_abs_path_, kdl_tree_))
+	{
+	    LOG_ERROR("[RobotModel] Error while initialising kdl treey");
+	    return false;
+	}
+	return true;
 }
 
 bool RobotModel::initialization()
@@ -83,8 +83,8 @@ bool RobotModel::initialization()
 
     if(!res)
     {
-    LOG_FATAL("[RobotModel] Robot model initialisation failed");
-    return false;
+	LOG_FATAL("[RobotModel] Robot model initialisation failed");
+	return false;
     }
 
     // Initialise the robot joints
@@ -98,24 +98,24 @@ bool RobotModel::initialization()
 
         if( (it->second->type != urdf::Joint::FIXED) && (it->second->type != urdf::Joint::UNKNOWN) && (it->second->type != urdf::Joint::CONTINUOUS) )
         {
-            if( (it->second->limits->lower > 0) || (it->second->limits->upper < 0) )
-                joint_value = (it->second->limits->lower + it->second->limits->upper )/2.0;
-            else
+            if( (it->second->limits->lower > 0) || (it->second->limits->upper < 0) )            
+                joint_value = (it->second->limits->lower + it->second->limits->upper )/2.0;            
+            else            
                 joint_value = 0;
-
+            
             joint_name = it->first;
             robot_joint.setJointValue(joint_value);
             robot_joint.setJointName(joint_name);
             robot_joint.setJointInfo(*(it->second.get()));
             // incase of mimic joints
             if (it->second->mimic)
-            {
+            {		
                 robot_joint.setJointAsMimic();
                 robot_joint.mimic_joints_ = MimicJoint( it->second->mimic->joint_name,
                                                         it->second->mimic->multiplier, it->second->mimic->offset );
             }
             // Assign robot joint to the robot state
-        robot_state_.robot_joints_[joint_name] = robot_joint;
+	    robot_state_.robot_joints_[joint_name] = robot_joint;
         }
     }
 
@@ -136,10 +136,10 @@ bool RobotModel::initialization()
     }
 
     // Initialise robot link
-    std::string link_name;
-    RobotLink robot_link;
+    std::string link_name;    
+    RobotLink robot_link;    
 
-    auto start_initialisation = std::chrono::high_resolution_clock::now();
+    auto start_initialisation = std::chrono::high_resolution_clock::now();    
 
     for(std::map<std::string, urdf::LinkSharedPtr >::iterator it = urdf_model_->links_.begin(); it != urdf_model_->links_.end(); it++)
     {
@@ -156,27 +156,26 @@ bool RobotModel::initialization()
 
         //convert visual and collision data to pointcloud and then assing to the robot state
         //TODO: Why are we doing this ?
-        std::vector<pcl::PointCloud<pcl::PointXYZ> > link_visual_point_cloud, link_collision_point_cloud;
-    // create pointcloud from visual link
-    registerLinks(visual_array, link_visual_point_cloud);
-    // create pointcloud from collision link
-    registerLinks(collision_array, link_collision_point_cloud);
+        std::vector<pcl::PointCloud<pcl::PointXYZ> > link_visual_point_cloud, link_collision_point_cloud;        
+	// create pointcloud from visual link
+	registerLinks(visual_array, link_visual_point_cloud);
+	// create pointcloud from collision link
+	registerLinks(collision_array, link_collision_point_cloud);
 
         robot_state_.robot_links_[link_name].setVisualPointCloud(link_visual_point_cloud);
         robot_state_.robot_links_[link_name].setCollisionPointCloud(link_collision_point_cloud);
     }
-
-    auto finish_initialisation = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> elapsed = finish_initialisation - start_initialisation;
-
-    LOG_INFO("[RobotModel] Robot link initialisation took %d seconds", elapsed.count());
 
     std::vector<std::string>  list_of_visited_link_from_root;
     dfsTraversing(urdf_model_->getRoot()->name, list_of_visited_link_from_root);
     settingVisitedFlagLinkToFalse();
     initializeLinksCollisions();
 
+    auto finish_initialisation = std::chrono::high_resolution_clock::now();
+    
+    std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double>> (finish_initialisation - start_initialisation);    
+    
+    LOG_INFO("[RobotModel] Robot link initialisation took %f seconds", elapsed.count());
     return true;
 }
 
@@ -212,43 +211,43 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
             if(joint_type != urdf::Joint::FIXED)
             {
                 kdl_chain_joint_array.data[0]=robot_state_.robot_joints_[joint_name].getJointValue();
-//                 LOG_DEBUG( "[RobotModel] DFSTraversing : The joint between %s and %s is of type %d and is of value %d",
-//                             start_link_name.c_str(), child_link_name.c_str(), joint_type, kdl_chain_joint_array.data[0] );
-            }
+                 LOG_DEBUG( "[RobotModel] DFSTraversing : The joint between %s and %s is of type %f and is of value %d", 
+                             start_link_name.c_str(), child_link_name.c_str(), joint_type, kdl_chain_joint_array.data[0] ); 
+          }
 
-            fk_solver.JntToCart(kdl_chain_joint_array, Child_link_Frame_in_Parent_Frame);
+          fk_solver.JntToCart(kdl_chain_joint_array, Child_link_Frame_in_Parent_Frame);
 
-            // if the parent link is root no more composing frames, the link pose has been already calculated
-            if(start_link_name == urdf_model_->getRoot()->name)
-            {
-                robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_Parent_Frame);
-
-//                 LOG_DEBUG("============================================================================== ");
-//                 LOG_DEBUG("Frame: %s", child_link_name.c_str());
-//                 LOG_DEBUG("x ", Child_link_Frame_in_Parent_Frame.p.x());
-//                 LOG_DEBUG("y ", Child_link_Frame_in_Parent_Frame.p.y());
-//                 LOG_DEBUG("z ", Child_link_Frame_in_Parent_Frame.p.z());
-//                 LOG_DEBUG("============================================================================== ");
-            }
-            else
-            {
-                Parent_link_in_base_link        = robot_state_.robot_links_[start_link_name].getLinkFrame();
-                Child_link_Frame_in_base_link   = Parent_link_in_base_link * Child_link_Frame_in_Parent_Frame;
-                robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_base_link);
-
-//                 LOG_DEBUG("============================================================================== ");
-//                 LOG_DEBUG("Frame: %s", child_link_name.c_str());
-//                 LOG_DEBUG("x ", Child_link_Frame_in_base_link.p.x());
-//                 LOG_DEBUG("y ", Child_link_Frame_in_base_link.p.y());
-//                 LOG_DEBUG("z ", Child_link_Frame_in_base_link.p.z());
-//                 LOG_DEBUG("============================================================================== ");
-
+          // if the parent link is root no more composing frames, the link pose has been already calculated 
+          if(start_link_name == urdf_model_->getRoot()->name)
+          {
+              robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_Parent_Frame);
+                  
+              //LOG_DEBUG("============================================================================== ");
+              //LOG_DEBUG("Frame: %s", child_link_name.c_str());
+              //LOG_DEBUG("x :%f", Child_link_Frame_in_Parent_Frame.p.x());
+              //LOG_DEBUG("y :%f", Child_link_Frame_in_Parent_Frame.p.y());
+              //LOG_DEBUG("z :%f ", Child_link_Frame_in_Parent_Frame.p.z());
+              //LOG_DEBUG("============================================================================== ");
+          }
+          else
+          {
+              Parent_link_in_base_link        = robot_state_.robot_links_[start_link_name].getLinkFrame();
+              Child_link_Frame_in_base_link   = Parent_link_in_base_link * Child_link_Frame_in_Parent_Frame;
+              robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_base_link);
+            
+              //LOG_DEBUG("============================================================================== ");
+              //LOG_DEBUG("Frame: %s w.r.t frame: %s", child_link_name.c_str(), start_link_name.c_str());
+              //LOG_DEBUG("x :%f", Child_link_Frame_in_base_link.p.x());
+              //LOG_DEBUG("y :%f", Child_link_Frame_in_base_link.p.y());
+              //LOG_DEBUG("z :%f", Child_link_Frame_in_base_link.p.z());
+              //LOG_DEBUG("============================================================================== ");
+             
             }
             // now we have to calculate the position of the visuals and collision of the robot in the world coordinate (global pose)
             robot_state_.robot_links_[child_link_name].calculateLinkVisualsPoseInGlobalPose();
             robot_state_.robot_links_[child_link_name].calculateLinkCollisionPoseinGlobalPose();
 
-            // recursive dfs
+            // recursive dfs 
             dfsTraversing(child_link_name, visited_links);
 
         }
@@ -258,7 +257,7 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
 void RobotModel::settingVisitedFlagLinkToFalse()
 {
     for( std::map<std::string, RobotLink>::iterator it = robot_state_.robot_links_.begin(); it != robot_state_.robot_links_.end(); it++ )
-    {
+    {    
         it->second.setLinkDFSVisited(false);
     }
 }
@@ -284,18 +283,30 @@ void RobotModel::setRobotState(RobotState &robot_state )
     robot_state_ = robot_state;
 }
 
+void RobotModel::setDisabledEnvironmentCollision(std::vector <std::pair<std::string,std::string> > disabled_collision_pair)
+{    
+     for(int i = 0; i < disabled_collision_pair.size(); i++)
+     {
+	 srdf::Model::DisabledCollision disabled_pair;
+	 disabled_pair.link1_ = disabled_collision_pair.at(i).first;
+	 disabled_pair.link2_ = disabled_collision_pair.at(i).second;
+	    // assign the disabled collision pairs to the collision library
+	 world_collision_detector_->AbstractCollisionDetection::disabled_collisions_.push_back(disabled_pair);
+     } 
+}
+
 void RobotModel::initializeLinksCollisions()
-{
+{     
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
 
     // get the disabled collision pairs from srdf
-    std::vector<srdf::Model::DisabledCollision> DisabledCollisionPairs = srdf_model_->getDisabledCollisionPairs();
+    std::vector<srdf::Model::DisabledCollision> disabled_collision_pairs = srdf_model_->getDisabledCollisionPairs();
     // assign the disabled collision pairs to the collision library
-    robot_collision_detector_->AbstractCollisionDetection::setDisabledCollisionPairs( DisabledCollisionPairs);
+    robot_collision_detector_->AbstractCollisionDetection::setDisabledCollisionPairs( disabled_collision_pairs);
 
-    int total_number_of_collision_should_be = 0;
-    std::string link_name,  abs_path_to_mesh_file,  collision_object_name;
+    int total_number_of_collision_should_be = 0;    
+    std::string link_name,  abs_path_to_mesh_file,  collision_object_name;    
     Eigen::Vector3d mesh_scale;
     std::vector<urdf::CollisionSharedPtr > link_collisions;
 
@@ -303,40 +314,38 @@ void RobotModel::initializeLinksCollisions()
     {
         link_name 	= it->first;
         link_collisions = it->second.getLinkCollisions();
-
+        
         LOG_DEBUG("For the link:%s there are %i collision objects in this link", link_name.c_str(), link_collisions.size());
-        total_number_of_collision_should_be = total_number_of_collision_should_be + link_collisions.size();
+        total_number_of_collision_should_be = total_number_of_collision_should_be + link_collisions.size();      
 
         for(std::size_t i = 0; i < link_collisions.size(); i++ )
-        {
+        {            
             collision_object_name = link_name+"_" +lexical_cast<std::string>(i);
 
-        base::Pose collision_object_pose;
-        collision_object_pose.position.x() = link_collisions.at(i)->origin.position.x;
-        collision_object_pose.position.y() = link_collisions.at(i)->origin.position.y;
-        collision_object_pose.position.z() = link_collisions.at(i)->origin.position.z;
-
+	    base::Pose collision_object_pose;
+	    collision_object_pose.position.x() = link_collisions.at(i)->origin.position.x;
+	    collision_object_pose.position.y() = link_collisions.at(i)->origin.position.y;
+	    collision_object_pose.position.z() = link_collisions.at(i)->origin.position.z;
+	    
             collision_object_pose.orientation.w() = link_collisions.at(i)->origin.rotation.w;
-        collision_object_pose.orientation.x() = link_collisions.at(i)->origin.rotation.x;
-        collision_object_pose.orientation.y() = link_collisions.at(i)->origin.rotation.y;
-        collision_object_pose.orientation.z() = link_collisions.at(i)->origin.rotation.z;
-
-        LOG_DEBUG(" The collision object name is %s", collision_object_name.c_str() );
-            LOG_DEBUG_S<<"x: "<< link_collisions.at(i)->origin.position.x;
-            LOG_DEBUG_S<<"y: "<< link_collisions.at(i)->origin.position.y;
-            LOG_DEBUG_S<<"z: "<< link_collisions.at(i)->origin.position.z;
-
+	    collision_object_pose.orientation.x() = link_collisions.at(i)->origin.rotation.x;
+	    collision_object_pose.orientation.y() = link_collisions.at(i)->origin.rotation.y;
+	    collision_object_pose.orientation.z() = link_collisions.at(i)->origin.rotation.z;
+                        
+	    LOG_DEBUG(" The collision object name is %s with origin X=%f; Y=%f, Z=%f", collision_object_name.c_str(), 
+			link_collisions.at(i)->origin.position.x, link_collisions.at(i)->origin.position.y, link_collisions.at(i)->origin.position.z);
+	    
 
             if(link_collisions.at(i)->geometry->type == urdf::Geometry::MESH)
-            {
-        LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering mesh file ";
-
+            {                
+		LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering mesh file ";
+                
                 urdf::MeshSharedPtr urdf_mesh_ptr = urdf::static_pointer_cast <urdf::Mesh> (link_collisions.at(i)->geometry);
-
+		
                 mesh_scale(0) = urdf_mesh_ptr->scale.x;
                 mesh_scale(1) = urdf_mesh_ptr->scale.y;
                 mesh_scale(2) = urdf_mesh_ptr->scale.z;
-
+		                                
                 urdf_directory_path = urdf_file_abs_path_.substr(0, urdf_file_abs_path_.find_last_of("/") );
 
                 abs_path_of_mesh_file = resolve_path( urdf_mesh_ptr->filename, urdf_directory_path );
@@ -347,32 +356,31 @@ void RobotModel::initializeLinksCollisions()
             }
             else if(link_collisions.at(i)->geometry->type == urdf::Geometry::BOX)
             {
-        LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering box ";
+		LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering box ";
 
-                urdf::BoxSharedPtr urdf_box_ptr = urdf::static_pointer_cast <urdf::Box> (link_collisions.at(i)->geometry);
+                urdf::BoxSharedPtr urdf_box_ptr = urdf::static_pointer_cast <urdf::Box> (link_collisions.at(i)->geometry);                
                 robot_collision_detector_->registerBoxToCollisionManager( urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z,
-                                      collision_object_name, collision_object_pose, link_padding_);
+									  collision_object_name, collision_object_pose, link_padding_);
             }
             else if(link_collisions.at(i)->geometry->type == urdf::Geometry::CYLINDER)
             {
-        LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering cylinder ";
+		LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering cylinder ";
 
-                urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (link_collisions.at(i)->geometry);
-                robot_collision_detector_->registerCylinderToCollisionManager(urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length,
-                                          collision_object_name, collision_object_pose, link_padding_);
+                urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (link_collisions.at(i)->geometry);                
+                robot_collision_detector_->registerCylinderToCollisionManager(urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length, 
+									      collision_object_name, collision_object_pose, link_padding_);
             }
             else if(link_collisions.at(i)->geometry->type == urdf::Geometry::SPHERE)
             {
-        LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering sphere ";
+		LOG_DEBUG_S<<"[initializeLinksCollisions]: Registering sphere ";                
 
-                urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (link_collisions.at(i)->geometry);
+                urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (link_collisions.at(i)->geometry);                
                 robot_collision_detector_->registerSphereToCollisionManager(urdf_sphere_ptr->radius,collision_object_name, collision_object_pose, link_padding_);
             }
-        }
-    }
-
-    LOG_DEBUG_S<<"[initializeLinksCollisions]: Initialisation completed with "<<robot_collision_detector_->AbstractCollisionDetection::disabled_collisions_.size()<<
-        "disabled collision pair";
+        }        
+    }    
+    LOG_DEBUG_S<<"[initializeLinksCollisions]: Initialisation completed with "<<robot_collision_detector_->numberOfObjectsInCollisionManger()<< 
+		 " collision objects and "<<robot_collision_detector_->disabled_collisions_.size()<< " disabled collision pair";
 
     return;
 }
@@ -502,8 +510,8 @@ void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr t
     pcl::transformPointCloud (*cylinder_cloud_ptr, *transformed_cylinder_cloud_ptr, link_visual_pose_in_sensor_frame_eigen_matrix);
 }
 
-void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius,
-                     Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha, int number_of_step_beta)
+void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, 
+					 Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha, int number_of_step_beta)
 {
 
     // alpha cretae point on a circle given radius, beta will give you the radius,
@@ -593,8 +601,12 @@ void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_
     sphere_cloud.push_back(pcl::PointXYZ(0,0,-radius));
 }
 
+/* Subtracting the pointcloud using this method is not efficient because it creates a convex hull for the entire robot.
+ * In doing so, computation time is less but it will delete all the points between the robot links.
+ */
 
-void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud)
+void RobotModel::subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
+					     pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud)
 {
     std::vector<pcl::Vertices> polygons;
     pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
@@ -605,32 +617,61 @@ void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cl
     pcl::ConcaveHull<pcl::PointXYZ> hull;
     hull.setAlpha(0.1);
 */
-    hull.setInputCloud(cloud_1);
+    hull.setInputCloud(cloud_2);
     hull.setDimension(3);
     hull.reconstruct(*boundingbox_ptr.get(),polygons);
-
 
     std::vector<int> indices;
     pcl::CropHull<pcl::PointXYZ> bb_filter;
 
     bb_filter.setDim(3);
-    bb_filter.setInputCloud(cloud_2);
+    bb_filter.setInputCloud(cloud_1);
     bb_filter.setHullIndices(polygons);
     bb_filter.setHullCloud(boundingbox_ptr);
     bb_filter.filter(indices);
 
-
-
     pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
     fInliers->indices=indices ;
     pcl::ExtractIndices<pcl::PointXYZ> extract ;
-    extract.setInputCloud (cloud_2);
+    extract.setInputCloud (cloud_1);
     extract.setIndices (fInliers);
     extract.setNegative (true);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud;
-    extract.filter (*output_cloud);
-
+    
+    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    extract.filter (*output_cloud);    
+    
     pclStatisticalOutlierRemoval(output_cloud, subtracted_cloud);
+}
+
+void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, 					
+					pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud)					
+{   
+    
+    std::vector<pcl::Vertices> polygons;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::ConvexHull<pcl::PointXYZ> hull;
+
+    hull.setInputCloud(robot_link_cloud);
+    hull.setDimension(3);
+    hull.reconstruct(*boundingbox_ptr.get(),polygons);
+   
+    std::vector<int> indices;
+    pcl::CropHull<pcl::PointXYZ> bb_filter;
+
+    bb_filter.setDim(3);
+    bb_filter.setInputCloud(env_cloud);
+    bb_filter.setHullIndices(polygons);
+    bb_filter.setHullCloud(boundingbox_ptr);
+    bb_filter.filter(indices);
+    
+    pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
+    fInliers->indices=indices ;
+    pcl::ExtractIndices<pcl::PointXYZ> extract ;
+    extract.setInputCloud (env_cloud);
+    extract.setIndices (fInliers);
+    extract.setNegative (true);    
+    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    extract.filter (*env_cloud);       
 }
 
 boost::filesystem::path RobotModel::resolve_path( const boost::filesystem::path& p, const boost::filesystem::path& base )
@@ -670,21 +711,21 @@ bool RobotModel::getJointLimits(std::vector< double > &lower_limits, std::vector
     std::vector< std::pair<std::string, urdf::Joint> > planning_groups_joints_names;
     std::string base_link, tip_link;
     if(!getPlanningGroupJointinformation(planning_group_name_, planning_groups_joints_names, base_link, tip_link))
-    return false;
+	return false;
     //lower_limits.resize(planning_groups_joints_names.size());
     //upper_limits.resize(planning_groups_joints_names.size());
     lower_limits.clear();
     upper_limits.clear();
-
-
+    
+    
     for(auto it = planning_groups_joints_names.begin(); it != planning_groups_joints_names.end(); it++)
     {
         lower_limits.push_back(it->second.limits->lower)  ;
-        upper_limits.push_back(it->second.limits->upper)  ;
+        upper_limits.push_back(it->second.limits->upper)  ;	
     }
-
+    
     assert(lower_limits.size() == planning_groups_joints_names.size());
-
+    
     return true;
 }
 
@@ -706,15 +747,9 @@ void RobotModel::manipulabilityIndex(KDL::Jacobian  &jacobian, double &manipulab
 
 void RobotModel::computeJacobain(const std::string &chain_root_link,const  std::string& tip_link, std::map<std::string, double> joints_name_values, KDL::Jacobian  &jacobian)
 {
-
-//    std::cout << "inside computeJacobain. . . .. ." << chain_root_link<< "==" << tip_link<< "\n";
-
-
 //#define COMPUTEJACOBAIN_LOG
     KDL::Chain kdl_chain;
-
     kdl_tree_.getChain(chain_root_link , tip_link , kdl_chain);
-
     std::string joint_name;
     double joint_value;
     KDL::JntArray kdl_chain_joint_array;
@@ -778,7 +813,7 @@ bool RobotModel::getPlanningGroupJointinformation(const std::string planningGrou
     }
 
     if(!kdl_tree_.getChain(base_link, tip_link , kdl_chain_))
-    return false;
+	return false;
 
     urdf::Joint planning_group_joint;
 
@@ -793,7 +828,7 @@ bool RobotModel::getPlanningGroupJointinformation(const std::string planningGrou
             planning_groups_joints.push_back(std::make_pair(joint_name ,planning_group_joint )   );
         }
     }
-
+    
     return true;
 }
 
@@ -808,7 +843,7 @@ void RobotModel::getPlanningGroupJointsName(const std::string planningGroupName,
 
     planning_group_joints_name.clear();
 
-    for(std::vector< std::pair<std::string, urdf::Joint> >::iterator it= planning_group_joints.begin(); it!=planning_group_joints.end();it++)
+    for(std::vector< std::pair<std::string, urdf::Joint> >::iterator it= planning_group_joints.begin(); it!=planning_group_joints.end();it++)    
         planning_group_joints_name.push_back(it->first);
 }
 
@@ -834,20 +869,20 @@ urdf::ModelInterfaceSharedPtr const &  RobotModel::getURDF()
 
 template<class urdfT>
 void RobotModel::registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud )
-{
+{   
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
 
     std::string abs_path_to_mesh_file;
-
-    std::shared_ptr<collision_detection::MeshLoader> mesh_loader(new collision_detection::MeshLoader());
+    
+    std::shared_ptr<collision_detection::MeshLoader> mesh_loader(new collision_detection::MeshLoader());    
 
     for(std::size_t i=0;i<urdf_link.size();i++ )
     {
         if(urdf_link.at(i)->geometry->type == urdf::Geometry::MESH)
-        {
-        LOG_DEBUG_S<<"[registerLinks]: Registering mesh file ";
-
+        {	    
+	    LOG_DEBUG_S<<"[registerLinks]: Registering mesh file ";	    
+           
             urdf::MeshSharedPtr urdf_mesh_ptr= urdf::static_pointer_cast <urdf::Mesh> (urdf_link.at(i)->geometry);
 
             urdf_directory_path=urdf_file_abs_path_.substr(0, urdf_file_abs_path_.find_last_of("/") );
@@ -862,10 +897,10 @@ void RobotModel::registerLinks(const urdfT &urdf_link, std::vector<pcl::PointClo
         }
         else if(urdf_link.at(i)->geometry->type == urdf::Geometry::BOX)
         {
-        LOG_DEBUG_S<<"[registerLinks]: Registering box ";
+	    LOG_DEBUG_S<<"[registerLinks]: Registering box ";
 
             urdf::BoxSharedPtr urdf_box_ptr= urdf::static_pointer_cast <urdf::Box> (urdf_link.at(i)->geometry);
-
+            
             pcl::PointCloud<pcl::PointXYZ> point_cloud;
 
             createPtCloudFromBox(point_cloud,urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z);
@@ -873,7 +908,7 @@ void RobotModel::registerLinks(const urdfT &urdf_link, std::vector<pcl::PointClo
         }
         else if(urdf_link.at(i)->geometry->type == urdf::Geometry::CYLINDER)
         {
-        LOG_DEBUG_S<<"[registerLinks]: Registering cylinder ";
+	    LOG_DEBUG_S<<"[registerLinks]: Registering cylinder ";
 
             urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (urdf_link.at(i)->geometry);
 
@@ -883,10 +918,10 @@ void RobotModel::registerLinks(const urdfT &urdf_link, std::vector<pcl::PointClo
         }
         else if(urdf_link.at(i)->geometry->type == urdf::Geometry::SPHERE)
         {
-        LOG_DEBUG_S<<"[registerLinks]: Registering sphere ";
+	    LOG_DEBUG_S<<"[registerLinks]: Registering sphere ";            
 
             urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (urdf_link.at(i)->geometry);
-
+            
             pcl::PointCloud<pcl::PointXYZ> point_cloud;
             createPtCloudFromSphere(point_cloud, urdf_sphere_ptr->radius);
             link_point_cloud.push_back(point_cloud);
@@ -983,20 +1018,20 @@ void RobotModel::addGraspObject(urdf::CollisionSharedPtr grasp_object, std::stri
     robot_collision_detector_->AbstractCollisionDetection::addDisabledCollisionPairs(disable_collision_grasp_object_w_parent_link);
 
     // register the grasp object to the collision manager.
-    double grasp_rot_x = 0.0, grasp_rot_y = 0.0, grasp_rot_z = 0.0, grasp_rot_w = 0.0;
+    double grasp_rot_x = 0.0, grasp_rot_y = 0.0, grasp_rot_z = 0.0, grasp_rot_w = 0.0;    
     grasp_object_frame_in_base_link.M.GetQuaternion(grasp_rot_x, grasp_rot_y, grasp_rot_z, grasp_rot_w);
-
+    
     /*fcl::Quaternion3f collision_quaternion_orientation (grasp_rot_x, grasp_rot_y, grasp_rot_z, grasp_rot_w);
     fcl::Vec3f collision_object_translation (grasp_object_frame_in_base_link.p.data[0],
                                              grasp_object_frame_in_base_link.p.data[1],
                                              grasp_object_frame_in_base_link.p.data[2]);
     */
-
+    
     base::Pose collision_pose;
     collision_pose.position.x() = grasp_object_frame_in_base_link.p.data[0];
     collision_pose.position.y() = grasp_object_frame_in_base_link.p.data[1];
     collision_pose.position.z() = grasp_object_frame_in_base_link.p.data[2];
-
+    
     collision_pose.orientation.x() = grasp_rot_x;
     collision_pose.orientation.y() = grasp_rot_y;
     collision_pose.orientation.z() = grasp_rot_z;
@@ -1021,8 +1056,8 @@ void RobotModel::addGraspObject(urdf::CollisionSharedPtr grasp_object, std::stri
         //double scale_for_mesha_files_x=urdf_mesh_ptr->scale.x;
         //double scale_for_mesha_files_y=urdf_mesh_ptr->scale.y;
         //double scale_for_mesha_files_z=urdf_mesh_ptr->scale.z;
-
-    Eigen::Vector3d mesh_scale(urdf_mesh_ptr->scale.x, urdf_mesh_ptr->scale.y, urdf_mesh_ptr->scale.z);
+	
+	Eigen::Vector3d mesh_scale(urdf_mesh_ptr->scale.x, urdf_mesh_ptr->scale.y, urdf_mesh_ptr->scale.z);
 
         boost::filesystem::path relative_path_of_mesh_file_in_urdf_file=urdf_mesh_ptr->filename;
 
@@ -1139,7 +1174,7 @@ void RobotModel::removeGraspObject(const std::string grasp_object_name)
     robot_collision_detector_->removeDisabledCollisionLink(grasp_object_name);
 
      // remove the grasp link from collision data base
-    //this->self_collision_detection.removeSelfCollisionObject(grasp_object_name);
+    //this->self_collision_detection.removeSelfCollisionObject(grasp_object_name);    
     robot_collision_detector_->removeSelfCollisionObject(grasp_object_name);
 
     #ifdef REMOVEGRASPOBJECT_LOG
@@ -1185,11 +1220,11 @@ void RobotModel::updateJoint(std::string joint_name, double joint_value)
                 robot_state_.robot_joints_[joint_name].setJointValue (joint_value);
 
             std::vector<std:: string> visited_links;
-
+     
             dfsTraversing(start_link_name, visited_links);
-
+ 
             settingVisitedFlagLinkToFalse(visited_links);
-        //std::cout<<"list of visited link for joint "<<joint_name.c_str()<<"  "<<visited_links.size()<<std::endl;
+	    //std::cout<<"list of visited link for joint "<<joint_name.c_str()<<"  "<<visited_links.size()<<std::endl;
             LOG_DEBUG_S<<"========================== list of visited link for joint "<<joint_name.c_str();
 
             /*for(std::size_t i=0;i<visited_links.size();i++)
@@ -1199,7 +1234,7 @@ void RobotModel::updateJoint(std::string joint_name, double joint_value)
 
             std::string name_of_visited_link, name_of_collision_object;
             //double quaternion_w,quaternion_x,quaternion_y,quaternion_z, translation_x,translation_y,translation_z;
-        base::Pose collision_object_pose;
+	    base::Pose collision_object_pose;
 
 
             ////////////////////link visual and collision pose has been updated in dfstraverse, but we have to update teh collision manger //////////////////////////////////
@@ -1207,18 +1242,17 @@ void RobotModel::updateJoint(std::string joint_name, double joint_value)
             {
                 name_of_visited_link=visited_links.at(i);
 
-
                 std::vector<urdf::CollisionSharedPtr >link_collisions = robot_state_.robot_links_[name_of_visited_link].getLinkCollisions() ;
 
                 for(std::size_t j=0;j<link_collisions.size();j++ )
                 {
                     urdf::CollisionSharedPtr link_collision_global_pose =link_collisions.at(j);
 
-            collision_object_pose.position.x() = link_collision_global_pose->origin.position.x;
+		    collision_object_pose.position.x() = link_collision_global_pose->origin.position.x;
                     collision_object_pose.position.y() = link_collision_global_pose->origin.position.y;
                     collision_object_pose.position.z() = link_collision_global_pose->origin.position.z;
-
-            collision_object_pose.orientation.w() = link_collision_global_pose->origin.rotation.w;
+		    	    
+		    collision_object_pose.orientation.w() = link_collision_global_pose->origin.rotation.w;
                     collision_object_pose.orientation.x() = link_collision_global_pose->origin.rotation.x;
                     collision_object_pose.orientation.y() = link_collision_global_pose->origin.rotation.y;
                     collision_object_pose.orientation.z() = link_collision_global_pose->origin.rotation.z;
@@ -1229,16 +1263,16 @@ void RobotModel::updateJoint(std::string joint_name, double joint_value)
                 }
 
             }
-
+            
         }
     }
 }
 
 void RobotModel::updateJointGroup(const std::vector<std::string> &joint_names, const Eigen::VectorXd &joint_values)
 {
-    assert(joint_names.size() == joint_values.size());
-    //auto start_time = std::chrono::high_resolution_clock::now();
-
+    assert(joint_names.size() == joint_values.size());	    
+    //auto start_time = std::chrono::high_resolution_clock::now(); 
+    
     for(std::size_t i=0;i<joint_names.size();i++)
         this->updateJoint(joint_names.at(i) ,joint_values(i) ) ;
       // 	    auto finish_time = std::chrono::high_resolution_clock::now();
@@ -1250,7 +1284,7 @@ void RobotModel::updateJointGroup(const base::samples::Joints &joint_values)
 {
 
     for(std::size_t i = 0; i < joint_values.size(); i++)
-    {
+    {	
         updateJoint(joint_values.names[i], joint_values.elements[i].position) ;
     }
 }
@@ -1274,41 +1308,52 @@ void RobotModel::updateJointGroup( const std::vector<std::string> &joint_names, 
     }
 }
 
-void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pclCloud, const Eigen::Vector3d &sensor_origin,
-                                  const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
+void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
+                                  std::string collision_object_name)
+{    
+
+    world_collision_detector_->updateEnvironment(pcl_cloud, sensor_origin, collision_object_name);
+}
+
+void RobotModel::assignPlanningScene(	const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
+					const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
 {
 
-    if(collision_object_name.empty())
-    collision_object_name = link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
+    if(collision_object_name.empty())                            
+	collision_object_name = link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
+    
+    
+    base::Pose collision_object_pose;
+    collision_object_pose.position.setZero();
+    collision_object_pose.orientation.setIdentity();
 
-    world_collision_detector_->registerPointCloudToCollisionManager(pclCloud, sensor_origin, octree_resolution, collision_object_name );
+    world_collision_detector_->registerPointCloudToCollisionManager(pcl_cloud, sensor_origin, collision_object_pose, octree_resolution, collision_object_name );    
 }
 
 bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_collision_manager_num_max_contacts)
 {
     if (robot_collision_detector_->checkSelfCollision(self_collision_num_max_contacts))
     {
-
-    LOG_DEBUG("[RobotModel]: There is no self collision, now checking for collision against environment");
-
-    if(robot_collision_detector_->checkWorldCollision(external_collision_manager_num_max_contacts))
-    {
-            LOG_DEBUG("[RobotModel]: There is no collision against environment" );
+	
+	LOG_DEBUG("[RobotModel]: There is no self collision, now checking for collision against environment");        
+	
+	if(robot_collision_detector_->checkWorldCollision(external_collision_manager_num_max_contacts))
+	{
+            LOG_DEBUG("[RobotModel]: There is no collision against environment" );           
             return true;
         }
         else
-    {
+	{           
             LOG_DEBUG("[RobotModel]: There is collision against environment" );
             return false;
         }
-    }
+    }    
     return false;
 }
 
 
-
 /*void RobotModel::ConvertPoseBetweenFrames( const std::string B_Frame_Name, const base::samples::RigidBodyState &F_B_C , const std::string &A_Frame_Name ,
-                       base::samples::RigidBodyState &F_A_C )
+					   base::samples::RigidBodyState &F_A_C )
 {
     KDL::Frame kdl_frame_f_b_c;
     kdl_frame_f_b_c.p.data[0] = F_B_C.position(0);
@@ -1317,14 +1362,14 @@ bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_
 
     kdl_frame_f_b_c.M = KDL::Rotation::Quaternion(F_B_C.orientation.x(), F_B_C.orientation.y(),
     F_B_C.orientation.z(), F_B_C.orientation.w() );
-
-    KDL::Frame kdl_frame_f_a_c;
+    
+    KDL::Frame kdl_frame_f_a_c; 
     ConvertPoseBetweenFrames(B_Frame_Name, kdl_frame_f_b_c , A_Frame_Name, kdl_frame_f_a_c );
-
+    
     F_A_C.position(0) = kdl_frame_f_a_c.p.data[0];
     F_A_C.position(1) = kdl_frame_f_a_c.p.data[1];
     F_A_C.position(2) = kdl_frame_f_a_c.p.data[2];
-
+    
     kdl_frame_f_a_c.M.GetQuaternion(F_A_C.orientation.x(),F_A_C.orientation.y(),F_A_C.orientation.z(),F_A_C.orientation.w());
 }*/
 
@@ -1367,17 +1412,17 @@ void RobotModel::ConvertPoseBetweenFrames( const std::string B_Frame_Name, const
         link_name=kdl_chain_.getSegment(i).getName();
         joint_name=kdl_chain_.getSegment(i).getJoint().getName();
         joint_type=this->urdf_model_->getJoint(joint_name)->type;
-
+        
         //std::string joint_array_names[]={"UNKNOWN", "REVOLUTE", "CONTINUOUS", "PRISMATIC", "FLOATING", "PLANAR", "FIXED"};
         //std::cout<<"the link name is " <<link_name<<std::endl;
         //std::cout<<"the joint is:" << joint_name <<std::endl;
         //std::cout<<"joint type is "<<joint_array_names[joint_type] <<std::endl;
-
+        
         if(joint_type!=urdf::Joint::FIXED)
         {
             joint_value=robot_state_.robot_joints_[joint_name].getJointValue();
             kdl_chain_joint_array.data[j]=joint_value;
-            j++;
+            j++;            
         }
     }
     fk_solver.JntToCart(kdl_chain_joint_array, F_A_B);
@@ -1413,8 +1458,8 @@ void RobotModel::getRobotVisuals(std::vector<urdf::VisualSharedPtr > &  robotVis
 }
 
 void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, std::string link_name, std::string collision_object_name)
-{
-
+{    
+    
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
 
@@ -1422,9 +1467,9 @@ void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, 
     {
         collision_object_name=link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
     }
-
+    
     LOG_DEBUG_S<<"[addCollisionsToWorld]: Collision object name is "<<collision_object_name;
-
+        
     base::Pose collision_object_pose;
     collision_object_pose.position.x() = robotCollision->origin.position.x;
     collision_object_pose.position.y() = robotCollision->origin.position.y;
@@ -1436,40 +1481,40 @@ void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, 
 
     if(robotCollision->geometry->type == urdf::Geometry::MESH)
     {
-    LOG_DEBUG_S<<"[addCollisionsToWorld]: registering mesh file";
-
+	LOG_DEBUG_S<<"[addCollisionsToWorld]: registering mesh file";
+        
         urdf::MeshSharedPtr urdf_mesh_ptr= urdf::static_pointer_cast <urdf::Mesh> (robotCollision->geometry);
+	
+	Eigen::Vector3d mesh_scale(urdf_mesh_ptr->scale.x, urdf_mesh_ptr->scale.y, urdf_mesh_ptr->scale.z);            
 
-    Eigen::Vector3d mesh_scale(urdf_mesh_ptr->scale.x, urdf_mesh_ptr->scale.y, urdf_mesh_ptr->scale.z);
-
-        urdf_directory_path = urdf_file_abs_path_.substr(0, urdf_file_abs_path_.find_last_of("/") );
+        urdf_directory_path = urdf_file_abs_path_.substr(0, urdf_file_abs_path_.find_last_of("/") );	
 
         abs_path_of_mesh_file =resolve_path( urdf_mesh_ptr->filename, urdf_directory_path );
-
+        
         world_collision_detector_->registerMeshToCollisionManager(abs_path_of_mesh_file.string(), mesh_scale, collision_object_name, collision_object_pose, link_padding_);
     }
     else if(robotCollision->geometry->type == urdf::Geometry::BOX)
     {
-    LOG_DEBUG_S<<"[addCollisionsToWorld]: registering box";
+	LOG_DEBUG_S<<"[addCollisionsToWorld]: registering box";
 
         urdf::BoxSharedPtr urdf_box_ptr= urdf::static_pointer_cast <urdf::Box> (robotCollision->geometry);
-
+        
         world_collision_detector_->registerBoxToCollisionManager( urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z,collision_object_name, collision_object_pose, link_padding_);
     }
     else if(robotCollision->geometry->type == urdf::Geometry::CYLINDER)
     {
-    LOG_DEBUG_S<<"[addCollisionsToWorld]: registering cylinder";
+	LOG_DEBUG_S<<"[addCollisionsToWorld]: registering cylinder";
 
         urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (robotCollision->geometry);
-
+        
         world_collision_detector_->registerCylinderToCollisionManager(urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length, collision_object_name,collision_object_pose,link_padding_);
     }
     else if(robotCollision->geometry->type == urdf::Geometry::SPHERE)
     {
-    LOG_DEBUG_S<<"[addCollisionsToWorld]: registering sphere";
+	LOG_DEBUG_S<<"[addCollisionsToWorld]: registering sphere";
 
         urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (robotCollision->geometry);
-
+        
         world_collision_detector_->registerSphereToCollisionManager(urdf_sphere_ptr->radius, collision_object_name, collision_object_pose ,link_padding_  );
     }
 }
@@ -1495,8 +1540,9 @@ float RobotModel::randomFloat(const float& min,const  float &max)
     return min + r * (max - min);
 }
 
-void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
-{
+void RobotModel::selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
+				    std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
+{    
     double start_time = omp_get_wtime();
 
     RobotState robot_state= this->getRobotState();
@@ -1509,53 +1555,102 @@ void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, 
     {
         KDL::Frame link_pose_in_sensor_frame;
         Eigen::Affine3f link_pose_in_sensor_frame_eigen_matrix;
-    if(use_selfcollision == motion_planners::VISUAL)
-    {
-        std::vector<urdf::VisualSharedPtr > links_collision=it->second.getLinkVisuals();
-        std::vector<pcl::PointCloud<pcl::PointXYZ> > collision_point_cloud=it->second.getVisualPointCloud();
-        for(std::size_t i=0;i<links_collision.size();i++)
-        {
-        KDL::Frame link_pose_in_base_link=toKdl( links_collision.at(i)->origin);
-        this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
-        KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
-        pcl::transformPointCloud (collision_point_cloud.at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
-        robot_pointcloud = robot_pointcloud + link_pointcloud_transformed_in_sensor_frame;
-        }
+	if(use_selfcollision == motion_planners::VISUAL)
+	{
+	    std::vector<urdf::VisualSharedPtr > links_collision=it->second.getLinkVisuals();
+	    std::vector<pcl::PointCloud<pcl::PointXYZ> > collision_point_cloud=it->second.getVisualPointCloud();
+	    for(std::size_t i=0;i<links_collision.size();i++)
+	    {
+		KDL::Frame link_pose_in_base_link=toKdl( links_collision.at(i)->origin);
+		this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
+		KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		pcl::transformPointCloud (collision_point_cloud.at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		robot_pointcloud = robot_pointcloud + link_pointcloud_transformed_in_sensor_frame;
+	    }
+	}
+	else
+	{
+	    std::vector<urdf::CollisionSharedPtr > links_collision=it->second.getLinkCollisions();
+	    std::vector<pcl::PointCloud<pcl::PointXYZ> > collision_point_cloud=it->second.getCollisionPointCloud();
+	    for(std::size_t i=0;i<links_collision.size();i++)
+	    {
+		KDL::Frame link_pose_in_base_link=toKdl( links_collision.at(i)->origin);
+		this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
+		KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		pcl::transformPointCloud (collision_point_cloud.at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		robot_pointcloud = robot_pointcloud + link_pointcloud_transformed_in_sensor_frame;
+	    }
+	}        
     }
-    else
-    {
-        std::vector<urdf::CollisionSharedPtr > links_collision=it->second.getLinkCollisions();
-        std::vector<pcl::PointCloud<pcl::PointXYZ> > collision_point_cloud=it->second.getCollisionPointCloud();
-        for(std::size_t i=0;i<links_collision.size();i++)
-        {
-        KDL::Frame link_pose_in_base_link=toKdl( links_collision.at(i)->origin);
-        this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
-        KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
-        pcl::transformPointCloud (collision_point_cloud.at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
-        robot_pointcloud = robot_pointcloud + link_pointcloud_transformed_in_sensor_frame;
-        }
-    }
-    }
-    // pcl::io::savePCDFile("robot.pcd",robot_pointcloud);
+    // pcl::io::savePCDFile("robot.pcd",robot_pointcloud);    
     double end_time = omp_get_wtime();
     LOG_DEBUG_S<<"[selfFilter:] Transforming point cloud took "<< end_time - start_time;
-
+    //std::cout<<"  Size = "<<scene_ptr->size()<<"  "<<robot_pointcloud.size()<<"   "<<std::endl;
     start_time = omp_get_wtime();
-    subtractingPtClouds( scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(robot_pointcloud ) , new_scene_ptr);
+    subtractingPtCloudsFullBody( scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(robot_pointcloud ) , new_scene_ptr);    
     end_time = omp_get_wtime();
-
+    
     LOG_DEBUG_S<<"[selfFilter:] Subtracting point cloud took "<< end_time - start_time;
-
-    return;
+    
+    return;    
 }
+
+void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
+{ 
+    double start_time = omp_get_wtime();
+
+    RobotState robot_state= this->getRobotState();
+    std::string A_Frame_Name=sensor_frame_name;
+    std::string B_Frame_Name=this->getURDF()->getRoot()->name ;
+
+    pcl::PointCloud<pcl::PointXYZ> link_pointcloud_transformed_in_sensor_frame;
+ 
+    for(std::map<std::string, RobotLink>::iterator it=robot_state.robot_links_.begin();it!=robot_state.robot_links_.end();it++)
+    {
+        KDL::Frame link_pose_in_sensor_frame;
+        Eigen::Affine3f link_pose_in_sensor_frame_eigen_matrix;
+	if(use_selfcollision == motion_planners::VISUAL)
+	{
+	    std::vector<urdf::VisualSharedPtr > links_collision=it->second.getLinkVisuals();
+	    std::vector<pcl::PointCloud<pcl::PointXYZ> > collision_point_cloud=it->second.getVisualPointCloud();
+	    for(std::size_t i=0;i<links_collision.size();i++)
+	    {
+		KDL::Frame link_pose_in_base_link=toKdl( links_collision.at(i)->origin);
+		this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
+		KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		pcl::transformPointCloud (it->second.getVisualPointCloud().at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		subtractingPtClouds(scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(link_pointcloud_transformed_in_sensor_frame) );
+	    }
+	}
+	else
+	{
+	    std::vector<urdf::CollisionSharedPtr > links_collision=it->second.getLinkCollisions();
+	    std::vector<pcl::PointCloud<pcl::PointXYZ> > collision_point_cloud=it->second.getCollisionPointCloud();
+	    for(std::size_t i=0;i<links_collision.size();i++)
+	    {
+		KDL::Frame link_pose_in_base_link=toKdl( links_collision.at(i)->origin);
+		this->ConvertPoseBetweenFrames( B_Frame_Name, link_pose_in_base_link , A_Frame_Name , link_pose_in_sensor_frame);
+		KDLFrameToEigenMatrix(link_pose_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+		pcl::transformPointCloud (collision_point_cloud.at(i), link_pointcloud_transformed_in_sensor_frame, link_pose_in_sensor_frame_eigen_matrix);
+    		
+		subtractingPtClouds(scene_ptr, boost::make_shared<pcl::PointCloud<pcl::PointXYZ> >(link_pointcloud_transformed_in_sensor_frame) );
+	    }
+	}        
+    }
+    // pcl::io::savePCDFile("robot.pcd",robot_pointcloud);    
+    double end_time = omp_get_wtime();
+    LOG_DEBUG_S<<"[selfFilter:] Subtracting point cloud took "<< end_time - start_time;
+    return;    
+}
+
 
 void RobotModel::pclStatisticalOutlierRemoval(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud)
 {
-    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-    sor.setInputCloud (input_cloud);
-    sor.setMeanK (50);
-    sor.setStddevMulThresh (1.0);
-    sor.filter (*filtered_cloud);
+	pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+	sor.setInputCloud (input_cloud);
+	sor.setMeanK (50);
+  	sor.setStddevMulThresh (1.0);
+  	sor.filter (*filtered_cloud);
 }
 
 void RobotModel::printWorldCollisionObject()
@@ -1654,5 +1749,4 @@ void RobotModel::getWorldDistanceInfo(std::vector<collision_detection::DistanceI
 }
 
 
-
-}// end namespace
+}// end namespace 

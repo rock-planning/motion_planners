@@ -31,6 +31,7 @@ struct StompConfig
     double control_cost_weight_;
     double delay_per_iteration_;
     double resolution_;
+    double min_cost_improvement_; //When the cost if below this threshold, the optimization is stopped.
 
     std::vector<double> noise_stddev_;
     std::vector<double> noise_decay_;

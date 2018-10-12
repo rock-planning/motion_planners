@@ -95,19 +95,17 @@ struct PlannerStatus
         CONSTRAINED_POSE_NOT_WITHIN_BOUNDS,        
         /// Planning reuest is successfully created.
         PLANNING_REQUEST_SUCCESS,
-        /// The planner timeout
+        // The planner timeout
         TIMEOUT,
-        /// Collision link name
-        COLLISION_LINK_NAME,
-        /// Invalid start state or no start state specified
+        // Invalid start state or no start state specified
         INVALID_START_STATE,
-        /// Invalid goal state
+        // Invalid goal state
         INVALID_GOAL_STATE,
-        /// The goal is of a type that a planner does not recognize
+        // The goal is of a type that a planner does not recognize
         UNRECOGNIZED_GOAL_TYPE,
-        /// The planner found an approximate solution
+        // The planner found an approximate solution
         APPROXIMATE_SOLUTION,
-        /// The planner found an exact solution
+        // The planner found an exact solution
         EXACT_SOLUTION,
 	// Robot model initialisation failed
 	ROBOTMODEL_INITIALISATION_FAILED,

@@ -10,7 +10,8 @@ CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 find_package(orocos_kdl REQUIRED)
 find_package(OpenMP REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 REQUIRED)  
+
 INCLUDE(FindPkgConfig)
 #pkg_check_modules(YAML REQUIRED yaml-cpp)
 
