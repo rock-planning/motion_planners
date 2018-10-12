@@ -62,8 +62,8 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
         collision_detection::DistanceInformation &dist = distance_info.at(i);
 
         if(dist.min_distance < m_distance_tolerance){
-            std::cout << "distance between . . . ." << dist.object1 << " and " << dist.object2 << " : " << dist.min_distance << "\n";
-            std::cout << dist << "\n";
+//            std::cout << "distance between . . . ." << dist.object1 << " and " << dist.object2 << " : " << dist.min_distance << "\n";
+//            std::cout << dist << "\n";
         }
 
         if(dist.min_distance > 0 && dist.min_distance < m_distance_tolerance)
@@ -86,8 +86,8 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
                 for(int i=0; i<contact_info.size(); i++){
                     Collision &coll = collisions.at(i);
                     collision_detection::ContactInformation &con = contact_info.at(i);
-                    std::cout << "Collision between . . . ." << con.object1 << " and " << con.object2 << " : " << - con.penetration_depth  << "\n";
-                    std::cout << con << "\n";
+//                    std::cout << "Collision between . . . ." << con.object1 << " and " << con.object2 << " : " << - con.penetration_depth  << "\n";
+//                    std::cout << con << "\n";
                     coll.distance = - con.penetration_depth;
                     coll.normalB2A = con.contact_normal;
                     coll.ptA = con.contact_position;
