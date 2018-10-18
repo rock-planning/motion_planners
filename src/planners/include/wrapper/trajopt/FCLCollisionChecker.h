@@ -30,6 +30,9 @@ public:
     double getContactDistance();
     void getContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions);
     void getDiscreteCollisionInfo(vector<Collision> &collisions);
+private:
+    void transformPointToLocalFrame(const std::string &link_name, const Eigen::Vector3d &point_in, Eigen::Vector3d &point_out);
+    void transformNormalToLocalFrame(const std::string &link_name, const Eigen::Vector3d &normal_in, Eigen::Vector3d &normal_out);
 };
 
 typedef boost::shared_ptr<FCLCollisionChecker> FCLCollisionCheckerPtr;
