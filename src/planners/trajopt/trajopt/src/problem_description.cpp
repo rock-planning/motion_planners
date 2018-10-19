@@ -4,12 +4,10 @@
 #include "utils/logging.hpp"
 #include "sco/expr_ops.hpp"
 #include "sco/expr_op_overloads.hpp"
+#include "sco/SQPConfig.h"
 #include "trajopt/kinematic_terms.hpp"
 #include "trajopt/trajectory_costs.hpp"
 #include "trajopt/collision_terms.hpp"
-//#include "trajopt/rave_utils.hpp"
-//#include "trajopt/rave_utils.hpp"
-//#include "trajopt/traj_plotter.hpp"
 #include "utils/eigen_conversions.hpp"
 #include "utils/eigen_slicing.hpp"
 #include <boost/algorithm/string.hpp>
@@ -145,6 +143,53 @@ void readYamlFile(char* filename, YAML::Node &config)
         std::cout << e.what() << "\n";
     }
 }
+
+SQPConfig getSQPConfig(const Json::Value& root){
+    SQPConfig config;
+    if (root.isMember("sqp")) {
+      Json::Value v = root["sqp"];
+      childFromJson(v, config.improve_ratio_threshold_, "improve_ratio_threshold");
+      childFromJson(v, config.min_trust_box_size_, "min_trust_box_size");
+      childFromJson(v, config.min_approx_improve_, "min_approx_improve");
+      childFromJson(v, config.min_approx_improve_frac_, "min_approx_improve_frac");
+      childFromJson(v, config.max_iter_, "max_iter");
+      childFromJson(v, config.trust_shrink_ratio_, "trust_shrink_ratio");
+      childFromJson(v, config.trust_expand_ratio_, "trust_expand_ratio");
+      childFromJson(v, config.cnt_tolerance_, "cnt_tolerance");
+      childFromJson(v, config.max_merit_coeff_increases_, "max_merit_coeff_increases");
+      childFromJson(v, config.merit_coeff_increase_ratio_, "merit_coeff_increase_ratio");
+      childFromJson(v, config.merit_error_coeff_, "merit_error_coeff");
+      childFromJson(v, config.trust_box_size_, "trust_box_size");
+    }
+    else {
+      PRINT_AND_THROW("missing field: sqp");
+    }
+    return config;
+}
+
+SQPConfig getSQPConfig(const YAML::Node& root){
+    SQPConfig config;
+    if (root["sqp"]) {
+      YAML::Node v = root["sqp"];
+      childFromYaml(v, config.improve_ratio_threshold_, "improve_ratio_threshold");
+      childFromYaml(v, config.min_trust_box_size_, "min_trust_box_size");
+      childFromYaml(v, config.min_approx_improve_, "min_approx_improve");
+      childFromYaml(v, config.min_approx_improve_frac_, "min_approx_improve_frac");
+      childFromYaml(v, config.max_iter_, "max_iter");
+      childFromYaml(v, config.trust_shrink_ratio_, "trust_shrink_ratio");
+      childFromYaml(v, config.trust_expand_ratio_, "trust_expand_ratio");
+      childFromYaml(v, config.cnt_tolerance_, "cnt_tolerance");
+      childFromYaml(v, config.max_merit_coeff_increases_, "max_merit_coeff_increases");
+      childFromYaml(v, config.merit_coeff_increase_ratio_, "merit_coeff_increase_ratio");
+      childFromYaml(v, config.merit_error_coeff_, "merit_error_coeff");
+      childFromYaml(v, config.trust_box_size_, "trust_box_size");
+    }
+    else {
+      PRINT_AND_THROW("missing field: sqp");
+    }
+    return config;
+}
+
 TRAJOPT_API ProblemConstructionInfo* gPCI;
 
 void BasicInfo::fromJson(const Json::Value& v) {
@@ -354,17 +399,18 @@ TrajOptResult::TrajOptResult(OptResults& opt, TrajOptProb& prob, OptStatus statu
   traj = getTraj(opt.x, prob.GetVars());
 }
 
-TrajOptResultPtr OptimizeProblem(TrajOptProbPtr prob) {
+TrajOptResultPtr OptimizeProblem(TrajOptProbPtr prob, SQPConfig config) {
 
-    //  Configuration::SaverPtr saver = prob->GetRAD()->Save();
-  BasicTrustRegionSQP opt(prob);
-  opt.max_iter_ = 40;
-  opt.min_approx_improve_frac_ = .001;
-  opt.improve_ratio_threshold_ = .2;
-  opt.merit_error_coeff_ = 20;
-//  if (plot) {
-//    SetupPlotting(*prob, opt);
-//  }
+//  BasicTrustRegionSQP opt(prob, config);
+    BasicTrustRegionSQP opt(prob, prob->getSQPConfig());
+
+//  opt.sqp_config.max_iter_ = 40;
+//  opt.sqp_config.min_approx_improve_frac_ = .001;
+//  opt.sqp_config.improve_ratio_threshold_ = .2;
+//  opt.sqp_config.merit_error_coeff_ = 20;
+//  opt.sqp_config.trust_box_size_ = 0.5;
+
+
   opt.initialize(trajToDblVec(prob->GetInitTraj()));
   OptStatus status = opt.optimize();
   if (status != OptStatus::INVALID)
@@ -373,12 +419,12 @@ TrajOptResultPtr OptimizeProblem(TrajOptProbPtr prob) {
       return TrajOptResultPtr(new TrajOptResult());
 }
 
-TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo& pci) {
+TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo& pci, SQPConfig config) {
 
   const BasicInfo& bi = pci.basic_info;
   int n_steps = bi.n_steps;
 
-  TrajOptProbPtr prob(new TrajOptProb(n_steps, pci.rad, pci.collision_checker));
+  TrajOptProbPtr prob(new TrajOptProb(n_steps, pci.rad, pci.collision_checker, config));
 
 //  int n_dof = prob->m_rad->GetDOF();
 
@@ -417,7 +463,8 @@ TrajOptProbPtr ConstructProblem(const Json::Value& root, ConfigurationPtr rad, C
   pci.rad = rad;
   pci.collision_checker = coll;
   pci.fromJson(root);
-  return ConstructProblem(pci);
+  SQPConfig config = getSQPConfig(root);
+  return ConstructProblem(pci, config);
 }
 
 TrajOptProbPtr ConstructProblem(const YAML::Node& root, ConfigurationPtr rad, CollisionCheckerPtr coll) {
@@ -425,10 +472,11 @@ TrajOptProbPtr ConstructProblem(const YAML::Node& root, ConfigurationPtr rad, Co
   pci.rad = rad;
   pci.collision_checker = coll;
   pci.fromYaml(root);
-  return ConstructProblem(pci);
+  SQPConfig config = getSQPConfig(root);
+  return ConstructProblem(pci, config);
 }
 
-TrajOptProb::TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll) : n_steps(n_steps), m_rad(rad), m_collision_checker(coll) {
+TrajOptProb::TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll, SQPConfig config) : n_steps(n_steps), m_rad(rad), m_collision_checker(coll), sqp_config(config) {
 
     DblVec lower, upper;
     m_rad->getDOFLimits(lower, upper);

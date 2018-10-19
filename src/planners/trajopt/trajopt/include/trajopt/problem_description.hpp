@@ -39,10 +39,12 @@ struct ProblemConstructionInfo;
 struct TrajOptResult;
 typedef boost::shared_ptr<TrajOptResult> TrajOptResultPtr;
 
-TrajOptProbPtr TRAJOPT_API ConstructProblem(const ProblemConstructionInfo&);
+TrajOptProbPtr TRAJOPT_API ConstructProblem(const ProblemConstructionInfo&, SQPConfig config);
 TrajOptProbPtr TRAJOPT_API ConstructProblem(const Json::Value&, ConfigurationPtr rad, CollisionCheckerPtr coll);
 TrajOptProbPtr TRAJOPT_API ConstructProblem(const YAML::Node &, ConfigurationPtr rad, CollisionCheckerPtr coll);
-TrajOptResultPtr TRAJOPT_API OptimizeProblem(TrajOptProbPtr);
+TrajOptResultPtr TRAJOPT_API OptimizeProblem(TrajOptProbPtr, SQPConfig config = SQPConfig());
+SQPConfig getSQPConfig(const Value &root);
+SQPConfig getSQPConfig(const YAML::Node &root);
 
 TRAJOPT_API TrajArray getStraightLineTrajData(int n_steps, int n_dof, DblVec startpoint, DblVec endpoint);
 TRAJOPT_API TrajArray getStationaryTrajData(DblVec startpoint);
@@ -67,7 +69,7 @@ enum TermType {
 class TRAJOPT_API TrajOptProb : public OptProb {
 public:
   TrajOptProb(){}
-  TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll);
+  TrajOptProb(int n_steps, ConfigurationPtr rad, CollisionCheckerPtr coll, SQPConfig config);
   ~TrajOptProb() {}
   VarVector GetVarRow(int i) {
     return m_traj_vars.row(i);
@@ -108,10 +110,12 @@ public:
   }
   TrajArray GetInitTraj() {return m_init_traj;}
 
+  SQPConfig getSQPConfig(){return sqp_config;}
+
   void setRobotModel(ConfigurationPtr rad){ m_rad = rad; }
   void setCollisionChecker(CollisionCheckerPtr coll){m_collision_checker = coll; }
 
-  friend TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo&);
+  friend TrajOptProbPtr ConstructProblem(const ProblemConstructionInfo&, SQPConfig config);
 
 private:
   int n_steps;
@@ -119,6 +123,7 @@ private:
   ConfigurationPtr m_rad;
   TrajArray m_init_traj;
   CollisionCheckerPtr m_collision_checker;
+  SQPConfig sqp_config;
 };
 
 struct TRAJOPT_API TrajOptResult {
