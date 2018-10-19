@@ -52,7 +52,7 @@ void FCLCollisionChecker::transformNormalToLocalFrame(const std::string &link_na
 
 
 FCLCollisionChecker::FCLCollisionChecker(std::shared_ptr<RobotModel> &robot_model):
-    m_robot_model_(robot_model)
+    m_robot_model_(robot_model), m_is_collision_check(true)
 {
 
 }
@@ -112,7 +112,7 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
             std::cout << dist << "\n";
         }
 
-        if(dist.min_distance > 0 && dist.min_distance < m_distance_tolerance)
+        if((!m_is_collision_check || dist.min_distance > 0) && dist.min_distance < m_distance_tolerance)
         {
             coll.distance = dist.min_distance;
 
@@ -124,7 +124,7 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
             collisions.push_back(coll);
             //                std::cout << coll << "\n";
         }
-        else if (dist.min_distance <= 0)
+        else if (m_is_collision_check && dist.min_distance <= 0)
         {
             std::vector<collision_detection::ContactInformation> contact_info;
             bool is_collided = m_robot_model_->getSelfCollisionInfo(contact_info);

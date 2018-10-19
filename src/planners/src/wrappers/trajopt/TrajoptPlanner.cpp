@@ -33,12 +33,13 @@ TrajoptPlanner::~TrajoptPlanner()
 
 bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path)
 {
+    motion_planners::loadConfigFile(config_file_path, m_input_config);
     m_robot_model_ = robot_model;
     m_robot_model_wrapper->setRobotModel(robot_model);
     m_collision_checker_wrapper->setRobotModel(robot_model);
+    m_collision_checker_wrapper->isCollsionCheckNeeded(motion_planners::getValue<bool>(m_input_config["debug_config"], "use_collision_check"));
     m_planning_group_name_ = m_robot_model_->getPlanningGroupName();
     m_robot_model_->getPlanningGroupJointsName(m_planning_group_name_, m_planning_group_joints_name_);
-    motion_planners::loadConfigFile(config_file_path, m_input_config);
     return true;
 }
 

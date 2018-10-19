@@ -12,6 +12,7 @@ class FCLCollisionChecker : public CollisionChecker
 
     double m_distance_tolerance;
     std::shared_ptr<RobotModel> m_robot_model_;
+    bool m_is_collision_check;
 
 protected:
 //    FCLCollisionChecker();
@@ -19,11 +20,13 @@ protected:
 //    FCLCollisionChecker& operator=(const FCLCollisionChecker&); // Prevent assignment
 //    virtual ~FCLCollisionChecker(); // Prevent unwanted destruction
 public:
-    FCLCollisionChecker(){}
+    FCLCollisionChecker(): m_is_collision_check(true) {}
     FCLCollisionChecker(std::shared_ptr<RobotModel> &robot_model);
     virtual ~FCLCollisionChecker();
 
     void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model_ = robot_model; }
+
+    void isCollsionCheckNeeded(bool use_collision){ m_is_collision_check = use_collision; }
 
     // CollisionChecker interface
     void setDistanceTolerance(float distance);
