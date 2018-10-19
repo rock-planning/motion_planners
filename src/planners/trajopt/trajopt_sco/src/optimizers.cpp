@@ -237,7 +237,7 @@ OptStatus BasicTrustRegionSQP::optimize() {
       callCallbacks(x_);
 
       LOG_DEBUG("current iterate: %s", CSTR(x_));
-      LOG_INFO("iteration %i", iter);
+      LOG_DEBUG("iteration %i", iter);
 
       // speedup: if you just evaluated the cost when doing the line search, use that
       if (results_.cost_vals.empty() && results_.cnt_viols.empty()) { //only happens on the first iteration
@@ -320,24 +320,24 @@ OptStatus BasicTrustRegionSQP::optimize() {
         double exact_merit_improve = old_merit - new_merit;
         double merit_improve_ratio = exact_merit_improve / approx_merit_improve;
 
-        if (util::GetLogLevel() >= util::LevelInfo) {
-          LOG_INFO(" ");
+        if (util::GetLogLevel() >= util::LevelDebug) {
+          LOG_DEBUG(" ");
           printCostInfo(results_.cost_vals, model_cost_vals, new_cost_vals,
                         results_.cnt_viols, model_cnt_viols, new_cnt_viols, cost_names,
                         cnt_names, sqp_config.merit_error_coeff_);
-          printf("%15s | %10.3e | %10.3e | %10.3e | %10.3e\n", "TOTAL", old_merit, approx_merit_improve, exact_merit_improve, merit_improve_ratio);
+          LOG_DEBUG("%15s | %10.3e | %10.3e | %10.3e | %10.3e\n", "TOTAL", old_merit, approx_merit_improve, exact_merit_improve, merit_improve_ratio);
         }
 
         if (approx_merit_improve < -1e-5) {
           LOG_ERROR("approximate merit function got worse (%.3e). (convexification is probably wrong to zeroth order)", approx_merit_improve);
         }
         if (approx_merit_improve < sqp_config.min_approx_improve_) {
-          LOG_INFO("converged because improvement was small (%.3e < %.3e)", approx_merit_improve, sqp_config.min_approx_improve_);
+          LOG_DEBUG("converged because improvement was small (%.3e < %.3e)", approx_merit_improve, sqp_config.min_approx_improve_);
           retval = OPT_CONVERGED;
           goto penaltyadjustment;
         }
         if (approx_merit_improve / old_merit < sqp_config.min_approx_improve_frac_) {
-          LOG_INFO(
+          LOG_DEBUG(
               "converged because improvement ratio was small (%.3e < %.3e)",
               approx_merit_improve/old_merit, sqp_config.min_approx_improve_frac_);
           retval = OPT_CONVERGED;
@@ -345,24 +345,24 @@ OptStatus BasicTrustRegionSQP::optimize() {
         } 
         else if (exact_merit_improve < 0 || merit_improve_ratio < sqp_config.improve_ratio_threshold_) {
           adjustTrustRegion(sqp_config.trust_shrink_ratio_);
-          LOG_INFO("shrunk trust region. new box size: %.4f",
+          LOG_DEBUG("shrunk trust region. new box size: %.4f",
               sqp_config.trust_box_size_);
         } else {
           x_ = new_x;
           results_.cost_vals = new_cost_vals;
           results_.cnt_viols = new_cnt_viols;
           adjustTrustRegion(sqp_config.trust_expand_ratio_);
-          LOG_INFO("expanded trust region. new box size: %.4f",sqp_config.trust_box_size_);
+          LOG_DEBUG("expanded trust region. new box size: %.4f",sqp_config.trust_box_size_);
           break;
         }
       }
 
       if (sqp_config.trust_box_size_ < sqp_config.min_trust_box_size_) {
-        LOG_INFO("converged because trust region is tiny");
+        LOG_DEBUG("converged because trust region is tiny");
         retval = OPT_CONVERGED;
         goto penaltyadjustment;
       } else if (iter >= sqp_config.max_iter_) {
-        LOG_INFO("iteration limit");
+        LOG_DEBUG("iteration limit");
         retval = OPT_SCO_ITERATION_LIMIT;
         goto cleanup;
       }
@@ -370,11 +370,11 @@ OptStatus BasicTrustRegionSQP::optimize() {
 
     penaltyadjustment:
     if (results_.cnt_viols.empty() || vecMax(results_.cnt_viols) < sqp_config.cnt_tolerance_) {
-      if (results_.cnt_viols.size() > 0) LOG_INFO("woo-hoo! constraints are satisfied (to tolerance %.2e)", sqp_config.cnt_tolerance_);
+      if (results_.cnt_viols.size() > 0) LOG_DEBUG("woo-hoo! constraints are satisfied (to tolerance %.2e)", sqp_config.cnt_tolerance_);
       goto cleanup;
     }
     else {
-      LOG_INFO("not all constraints are satisfied. increasing penalties");
+      LOG_DEBUG("not all constraints are satisfied. increasing penalties");
       sqp_config.merit_error_coeff_ *= sqp_config.merit_coeff_increase_ratio_;
       sqp_config.trust_box_size_ = fmax(sqp_config.trust_box_size_, sqp_config.min_trust_box_size_ / sqp_config.trust_shrink_ratio_ * 1.5);
     }
@@ -383,14 +383,14 @@ OptStatus BasicTrustRegionSQP::optimize() {
 
   }
   retval = OPT_PENALTY_ITERATION_LIMIT;
-  LOG_INFO("optimization couldn't satisfy all constraints");
+  LOG_DEBUG("optimization couldn't satisfy all constraints");
 
 
   cleanup:
   assert(retval != INVALID && "should never happen");
   results_.status = retval;
   results_.total_cost = vecSum(results_.cost_vals);
-  LOG_INFO("\n==================\n%s==================", CSTR(results_));
+  LOG_DEBUG("\n==================\n%s==================", CSTR(results_));
   callCallbacks(x_);
 
   return retval;
