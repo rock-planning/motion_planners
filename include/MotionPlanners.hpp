@@ -50,7 +50,11 @@ class MotionPlanners
     
     bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken);
     
-    void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);
+    void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);   
+    
+    bool handleCollisionObjectInWorld(const motion_planners::ModelObject &known_object);
+    
+    bool handleGraspObject(const motion_planners::ModelObject &known_object);
     
     std::vector< std::pair<std::string, std::string> > getCollisionObjectNames()
     {
@@ -89,6 +93,8 @@ class MotionPlanners
     bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
     
     void applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud);
+    
+    bool convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object);
 
 };
 

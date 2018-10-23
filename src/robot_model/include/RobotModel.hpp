@@ -148,7 +148,7 @@ class RobotModel
 
         void getRobotVisuals(std::vector<urdf::VisualSharedPtr > &  robotVisuals);
 
-        void addCollisionsToWorld(urdf::CollisionSharedPtr &  robotCollision, std::string link_name, std::string collision_object_name="");
+        void addCollisionsToWorld(urdf::CollisionSharedPtr &  robotCollision, std::string link_name);
 
         //S void addCollisionsToWorld(boost::shared_ptr<fcl::CollisionObject> & collisionObject_ptr, std::string link_name);
 
