@@ -2,15 +2,13 @@
 # include_directories(${Eigen_INCLUDE_DIRS})
 project(trajopt_sco)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../cmake/FindEigen2.cmake")
+find_package(Eigen3 REQUIRED)
 
-#find_package(Eigen3 REQUIRED)
+set (TRAJOPT_SCO_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
 
- set (TRAJOPT_SCO_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
+get_directory_property(TRAJOPT_UTILS_DIR_PATH DIRECTORY ../trajopt_utils DEFINITION TRAJOPT_UTILS_DIR_PATH)
 
- get_directory_property(TRAJOPT_UTILS_DIR_PATH DIRECTORY ../trajopt_utils DEFINITION TRAJOPT_UTILS_DIR_PATH)
-
-include_directories(${Eigen_INCLUDE_DIRS} ${TRAJOPT_SCO_DIR_PATH}/include ${TRAJOPT_UTILS_DIR_PATH}/include)
+include_directories(${EIGEN3_INCLUDE_DIR} ${TRAJOPT_SCO_DIR_PATH}/include ${TRAJOPT_UTILS_DIR_PATH}/include)
 
 
 set(SCO_SOURCE_FILES
