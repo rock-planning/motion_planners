@@ -1,16 +1,14 @@
-
 INCLUDE(FindPkgConfig)
 
 pkg_check_modules(YAML REQUIRED yaml-cpp)
 
 include_directories(
   SYSTEM
-  # ${BULLET_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  ${Eigen2_INCLUDE_DIRS}
-  # ${JSON_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
-include("${CMAKE_CURRENT_LIST_DIR}/../cmake/FindEigen2.cmake")
+
+find_package(Eigen3 REQUIRED)
 
 set (TRAJOPT_PLANNER_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
 
@@ -33,6 +31,3 @@ include_directories(${TRAJOPT_INCLUDE_HEADER}  ${YAML_INCLUDE_DIRS}
 if (NOT APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
 endif()
-
-
-# add_subdirectory(test)

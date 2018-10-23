@@ -37,7 +37,6 @@ ${YAML_INCLUDE_DIRS}
 )
 
 add_library(trajopt SHARED
-        # traj_plotter.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/trajectory_costs.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/kinematic_terms.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/collision_terms.cpp

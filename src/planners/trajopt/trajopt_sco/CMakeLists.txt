@@ -1,5 +1,3 @@
-# find_package(Eigen REQUIRED)
-# include_directories(${Eigen_INCLUDE_DIRS})
 project(trajopt_sco)
 
 find_package(Eigen3 REQUIRED)
