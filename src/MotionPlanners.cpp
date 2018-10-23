@@ -257,6 +257,137 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
+
+bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object)
+{   
+    // assign the object name
+    collision_object->name = known_object.object_name;
+
+    // assign the pose value for the grasp object
+    collision_object->origin.position.x = known_object.relative_pose.position(0);
+    collision_object->origin.position.y = known_object.relative_pose.position(1);
+    collision_object->origin.position.z = known_object.relative_pose.position(2);    
+    collision_object->origin.rotation.setFromQuaternion(known_object.relative_pose.orientation.x(),
+							known_object.relative_pose.orientation.y(),
+							known_object.relative_pose.orientation.z(),
+							known_object.relative_pose.orientation.w());
+
+    if(known_object.model_type == collision_detection::PRIMITIVES)
+    {
+	// box, cylinder or sphere
+	if(known_object.primitive_object.primitive_type == collision_detection::BOX)
+	{
+	    std::shared_ptr<urdf::Box> urdf_box_ptr(new urdf::Box);
+	    urdf_box_ptr->dim.x = known_object.primitive_object.dimensions.at(0);
+	    urdf_box_ptr->dim.y = known_object.primitive_object.dimensions.at(1);
+	    urdf_box_ptr->dim.z = known_object.primitive_object.dimensions.at(2);
+	    
+	    collision_object->geometry = urdf_box_ptr;
+	}                
+	else if (known_object.primitive_object.primitive_type == collision_detection::CYLINDER)
+	{
+	    std::shared_ptr<urdf::Cylinder> urdf_cylinder_ptr(new urdf::Cylinder);
+	    urdf_cylinder_ptr->radius = known_object.primitive_object.radius;
+	    urdf_cylinder_ptr->length = known_object.primitive_object.height;
+
+	    collision_object->geometry = urdf_cylinder_ptr;
+	}
+	else if (known_object.primitive_object.primitive_type == collision_detection::SPHERE)
+	{
+	    std::shared_ptr<urdf::Sphere> urdf_sphere_ptr(new urdf::Sphere);
+	    urdf_sphere_ptr->radius = known_object.primitive_object.radius;
+
+	    collision_object->geometry = urdf_sphere_ptr;
+	}
+	else
+	{
+	    LOG_INFO("[MotionPlanners]: Primitive object type is undefined");
+	    return false;
+	}
+    }
+    else if (known_object.model_type == collision_detection::MESH)
+    {
+	std::shared_ptr<urdf::Mesh> urdf_mesh_ptr(new urdf::Mesh);
+	urdf_mesh_ptr->filename = known_object.object_path;
+
+	collision_object->geometry = urdf_mesh_ptr;
+    }
+    else
+    {
+	LOG_WARN("[MotionPlanners]: Object type is undefined");
+	return false;
+    }
+
+    return true;
+}
+
+bool MotionPlanners::handleCollisionObjectInWorld(const motion_planners::ModelObject &known_object)
+{
+    if(known_object.operation == collision_detection::RESET)
+    {
+	LOG_INFO("[MotionPlanners]: Received known object with RESET");
+	return false;
+    }
+    
+    std::shared_ptr<urdf::Collision> collision_object;
+    if(convertModelObjectToURDFCollision(known_object, collision_object))
+    {
+	if(known_object.operation == collision_detection::REMOVE)
+	{
+	    LOG_INFO("[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str());
+	    robot_model_->removeWorldObject(known_object.object_name);	    
+	}
+	else if (known_object.operation == collision_detection::ADD)
+	{
+	    LOG_INFO("[MotionPlanners]: Add known object with name %s", known_object.object_name.c_str());
+	    robot_model_->addCollisionsToWorld(collision_object, known_object.attach_link_name);
+	}
+	else
+	{
+	    LOG_INFO("[MotionPlanners]: Unknown collision::operation received ");
+	    return false;	    
+        }
+    }
+    else
+	return false;
+    
+    return true;
+}
+
+bool MotionPlanners::handleGraspObject(const motion_planners::ModelObject &known_object)
+{
+    if(known_object.operation == collision_detection::RESET)
+    {
+	LOG_INFO("[MotionPlanners]: Received grasp object with RESET");
+	return false;
+    }
+    
+    std::shared_ptr<urdf::Collision> collision_object;
+    if(convertModelObjectToURDFCollision(known_object, collision_object))
+    {
+	if(known_object.operation == collision_detection::REMOVE)
+	{
+	    LOG_INFO("[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str());
+	    robot_model_->removeGraspObject(known_object.object_name);	    
+	}
+	else if (known_object.operation == collision_detection::ADD)
+	{
+	    LOG_INFO("[MotionPlanners]: Add known object with name %s", known_object.object_name.c_str());
+	    robot_model_->addGraspObject(collision_object, known_object.attach_link_name);
+	}
+	else
+	{
+	    LOG_INFO("[MotionPlanners]: Unknown collision::operation received ");
+	    return false;	    
+        }
+    }
+    else
+	return false;
+    
+    return true;
+}
+
+
 bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken)
 {   
     planner_->updateInitialTrajectory(initial_joint_status_, goal_joint_status_, planner_status);

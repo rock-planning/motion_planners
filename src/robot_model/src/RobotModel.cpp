@@ -1457,18 +1457,18 @@ void RobotModel::getRobotVisuals(std::vector<urdf::VisualSharedPtr > &  robotVis
     }
 }
 
-void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, std::string link_name, std::string collision_object_name)
+void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, std::string link_name)
 {    
     
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
 
-    if(collision_object_name.empty())
+    if(robotCollision->name.empty())
     {
-        collision_object_name=link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
+        robotCollision->name=link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
     }
     
-    LOG_DEBUG_S<<"[addCollisionsToWorld]: Collision object name is "<<collision_object_name;
+    LOG_DEBUG_S<<"[addCollisionsToWorld]: Collision object name is "<<robotCollision->name;
         
     base::Pose collision_object_pose;
     collision_object_pose.position.x() = robotCollision->origin.position.x;
@@ -1491,7 +1491,7 @@ void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, 
 
         abs_path_of_mesh_file =resolve_path( urdf_mesh_ptr->filename, urdf_directory_path );
         
-        world_collision_detector_->registerMeshToCollisionManager(abs_path_of_mesh_file.string(), mesh_scale, collision_object_name, collision_object_pose, link_padding_);
+        world_collision_detector_->registerMeshToCollisionManager(abs_path_of_mesh_file.string(), mesh_scale, robotCollision->name, collision_object_pose, link_padding_);
     }
     else if(robotCollision->geometry->type == urdf::Geometry::BOX)
     {
@@ -1499,7 +1499,7 @@ void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, 
 
         urdf::BoxSharedPtr urdf_box_ptr= urdf::static_pointer_cast <urdf::Box> (robotCollision->geometry);
         
-        world_collision_detector_->registerBoxToCollisionManager( urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z,collision_object_name, collision_object_pose, link_padding_);
+        world_collision_detector_->registerBoxToCollisionManager( urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z,robotCollision->name, collision_object_pose, link_padding_);
     }
     else if(robotCollision->geometry->type == urdf::Geometry::CYLINDER)
     {
@@ -1507,7 +1507,7 @@ void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, 
 
         urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (robotCollision->geometry);
         
-        world_collision_detector_->registerCylinderToCollisionManager(urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length, collision_object_name,collision_object_pose,link_padding_);
+        world_collision_detector_->registerCylinderToCollisionManager(urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length, robotCollision->name,collision_object_pose,link_padding_);
     }
     else if(robotCollision->geometry->type == urdf::Geometry::SPHERE)
     {
@@ -1515,7 +1515,7 @@ void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, 
 
         urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (robotCollision->geometry);
         
-        world_collision_detector_->registerSphereToCollisionManager(urdf_sphere_ptr->radius, collision_object_name, collision_object_pose ,link_padding_  );
+        world_collision_detector_->registerSphereToCollisionManager(urdf_sphere_ptr->radius, robotCollision->name, collision_object_pose ,link_padding_  );
     }
 }
 
