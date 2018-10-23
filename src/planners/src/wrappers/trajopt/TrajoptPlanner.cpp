@@ -60,6 +60,7 @@ bool TrajoptPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &plan
                 solution.elements.at(col).at(row).position =  goal_traj.coeff(row, col);
             }
         }
+        planner_status.statuscode = PlannerStatus::PATH_FOUND;
         return true;
     }
     else{
