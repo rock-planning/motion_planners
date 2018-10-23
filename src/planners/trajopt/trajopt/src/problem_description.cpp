@@ -195,7 +195,6 @@ TRAJOPT_API ProblemConstructionInfo* gPCI;
 void BasicInfo::fromJson(const Json::Value& v) {
   childFromJson(v, start_fixed, "start_fixed", true);
   childFromJson(v, n_steps, "n_steps");
-  childFromJson(v, manip, "manip");
   childFromJson(v, robot, "robot", string(""));
   childFromJson(v, dofs_fixed, "dofs_fixed", IntVec());
   // TODO: optimization parameters, etc?
@@ -204,7 +203,6 @@ void BasicInfo::fromJson(const Json::Value& v) {
 void BasicInfo::fromYaml(const YAML::Node& v) {
   childFromYaml(v, start_fixed, "start_fixed", true);
   childFromYaml(v, n_steps, "no_of_samples");
-  childFromYaml(v, manip, "planning_group");
   childFromYaml(v, robot, "robot", string(""));
   childFromYaml(v, dofs_fixed, "dofs_fixed", IntVec());
   // TODO: optimization parameters, etc?
