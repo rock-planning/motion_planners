@@ -1319,6 +1319,8 @@ void RobotModel::assignPlanningScene(	const pcl::PointCloud<pcl::PointXYZ>::Ptr 
 					const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
 {
 
+    std::cout<< "inside assignPlanningScene \n";
+
     if(collision_object_name.empty())                            
 	collision_object_name = link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
     
@@ -1458,7 +1460,7 @@ void RobotModel::getRobotVisuals(std::vector<urdf::VisualSharedPtr > &  robotVis
 }
 
 void RobotModel::addCollisionsToWorld(urdf::CollisionSharedPtr &robotCollision, std::string link_name, std::string collision_object_name)
-{    
+{    std::cout<< "insid addCollisionsToWorld \n";
     
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
@@ -1662,10 +1664,6 @@ bool RobotModel::getChainJointState(std::string base_link, std::string tip_link,
                                                   std::map< std::string, double > &planning_groups_joints)
 {
     //    planning_groups_joints are in  order from base to tip! very important
-
-
-//    std::cout << "inside getChainJointState. . . .. ." << base_link<< "==" << tip_link<< "\n";
-
     if(!kdl_tree_.getChain(base_link, tip_link , kdl_chain_))
     return false;
     for(std::size_t i=0;i<kdl_chain_.segments.size();i++ )
@@ -1695,58 +1693,18 @@ void RobotModel::getLinkTransformByName(const std::string link_name, Eigen::Vect
 
 }
 
-
-bool RobotModel::getSelfCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int self_collision_num_max_contacts)
-{
-    if (robot_collision_detector_->checkSelfCollision(self_collision_num_max_contacts))
-    {
-
-        LOG_DEBUG("[RobotModel]: There is no self collision");
-
-        //    if(robot_collision_detector_->checkWorldCollision(external_collision_manager_num_max_contacts))
-        //    {
-        //            LOG_DEBUG("[RobotModel]: There is no collision against environment" );
-        //            return true;
-        //        }
-        //        else
-        //    {
-        //            LOG_DEBUG("[RobotModel]: There is collision against environment" );
-        //            return false;
-        //        }
-        return false;
-    }
-    else{
-        LOG_DEBUG("[RobotModel]: There is a self collision" );
-        contact_info = robot_collision_detector_->getSelfContacts();
-        return true;
-    }
-    return false;
-
-}
-bool RobotModel::getWorldCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int world_collision_num_max_contacts)
-{
-    if(robot_collision_detector_->checkWorldCollision(world_collision_num_max_contacts))
-    {
-        LOG_DEBUG("[RobotModel]: There is no collision against environment" );
-        return true;
-    }
-    else
-    {
-        LOG_DEBUG("[RobotModel]: There is collision against environment" );
-        contact_info = robot_collision_detector_->getEnvironmentalContacts();
-        return false;
-    }
-    return false;
+bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info){
+    bool no_collision = isStateValid();
+    contact_info = robot_collision_detector_->getSelfContacts();
+    std::copy(robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end(), contact_info.end());
+    return no_collision;
 }
 
-void RobotModel::getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed/*=true*/, double distance_tolerance/*=1e-6*/){
+void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info){
     robot_collision_detector_->computeSelfDistanceInfo();
     distance_info = robot_collision_detector_->getSelfDistanceInfo();
-}
-void RobotModel::getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed/*=true*/, double distance_tolerance/*=1e-6*/){
     robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
-    distance_info = robot_collision_detector_->getClosestObstacleToRobotDistanceInfo();
+    std::copy(robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().begin(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().end(), distance_info.end());
 }
-
 
 }// end namespace 

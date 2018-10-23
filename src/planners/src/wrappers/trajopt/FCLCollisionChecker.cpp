@@ -1,4 +1,6 @@
+//#include <typeinfo>
 #include "wrapper/trajopt/FCLCollisionChecker.h"
+
 
 ostream& operator<<(ostream& os, const collision_detection::DistanceInformation& dist) {
 
@@ -10,17 +12,13 @@ ostream& operator<<(ostream& os, const collision_detection::DistanceInformation&
     return os;
 }
 
-
-ostream& operator<<(ostream& os, const collision_detection::ContactInformation& cont) {
-
-    os<<"**********ContactInformation*************** \n"
-    << "object 1: " << cont.object1 << " \nobject2:  " << cont.object2  << " \npenetration_depth: " << cont.penetration_depth << "\n"
-    << "point on O1: \n" << cont.contact_position<< " \nnormal: \n" << cont.contact_normal<< "\n"
-    << " \nunit normal: \n" << (cont.contact_normal /  cont.contact_normal.norm())<< "\n"
-
-    <<"---------------------------------------- \n";
-
-    return os;
+void FCLCollisionChecker::copyDistanceInfoToCollision(const collision_detection::DistanceInformation &dist, Collision &coll){
+    coll.distance = dist.min_distance;
+    coll.ptA = dist.nearest_points.at(0);
+    coll.ptB = dist.nearest_points.at(1);
+    coll.linkA = dist.object1;
+    coll.linkB = dist.object2;
+    coll.normalB2A = dist.contact_normal;
 }
 
 void FCLCollisionChecker::transformPointToLocalFrame(const std::string &link_name, const Eigen::Vector3d &point_in, Eigen::Vector3d &point_out){
@@ -80,11 +78,8 @@ void FCLCollisionChecker::getContinuousCollisionInfo(const DblVec &startjoints, 
 
 void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions)
 {
-
-    collisions.clear();
     std::vector<collision_detection::DistanceInformation> distance_info;
-    m_robot_model_->getSelfDistanceInfo(distance_info, m_distance_tolerance);
-
+    m_robot_model_->getRobotDistanceToCollisionInfo(distance_info);
     for(int i=0; i<distance_info.size(); i++){
         Collision coll;
         collision_detection::DistanceInformation &dist = distance_info.at(i);
@@ -96,45 +91,35 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
         {
             transformPointToLocalFrame(dist.object1, dist.nearest_points.at(0), dist.nearest_points.at(0));
             transformPointToLocalFrame(dist.object2, dist.nearest_points.at(1), dist.nearest_points.at(1));
-    //        transformNormalToLocalFrame(dist.object1, dist.contact_normal, dist.contact_normal);
+            //        transformNormalToLocalFrame(dist.object1, dist.contact_normal, dist.contact_normal);
             dist.contact_normal = dist.nearest_points.at(0) - dist.nearest_points.at(1);
             dist.contact_normal /= dist.contact_normal.norm();
 
-            coll.distance = dist.min_distance;
-            coll.ptA = dist.nearest_points.at(0);
-            coll.ptB = dist.nearest_points.at(1);
-            coll.linkA = dist.object1;
-            coll.linkB = dist.object2;
-            coll.normalB2A = dist.contact_normal;
-            collisions.push_back(coll);
-            //                std::cout << coll << "\n";
+           copyDistanceInfoToCollision(dist, coll);
+           collisions.push_back(coll);
         }
-        else if (m_is_collision_check && dist.min_distance <= 0)
-        {
-            std::vector<collision_detection::ContactInformation> contact_info;
-            bool is_collided = m_robot_model_->getSelfCollisionInfo(contact_info);
-            if(is_collided){
-                collisions.resize(contact_info.size());
-                for(int i=0; i<contact_info.size(); i++){
-                     Collision coll;
-                    collision_detection::ContactInformation &con = contact_info.at(i);
-                    transformPointToLocalFrame(dist.object1, con.contact_position, con.contact_position);
-                    transformNormalToLocalFrame(con.object1, con.contact_normal, con.contact_normal);
-//                    std::cout << "Collision between . . . ." << con.object1 << " and " << con.object2 << " : " << - con.penetration_depth  << "\n";
-//                    std::cout << con << "\n";
-                    coll.distance = - con.penetration_depth;
-                    coll.normalB2A = con.contact_normal;
-                    coll.ptA = con.contact_position;
-                    coll.ptB = con.contact_position;
-                    coll.linkA = con.object1;
-                    coll.linkB = con.object2;
-                    collisions.push_back(coll);
-                    //            std::cout << coll << "\n";
+    }
 
-                }
+    if (m_is_collision_check)
+    {
+        std::vector<collision_detection::DistanceInformation> contact_info;
+        bool not_collided = false;
+        not_collided = m_robot_model_->getRobotCollisionInfo(contact_info);
+        if(!not_collided){
+            collisions.resize(contact_info.size());
+            for(int i=0; i<contact_info.size(); i++){
+                Collision coll;
+                collision_detection::DistanceInformation &con = contact_info.at(i);
+                transformPointToLocalFrame(con.object1, con.nearest_points.at(0), con.nearest_points.at(0));
+                transformPointToLocalFrame(con.object1, con.nearest_points.at(1), con.nearest_points.at(1));
+                transformNormalToLocalFrame(con.object1, con.contact_normal, con.contact_normal);
+
+//                std::cout << "Collision between . . . ." << con.object1 << " and " << con.object2 << " : " << - con.min_distance  << "\n";
+//                std::cout << con << "\n";
+
+                copyDistanceInfoToCollision(con, coll);
+                collisions.push_back(coll);
             }
         }
-
     }
 }
-

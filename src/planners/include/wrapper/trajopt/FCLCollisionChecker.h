@@ -36,6 +36,7 @@ public:
 private:
     void transformPointToLocalFrame(const std::string &link_name, const Eigen::Vector3d &point_in, Eigen::Vector3d &point_out);
     void transformNormalToLocalFrame(const std::string &link_name, const Eigen::Vector3d &normal_in, Eigen::Vector3d &normal_out);
+    void copyDistanceInfoToCollision(const collision_detection::DistanceInformation &dist, Collision &coll);
 };
 
 typedef boost::shared_ptr<FCLCollisionChecker> FCLCollisionCheckerPtr;

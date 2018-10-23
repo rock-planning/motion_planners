@@ -227,17 +227,16 @@ class RobotModel
 	bool getJointLimits(std::vector< double > &lower_limits, std::vector< double > &upper_limits);
 
 	kinematics_library::RobotKinematicsPtr robot_kinematics_;
-	bool getSelfCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int self_collision_num_max_contacts=1);
-        bool getWorldCollisionInfo(std::vector<collision_detection::ContactInformation> &contact_info, int world_collision_num_max_contacts=1);
-
-        void getSelfDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed=true, double distance_tolerance=1e-6);
-        void getWorldDistanceInfo(std::vector<collision_detection::DistanceInformation> &distance_info, bool is_signed_dist_needed=true, double distance_tolerance=1e-6);
 
         void getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation);
 
         bool getChainJointState(std::string base_link, std::string tip_link, std::map<std::string, double> &planning_groups_joints);
-    
-    private :
+
+        bool getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info);
+
+        void getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info);
+
+private :
 
         RobotState  robot_state_;
 	std::string planning_group_name_;   
