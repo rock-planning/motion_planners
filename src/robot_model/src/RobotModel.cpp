@@ -1691,14 +1691,19 @@ void RobotModel::getLinkTransformByName(const std::string link_name, Eigen::Vect
 
 }
 
-bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info){
+bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info)
+{
     bool no_collision = isStateValid();
-    contact_info = robot_collision_detector_->getSelfContacts();
-    std::copy(robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end(), contact_info.end());
+    if(!no_collision)
+    {
+	contact_info = robot_collision_detector_->getSelfContacts();
+	std::copy(robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end(), contact_info.end());
+    }
     return no_collision;
 }
 
-void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info){
+void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info)
+{
     robot_collision_detector_->computeSelfDistanceInfo();
     distance_info = robot_collision_detector_->getSelfDistanceInfo();
     robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
