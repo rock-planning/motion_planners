@@ -815,7 +815,7 @@ void CollisionCostInfo::hatch(TrajOptProb& prob) {
       }
     }
   }
-  prob.GetCollisionChecker()->setDistanceTolerance(*std::max_element(dist_pen.begin(), dist_pen.end()) + .04);
+  prob.GetCollisionChecker()->setDistanceTolerance(*std::max_element(dist_pen.begin(), dist_pen.end()));
 }
 
 
