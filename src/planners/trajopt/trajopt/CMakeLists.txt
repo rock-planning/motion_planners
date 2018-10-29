@@ -17,8 +17,7 @@ get_directory_property(TRAJOPT_SCO_DIR_PATH DIRECTORY ../trajopt_sco DEFINITION 
 get_directory_property(JSON_DIR_PATH DIRECTORY ../trajopt_ext DEFINITION JSON_DIR_PATH)
 
 
-set(TRAJOPT_INCLUDE_HEADER ${TRAJOPT_DIR_PATH}/include $
-    ${TRAJOPT_DIR_PATH}/ext
+set(TRAJOPT_INCLUDE_HEADER ${TRAJOPT_PLANNER_DIR_PATH}/include
     ${TRAJOPT_SCO_DIR_PATH}/include
     ${TRAJOPT_PLANNER_DIR_PATH}/include
     ${TRAJOPT_UTILS_DIR_PATH}/include
