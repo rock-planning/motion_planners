@@ -1658,4 +1658,56 @@ void RobotModel::printWorldCollisionObject()
      world_collision_detector_->printCollisionObject();
 }
 
+bool RobotModel::getChainJointState(std::string base_link, std::string tip_link,
+                                                  std::map< std::string, double > &planning_groups_joints)
+{
+    //    planning_groups_joints are in  order from base to tip! very important
+    if(!kdl_tree_.getChain(base_link, tip_link , kdl_chain_))
+    return false;
+    for(std::size_t i=0;i<kdl_chain_.segments.size();i++ )
+    {
+        //KDL JointType: RotAxis,RotX,RotY,RotZ,TransAxis,TransX,TransY,TransZ,None;
+        if(! (kdl_chain_.getSegment(i).getJoint().getType()==KDL::Joint::None) )
+        {
+            std::string joint_name=kdl_chain_.getSegment(i).getJoint().getName();
+            double joint_state = getRobotState().robot_joints_[joint_name].getJointValue();
+            planning_groups_joints[joint_name] = joint_state;
+        }
+    }
+
+    return true;
+}
+
+void RobotModel::getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation)
+{
+
+    KDL::Frame link = robot_state_.robot_links_[link_name].getLinkFrame();
+
+    position.x() = link.p[0];
+    position.y() = link.p[1];
+    position.z() = link.p[2];
+
+    link.M.GetQuaternion(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+
+}
+
+bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info)
+{
+    bool no_collision = isStateValid();
+    if(!no_collision)
+    {
+	contact_info = robot_collision_detector_->getSelfContacts();
+	std::copy(robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end(), contact_info.end());
+    }
+    return no_collision;
+}
+
+void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info)
+{
+    robot_collision_detector_->computeSelfDistanceInfo();
+    distance_info = robot_collision_detector_->getSelfDistanceInfo();
+    robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
+    std::copy(robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().begin(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().end(), distance_info.end());
+}
+
 }// end namespace 

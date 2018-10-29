@@ -1,5 +1,5 @@
 add_subdirectory(stomp)
-
+add_subdirectory(trajopt)
 
 project(planner_factory)
 
@@ -21,9 +21,12 @@ pkg_check_modules(YAML REQUIRED yaml-cpp)
 # get the planners
 get_directory_property(STOMP_PATH DIRECTORY stomp DEFINITION STOMP_DIR_PATH)
 get_directory_property(ROBOT_MODEL_PATH DIRECTORY ../robot_model DEFINITION ROBOT_MODEL_DIR_PATH)
+get_directory_property(TRAJOPT_PATH DIRECTORY trajopt DEFINITION TRAJOPT_PATH)
+
+get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY trajopt DEFINITION TRAJOPT_INCLUDE_HEADER)
 
 # assign the available planner's path
-set (PLANNERS_PATH ${STOMP_PATH}/include)
+set (PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 #set the header and library path
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} 
@@ -44,6 +47,17 @@ add_library(stomp_wrapper SHARED
 target_link_libraries(stomp_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} stomp collision_detection robot_model)
 LIST(APPEND WRAPPERS_LIB "stomp_wrapper")
 
+add_library(trajopt_wrapper SHARED
+            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/TrajoptPlanner.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/RobotModelWrapper.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/FCLCollisionChecker.cpp
+#            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/RobotLinkWrapper.cpp
+#            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/HandleTrajoptConfig.cpp
+)
+
+target_link_libraries(trajopt_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} trajopt collision_detection robot_model)
+
+LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
 # if OMPL is found, add it to the planner factory
 
@@ -86,9 +100,15 @@ target_link_libraries(planner_factory ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} 
 
 set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} stomp")
 set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${STOMP_PATH}/include")
+
+set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} trajopt")
+set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${TRAJOPT_PATH}/trajopt/include")
+
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
 install(DIRECTORY include/ DESTINATION include/motion_planners/planner_factory)
 install(TARGETS stomp_wrapper DESTINATION lib)
+install(TARGETS trajopt_wrapper DESTINATION lib)
+
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 #install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)

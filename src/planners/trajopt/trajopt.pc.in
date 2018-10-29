@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include/trajectory_optimization/planner
+
+Name: @TARGET_NAME@
+Description: @PROJECT_DESCRIPTION@
+Version: @TRAJOPT_VERSION@
+Requires: eigen3
+Libs: -L${libdir} -l@TARGET_NAME@ @PKGCONFIG_LIBS@
+Cflags: -I${includedir} @PKGCONFIG_CFLAGS@

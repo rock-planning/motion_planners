@@ -4,6 +4,7 @@
 #include <Config.hpp>
 #include <abstract/AbstractPlanner.hpp>
 #include <wrapper/stomp/StompPlanner.hpp>
+#include <wrapper/trajopt/TrajoptPlanner.hpp>
 
 
 #if OMPL_LIB_FOUND    
