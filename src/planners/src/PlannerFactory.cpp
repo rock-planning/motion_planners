@@ -26,7 +26,8 @@ AbstractPlannerPtr PlannerFactory::getPlannerTask(motion_planners::PlannerLibrar
 		    #if(OMPL_LIB_FOUND)
 		    	planner = std::shared_ptr< OmplPlanner>(new OmplPlanner());
             #else
-			    LOG_FATAL_S << "[PlannerFactory]: OMPL is not installed. Please select an another Planner !";			
+			    LOG_FATAL_S << "[PlannerFactory]: OMPL is not installed. Please select an another Planner !";
+				return NULL;
 		    #endif
 		    
 		    break;
