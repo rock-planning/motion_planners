@@ -17,16 +17,13 @@
 
 namespace motion_planners
 {
-
-
+    
 class PlannerFactory
 {
-	public:
-		PlannerFactory();
-		~PlannerFactory();
-
-		AbstractPlannerPtr getPlannerTask(motion_planners::PlannerLibrary library);
-   
+    public:
+    PlannerFactory();
+    ~PlannerFactory();
+    AbstractPlannerPtr getPlannerTask(motion_planners::PlannerLibrary library);
 };
 
 }// end planner
