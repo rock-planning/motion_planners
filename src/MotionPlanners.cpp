@@ -328,7 +328,8 @@ bool MotionPlanners::handleCollisionObjectInWorld ( const motion_planners::Model
         return false;
     }
 
-    std::shared_ptr<urdf::Collision> collision_object;
+    std::shared_ptr<urdf::Collision> collision_object = std::make_shared<urdf::Collision>();
+
     if ( convertModelObjectToURDFCollision ( known_object, collision_object ) )
     {
         if ( known_object.operation == collision_detection::REMOVE )
@@ -361,7 +362,8 @@ bool MotionPlanners::handleGraspObject ( const motion_planners::ModelObject &kno
         return false;
     }
 
-    std::shared_ptr<urdf::Collision> collision_object;
+    std::shared_ptr<urdf::Collision> collision_object = std::make_shared<urdf::Collision>();
+
     if ( convertModelObjectToURDFCollision ( known_object, collision_object ) )
     {
         if ( known_object.operation == collision_detection::REMOVE )
