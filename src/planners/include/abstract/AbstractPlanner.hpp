@@ -11,7 +11,7 @@
 
 namespace motion_planners
 {
-    
+
 inline void loadConfigFile(std::string filename, YAML::Node &config)
 {
     try
@@ -22,10 +22,10 @@ inline void loadConfigFile(std::string filename, YAML::Node &config)
     {
         std::cout << e.what() << "\n";
     }
-        
+
 
 }
-    
+
 template<typename T>
 T getValue (const YAML::Node &yaml_data, std::string name)
 {
@@ -37,9 +37,9 @@ T getValue (const YAML::Node &yaml_data, std::string name)
         }
         else
             std::cout << "Key "<< name <<" doesn't exist\n";
-            
+
         return value; 
-        
+
 }
 
 template<typename T>
@@ -107,17 +107,16 @@ struct PlannerStatus
         APPROXIMATE_SOLUTION,
         // The planner found an exact solution
         EXACT_SOLUTION,
-	// Robot model initialisation failed
-	ROBOTMODEL_INITIALISATION_FAILED,
-	// Planner initialisation failed
-	PLANNER_INITIALISATION_FAILED,
+        // Robot model initialisation failed
+        ROBOTMODEL_INITIALISATION_FAILED,
+        // Planner initialisation failed
+        PLANNER_INITIALISATION_FAILED,
         /// The planner crashed
         CRASH,
         /// invalid state
         INVALID
-    }statuscode;   
+    }statuscode;
 
-    
     kinematics_library::KinematicsStatus kinematic_status;
 
 };

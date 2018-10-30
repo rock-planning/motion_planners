@@ -35,65 +35,64 @@ class MotionPlanners
     * @brief  destructor
     */
     ~MotionPlanners();
-    
+
     bool initialize(PlannerStatus &error_status);
 
     bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::Joints &target_jointvalues,
-			      std::string &planningGroupName, PlannerStatus &planner_status);
-    
-    bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
-			       std::string &planningGroupName, PlannerStatus &planner_status);
-    
+                                std::string &planningGroupName, PlannerStatus &planner_status);
+
+    bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
+                                std::string &planningGroupName, PlannerStatus &planner_status);
+
     void assignPlanningScene(const Eigen::Vector3d &sensor_origin);    
-    
+
     void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);    
-    
+
     bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken);
-    
+
     void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);   
-    
+
     bool handleCollisionObjectInWorld(const motion_planners::ModelObject &known_object);
-    
+
     bool handleGraspObject(const motion_planners::ModelObject &known_object);
-    
+
     std::vector< std::pair<std::string, std::string> > getCollisionObjectNames()
     {
-	return collision_object_names_;
+        return collision_object_names_;
     }
-    
-    base::JointsTrajectory planner_solution_;
-    
-    AbstractPlannerPtr planner_;
-    
-  private:     
 
-    
+    base::JointsTrajectory planner_solution_;
+
+    AbstractPlannerPtr planner_;
+
+  private:
+
     std::shared_ptr<RobotModel> robot_model_;
-    
+
     collision_detection::CollisionDetection collision_factory_;
-    
+
     std::vector< std::pair<std::string, std::string> > collision_object_names_;
-    
+
     kinematics_library::KinematicsFactory kinematics_factory_;
-    
+
     Config config_;
-    
+
     std::vector< std::pair<std::string,urdf::Joint> > planning_group_joints_;
-    
+
     base::samples::Joints initial_joint_status_, goal_joint_status_;
-    
+
     base::samples::RigidBodyState goal_pose_;
-    
+
     base::commands::Joints ik_solution_;
-    
+
     pcl::PointCloud<pcl::PointXYZ>::Ptr env_pcl_cloud_;
-    
+
     bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status);
-    
+
     bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
-    
+
     void applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud);
-    
+
     bool convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object);
 
 };

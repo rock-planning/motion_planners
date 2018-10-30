@@ -11,7 +11,6 @@
 namespace motion_planners
 {
 
-    
 struct CollisionInformation
 {
     std::pair<std::string,std::string>  collision_pair;
