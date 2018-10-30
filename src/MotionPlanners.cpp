@@ -24,8 +24,11 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     // IN FCL wrapper the base pointer is downcasted.
     collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
     collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
-    kinematics_library::RobotKinematicsPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config);
-    robot_kinematics->initialise(planner_status.kinematic_status);
+	// get the kinematics solver
+    kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, planner_status.kinematic_status);	
+	if(robot_kinematics==NULL)	
+		return false;
+	// initialise robot model    
     robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config.urdf_file, config_.planner_config.robot_model_config.srdf_file, 
 				      config_.planner_config.robot_model_config.planning_group_name));
     robot_model_->setRobotCollisionDetector(robot_collision_detector);
@@ -173,7 +176,7 @@ void MotionPlanners::updatePointcloud(const base::samples::Pointcloud &pt_cloud,
     
 }
 
-bool MotionPlanners::assignPlanningScene(const Eigen::Vector3d &sensor_origin)
+void MotionPlanners::assignPlanningScene(const Eigen::Vector3d &sensor_origin)
 {
     env_pcl_cloud_->clear();       
     

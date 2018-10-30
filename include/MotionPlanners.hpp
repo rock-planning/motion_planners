@@ -44,7 +44,7 @@ class MotionPlanners
     bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
 			       std::string &planningGroupName, PlannerStatus &planner_status);
     
-    bool assignPlanningScene(const Eigen::Vector3d &sensor_origin);    
+    void assignPlanningScene(const Eigen::Vector3d &sensor_origin);    
     
     void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);    
     
