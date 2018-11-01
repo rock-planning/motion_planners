@@ -1689,7 +1689,7 @@ bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::Distance
     if(!no_collision)
     {
         contact_info = robot_collision_detector_->getSelfContacts();
-        std::copy(robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end(), contact_info.end());
+        contact_info.insert(contact_info.end(), robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end());
     }
     return no_collision;
 }
@@ -1699,7 +1699,9 @@ void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection
     robot_collision_detector_->computeSelfDistanceInfo();
     distance_info = robot_collision_detector_->getSelfDistanceInfo();
     robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
-    std::copy(robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().begin(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().end(), distance_info.end());
+    distance_info.insert(distance_info.end(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().begin(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().end());
+
+
 }
 
 }// end namespace 
