@@ -22,11 +22,13 @@ void FCLCollisionChecker::copyDistanceInfoToCollision(const collision_detection:
 }
 
 void FCLCollisionChecker::transformPointToLocalFrame(const std::string &link_name, const Eigen::Vector3d &point_in, Eigen::Vector3d &point_out){
-
-    KDL::Frame link_frame = m_robot_model_->getRobotState().robot_links_[link_name].getLinkFrame();
-    KDL::Vector point(point_in.x(), point_in.y(), point_in.z());
-    point = link_frame.Inverse() * point;
-    point_out = Eigen::Vector3d(point.x(), point.y(), point.z());
+    // transform point to local frame only for robot links
+    if (m_robot_model_->getRobotState().robot_links_.count(link_name)){
+        KDL::Frame link_frame = m_robot_model_->getRobotState().robot_links_[link_name].getLinkFrame();
+        KDL::Vector point(point_in.x(), point_in.y(), point_in.z());
+        point = link_frame.Inverse() * point;
+        point_out = Eigen::Vector3d(point.x(), point.y(), point.z());
+    }
 }
 
 void FCLCollisionChecker::transformNormalToLocalFrame(const std::string &link_name, const Eigen::Vector3d &normal_in, Eigen::Vector3d &normal_out){
@@ -83,10 +85,6 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
     for(int i=0; i<distance_info.size(); i++){
         Collision coll;
         collision_detection::DistanceInformation &dist = distance_info.at(i);
-//        if(dist.min_distance < m_distance_tolerance){
-//            std::cout << "distance between . . . ." << dist.object1 << " and " << dist.object2 << " : " << dist.min_distance << "\n";
-//            std::cout << dist << "\n";
-//        }
         if((!m_is_collision_check || dist.min_distance > 0) && dist.min_distance < m_distance_tolerance)
         {
             transformPointToLocalFrame(dist.object1, dist.nearest_points.at(0), dist.nearest_points.at(0));
@@ -98,6 +96,10 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
            copyDistanceInfoToCollision(dist, coll);
            collisions.push_back(coll);
         }
+//        if(dist.min_distance < m_distance_tolerance){
+//            std::cout << "distance between . . . ." << dist.object1 << " and " << dist.object2 << " : " << dist.min_distance << "\n";
+//            std::cout << dist << "\n";
+//        }
     }
 
     if (m_is_collision_check)
