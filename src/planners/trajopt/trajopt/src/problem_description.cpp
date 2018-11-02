@@ -753,8 +753,9 @@ void CollisionCostInfo::fromJson(const Value& v) {
   else if (dist_pen.size() != n_terms) {
     PRINT_AND_THROW(boost::format("wrong size: dist_pen. expected %i got %i")%n_terms%dist_pen.size());
   }
+  childFromJson(params, dist_to_collision_check,"dist_to_collision_check");
 
-  const char* all_fields[] = {"continuous", "first_step", "last_step", "gap", "coeffs", "dist_pen"};
+  const char* all_fields[] = {"continuous", "first_step", "last_step", "gap", "coeffs", "dist_pen", "dist_to_collision_check"};
   ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 }
 
@@ -781,8 +782,9 @@ void CollisionCostInfo::fromYaml(const YAML::Node& v) {
   else if (dist_pen.size() != n_terms) {
     PRINT_AND_THROW(boost::format("wrong size: dist_pen. expected %i got %i")%n_terms%dist_pen.size());
   }
+  childFromYaml(params, dist_to_collision_check,"dist_to_collision_check");
 
-  const char* all_fields[] = {"continuous", "first_step", "last_step", "gap", "coeffs", "dist_pen"};
+  const char* all_fields[] = {"continuous", "first_step", "last_step", "gap", "coeffs", "dist_pen", "dist_to_collision_check"};
   ensure_only_members(params, all_fields, sizeof(all_fields)/sizeof(char*));
 }
 
@@ -815,7 +817,7 @@ void CollisionCostInfo::hatch(TrajOptProb& prob) {
       }
     }
   }
-  prob.GetCollisionChecker()->setDistanceTolerance(*std::max_element(dist_pen.begin(), dist_pen.end()));
+  prob.GetCollisionChecker()->setDistanceTolerance(*std::max_element(dist_pen.begin(), dist_pen.end()) + dist_to_collision_check);
 }
 
 

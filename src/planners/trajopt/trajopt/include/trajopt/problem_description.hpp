@@ -310,6 +310,7 @@ struct CollisionCostInfo : public TermInfo, public MakesCost {
   DblVec coeffs;
   /// safety margin: contacts with distance < dist_pen are penalized
   DblVec dist_pen;
+  double dist_to_collision_check;
   bool continuous;
   /// for continuous-time penalty, use swept-shape between timesteps t and t+gap (gap=1 by default)
   int gap;
