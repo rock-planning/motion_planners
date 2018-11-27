@@ -44,7 +44,7 @@ add_library(trajopt SHARED
         ${TRAJOPT_PLANNER_DIR_PATH}/src/problem_description.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/utils.cpp
 )
-target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} trajopt_sco trajopt_utils)
+target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} trajopt_sco trajopt_utils json)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 

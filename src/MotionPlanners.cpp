@@ -26,8 +26,10 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
     // get the kinematics solver
     kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, planner_status.kinematic_status);	
-    if(robot_kinematics==NULL)	
+    if(robot_kinematics==NULL)
         return false;
+
+
     // initialise robot model    
     robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config.urdf_file, config_.planner_config.robot_model_config.srdf_file, 
     config_.planner_config.robot_model_config.planning_group_name));

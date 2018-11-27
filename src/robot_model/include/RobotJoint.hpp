@@ -40,7 +40,7 @@ class RobotJoint
 
         inline void setJointAsMimic() {is_mimic_joint_ = true;}
 
-        inline bool isMimicJoint( ) { return this->is_mimic_joint_; }
+        inline bool isMimicJoint( ) { return is_mimic_joint_; }
 
         MimicJoint mimic_joints_;
 	std::map< std::string, MimicJoint > mimic_joints_map_; // these joints are mimicking this joint.

@@ -60,10 +60,10 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
         std::stringstream sss;
         sss << debug_config_.output_dir_ << "/noiseless_0.txt";
         optimization_task_->policy_->writeToFile(sss.str());
-	tmp_policy = *optimization_task_->policy_;
-    }  
+        tmp_policy = *optimization_task_->policy_;
+    }
 
-    
+
     stomp::Rollout noiseless_rollout;
     double old_cost = 0.0;
     double cost_improvement = 0.0;

@@ -88,9 +88,7 @@ bool RobotModel::initialization()
     }
 
     // Initialise the robot joints
-    double joint_value;
-    std::string joint_name;
-    RobotJoint robot_joint;
+
 
     for( std::map<std::string, urdf::JointSharedPtr >::iterator it = urdf_model_->joints_.begin(); it != urdf_model_->joints_.end(); it++)
     {
@@ -98,9 +96,13 @@ bool RobotModel::initialization()
 
         if( (it->second->type != urdf::Joint::FIXED) && (it->second->type != urdf::Joint::UNKNOWN) && (it->second->type != urdf::Joint::CONTINUOUS) )
         {
+            double joint_value;
+            std::string joint_name;
+            RobotJoint robot_joint;
+
             if( (it->second->limits->lower > 0) || (it->second->limits->upper < 0) )            
                 joint_value = (it->second->limits->lower + it->second->limits->upper )/2.0;            
-            else            
+            else
                 joint_value = 0;
 
             joint_name = it->first;
@@ -108,14 +110,14 @@ bool RobotModel::initialization()
             robot_joint.setJointName(joint_name);
             robot_joint.setJointInfo(*(it->second.get()));
             // incase of mimic joints
-            if (it->second->mimic)
-            {		
+            if (it->second->mimic != nullptr)
+            {
                 robot_joint.setJointAsMimic();
                 robot_joint.mimic_joints_ = MimicJoint( it->second->mimic->joint_name,
                                                         it->second->mimic->multiplier, it->second->mimic->offset );
             }
             // Assign robot joint to the robot state
-	    robot_state_.robot_joints_[joint_name] = robot_joint;
+            robot_state_.robot_joints_[joint_name] = robot_joint;
         }
     }
 
@@ -131,6 +133,7 @@ bool RobotModel::initialization()
             else
             {
                 robot_state_.robot_joints_[it->second.mimic_joints_.joint_to_mimic].mimic_joints_map_[it->first]  = robot_state_.robot_joints_[it->first].mimic_joints_;
+                LOG_DEBUG("[RobotModel]: The joint %s is mimicing the joint %s \n", it->second.mimic_joints_.joint_to_mimic.c_str(), it->first.c_str());
             }
         }
     }
@@ -234,14 +237,14 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
               Parent_link_in_base_link        = robot_state_.robot_links_[start_link_name].getLinkFrame();
               Child_link_Frame_in_base_link   = Parent_link_in_base_link * Child_link_Frame_in_Parent_Frame;
               robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_base_link);
-            
+
               //LOG_DEBUG("============================================================================== ");
               //LOG_DEBUG("Frame: %s w.r.t frame: %s", child_link_name.c_str(), start_link_name.c_str());
               //LOG_DEBUG("x :%f", Child_link_Frame_in_base_link.p.x());
               //LOG_DEBUG("y :%f", Child_link_Frame_in_base_link.p.y());
               //LOG_DEBUG("z :%f", Child_link_Frame_in_base_link.p.z());
               //LOG_DEBUG("============================================================================== ");
-             
+
             }
             // now we have to calculate the position of the visuals and collision of the robot in the world coordinate (global pose)
             robot_state_.robot_links_[child_link_name].calculateLinkVisualsPoseInGlobalPose();
@@ -284,7 +287,7 @@ void RobotModel::setRobotState(RobotState &robot_state )
 }
 
 void RobotModel::setDisabledEnvironmentCollision(std::vector <std::pair<std::string,std::string> > disabled_collision_pair)
-{    
+{
      for(int i = 0; i < disabled_collision_pair.size(); i++)
      {
         srdf::Model::DisabledCollision disabled_pair;
@@ -1197,13 +1200,12 @@ void RobotModel::removeWorldObject(const std::string world_object_name)
 }
 
 void RobotModel::updateJoint(std::string joint_name, double joint_value)
-{
-
+{ 
     if(this->urdf_model_->getJoint(joint_name) )
     {
         if(! robot_state_.robot_joints_[joint_name].isMimicJoint() )
         {
-
+     
             std::string start_link_name= this->urdf_model_->getJoint(joint_name)->parent_link_name;
 
             if(robot_state_.robot_joints_[joint_name].mimic_joints_map_.size() > 0)
