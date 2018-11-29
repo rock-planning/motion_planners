@@ -17,7 +17,7 @@ namespace motion_planners
     KDL::Rotation toKdl(urdf::Rotation r);
     KDL::Frame toKdl(urdf::Pose p);
     urdf::Pose toURDFPose(KDL::Frame frame);
-    void KDLFrameToEigenMatrix(KDL::Frame &frame,Eigen::Affine3f &transform);
+    void KDLFrameToEigenMatrix(KDL::Frame &frame,Eigen::Isometry3f &transform);
 }
 
 #endif

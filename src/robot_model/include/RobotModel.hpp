@@ -186,16 +186,15 @@ class RobotModel
 
 		void manipulabilityIndex(KDL::Jacobian  &jacobian, double &manipulability_index);
 
-		void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense);
+		void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense);
 
 		void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &box_cloud,double x, double y, double z);
 
-		void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, 
-		int number_of_step_alpha=10, bool dense=false );
+		void createPtCloudFromCylinder( pcl::PointCloud< pcl::PointXYZ >::Ptr transformed_cylinder_cloud_ptr, double radius, double height, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha = 10, bool dense = false );
 
 		void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha=5);
 
-		void createPtCloudFromSphere(	pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, 
+		void createPtCloudFromSphere(	pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, 
 		int number_of_step_alpha=10, int number_of_step_beta=10);
 
 		void createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_cloud, double radius, int number_of_step_alpha=20, int number_of_step_beta=20);
@@ -251,16 +250,16 @@ class RobotModel
 
 		bool initialiseURDFandSRDF();
 
-		void kdlFrameToEigenMatrix(KDL::Frame &frame,Eigen::Affine3f &transform);
+		void kdlFrameToEigenMatrix(KDL::Frame &frame,Eigen::Isometry3f &transform);
 
 		void scalePointCloud( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out,
 		double scale_x, double scale_y, double scale_z);
 
 		void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z,
-		Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix);
+		Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix);
 
 		void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height,
-		Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10 );
+		Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10 );
 
 		void subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
 		pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud);

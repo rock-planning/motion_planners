@@ -402,7 +402,7 @@ void RobotModel::scalePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in, p
 }
 
 void RobotModel::createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,
-                                            double x, double y, double z, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense)
+                                            double x, double y, double z, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense)
 {
     pcl::PointCloud<pcl::PointXYZ>::Ptr box_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>()) ;
     box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,z/2 ) );
@@ -473,7 +473,7 @@ void RobotModel::createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transf
 }
 
 void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr,
-                                                 double radius, double height, Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix,
+                                                 double radius, double height, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix,
                                                  int number_of_step_alpha, bool dense )
 {
     double alpha_angle=M_PI/number_of_step_alpha;
@@ -514,7 +514,7 @@ void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr t
 }
 
 void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, 
-					 Eigen::Affine3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha, int number_of_step_beta)
+					 Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha, int number_of_step_beta)
 {
 
     // alpha cretae point on a circle given radius, beta will give you the radius,
@@ -1548,7 +1548,7 @@ void RobotModel::selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr sce
     for(std::map<std::string, RobotLink>::iterator it=robot_state.robot_links_.begin();it!=robot_state.robot_links_.end();it++)
     {
         KDL::Frame link_pose_in_sensor_frame;
-        Eigen::Affine3f link_pose_in_sensor_frame_eigen_matrix;
+        Eigen::Isometry3f link_pose_in_sensor_frame_eigen_matrix;
         if(use_selfcollision == motion_planners::VISUAL)
         {
             std::vector<urdf::VisualSharedPtr > links_collision=it->second.getLinkVisuals();
@@ -1602,7 +1602,7 @@ void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::
     for(std::map<std::string, RobotLink>::iterator it=robot_state.robot_links_.begin();it!=robot_state.robot_links_.end();it++)
     {
         KDL::Frame link_pose_in_sensor_frame;
-        Eigen::Affine3f link_pose_in_sensor_frame_eigen_matrix;
+        Eigen::Isometry3f link_pose_in_sensor_frame_eigen_matrix;
         if(use_selfcollision == motion_planners::VISUAL)
         {
             std::vector<urdf::VisualSharedPtr > links_collision=it->second.getLinkVisuals();
