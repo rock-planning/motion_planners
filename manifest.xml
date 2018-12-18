@@ -1,7 +1,7 @@
 <package>
     <description brief="Motion Planning Libraries">A framework for robot motion planning. This library contains different state of the art motion planners.
-  The current version supports optimization and sampling based planner. 
-  Available motion planners are STOMP, TrajOpt and OMPL.</description>
+    The current version supports optimization and sampling based planner. 
+    Available motion planners are STOMP, TrajOpt and OMPL.</description>
     <author>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</author>
     <!-- Use the short version name from:https://spdx.org/licenses/ -->
     <license></license>
@@ -12,15 +12,10 @@
     <depend package="planning/collision_detection" />
     <name>motion_planners</name>
     <maintainer>Sankar Natarajan/sankar.natarajan@dfki.de</maintainer>
-    <maintainer>Mahesh Kumar Karikalan/mahesh.karikalan@dfki.de</maintainer>
-    <!-- One of: -1, 0, 1, 2 -->
     <stage>-1</stage>
-    <!-- First keyword one of: communication, configuration, control, drivers, interaction, learning, localization, mapping, mechanics, middleware, perception, planning, reasoning, representation, simulation, utilities-->
     <keywords>
-        <keyword>ADD THE MAIN CATEGORY HERE</keyword>
+        <keyword>planning</keyword>
     </keywords>
-    <!-- One of: active, pending, discontinued -->
     <activity>active</activity>
-    <!-- One of: single project, multi project, external-->
     <use>single project</use>
 </package>
