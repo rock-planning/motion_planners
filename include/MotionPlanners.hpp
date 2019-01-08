@@ -83,7 +83,7 @@ class MotionPlanners
 
     base::samples::RigidBodyState goal_pose_;
 
-    base::commands::Joints ik_solution_;
+    std::vector<base::commands::Joints> ik_solution_;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr env_pcl_cloud_;
 

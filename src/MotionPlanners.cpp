@@ -236,24 +236,28 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 
         if ( planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND ) 
         {
-            for ( size_t i = 0; i < planning_group_joints_.size(); i++ )
-            {
-                try
-                {
-                    goal_joint_status_.names.at ( i )	= planning_group_joints_.at ( i ).first;
-                    goal_joint_status_.elements.at ( i )	= ik_solution_.getElementByName ( planning_group_joints_.at ( i ).first );
-                }
-                catch ( base::samples::Joints::InvalidName e )
-                {   //Only catch exception to write more explicit error msgs
-                    LOG_ERROR ( "[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value", planning_group_joints_.at ( i ).first.c_str() );
-                    return false;
-                }
-            }
 
-            if ( checkGoalState ( goal_joint_status_, planner_status ) )            
-                return true;            
-            else            
-                return false;
+            for(std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
+            {
+                for ( size_t i = 0; i < planning_group_joints_.size(); i++ )
+                {
+                    try
+                    {
+                        goal_joint_status_.names.at ( i )	= planning_group_joints_.at ( i ).first;
+                        goal_joint_status_.elements.at ( i )	= it->getElementByName ( planning_group_joints_.at ( i ).first );
+                    }
+                    catch ( base::samples::Joints::InvalidName e )
+                    {   //Only catch exception to write more explicit error msgs
+                        LOG_ERROR ( "[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value", planning_group_joints_.at ( i ).first.c_str() );
+                        return false;
+                    }
+                }
+
+                if ( checkGoalState ( goal_joint_status_, planner_status ) )            
+                    return true;            
+                //else            
+                //    return false;
+            }
         }
     }
     return false;
