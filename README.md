@@ -1,7 +1,9 @@
 # motion_planners
 
-A motion planning framework for robotic system. This framework contains different state of the art motion planners.
-The current version supports optimization and sampling based motion planner. The following motion planners
+The motion_planner package contains different state of the art motion planners. This package is one of the main package of
+the Motion planner framework. The Motion planner framework is focussed on to generate a collision free path for complex robotics system 
+with higher degrees of freedom. This package contains different state of the art motion planners.
+The current version supports optimization and sampling based motion planners. The following motion planners
 are currently integrated:
 - OMPL - [The Open Motion Planning Library](http://ompl.kavrakilab.org/)
 - STOMP - [Stochastic trajectory optimization for motion planning](https://ieeexplore.ieee.org/document/5980280)
@@ -9,13 +11,12 @@ are currently integrated:
 
 # Requirements 
 
-This Motion planner framework is focussed on to generate a collision free path for complex robotics system 
-with higher degrees of freedom. This package contains only the planner part, for collision detection and kinematics
+![motion_planner_framework](/uploads/4ef1b5e1de6351329b48b31ef9a1f5a0/motion_planner_framework.png)
+
+As shown in the above figure this package contains only the planner part, for collision detection and kinematics
 it depends on the following library:
 - [Kinematics Library](https://git.hb.dfki.de/dfki-planning/kinematics_library)
 - [Collision Detection Library](https://git.hb.dfki.de/dfki-planning/collision_detection)
-
-![motion_planner_framework](/uploads/4ef1b5e1de6351329b48b31ef9a1f5a0/motion_planner_framework.png)
 
 # Installation
 
@@ -29,8 +30,11 @@ can alsp be build even without OMPL planner.
 
 # Features
 
-- Provides a collision free trajectory for complex robotic system
-- Easy to choose different planners. The code is written using factory design pattern. 
+- Provides a collision free trajectory for complex robotic system.
+- Handles self collision and collision with the environment.
+    - Grasped object can be added to the planner and it will be checked for collision.
+    - External object can be added to the environment.
+- Easy to choose different planners. The code is written using factory design pattern.
 - Currently in development:
     - Adding Pose constraint
     - Real time planning
