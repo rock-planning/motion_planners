@@ -56,5 +56,5 @@ motion_planners contains the following directories:
 
 # Deployment
 
-Please refer to [motion_planner](https://git.hb.dfki.de/dfki-planning/orogen-motion_planners) deployment package for deployment.
+Please refer to [motion_planner](https://git.hb.dfki.de/dfki-planning/orogen-motion_planners) deployment package for how to deploy this libray.
                      
