@@ -230,6 +230,7 @@ bool getParameters(std::vector<base::VectorXd>& parameters);
 
 inline bool CovariantMovementPrimitive::getParametersAll(std::vector<base::VectorXd>& parameters)
 {
+    parameters.clear();
     parameters = parameters_all_;
     return true;
 }
