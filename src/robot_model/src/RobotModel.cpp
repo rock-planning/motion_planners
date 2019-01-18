@@ -187,7 +187,7 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
     robot_state_.robot_links_[start_link_name].setLinkDFSVisited(true);
     visited_links.push_back(start_link_name);
 
-    std::string child_link_name;
+    //std::string child_link_name;
     int joint_type;
     std::string joint_name;
     bool is_link_visited;
@@ -198,24 +198,27 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
 
     std::vector<urdf::LinkSharedPtr > child_links = urdf_model_->getLink(start_link_name)->child_links;
 
-    for(std::size_t i = 0; i < child_links.size(); i++)
+    //for(std::size_t i = 0; i < child_links.size(); i++)
+    //for(std::vector<urdf::LinkSharedPtr >::iterator it = child_links.begin(); it != child_links.end(); it++)
+    for(auto &cl : child_links)    
     {
-        child_link_name     = child_links.at(i)->name;
-        is_link_visited     = robot_state_.robot_links_[child_link_name].getLinkDFSVisited();
-        urdf::JointSharedPtr joint_between_child_link_and_parent_link = urdf_model_->getLink(child_link_name)->parent_joint;
+        //child_link_name     = child_links.at(i)->name;
+        //child_link_name     = cl->name;
+        is_link_visited     = robot_state_.robot_links_[cl->name].getLinkDFSVisited();
+        urdf::JointSharedPtr joint_between_child_link_and_parent_link = urdf_model_->getLink(cl->name)->parent_joint;
         joint_name          = joint_between_child_link_and_parent_link->name;
         joint_type          = joint_between_child_link_and_parent_link->type;
 
         if(!is_link_visited)
         {
-            kdl_tree_.getChain(start_link_name, child_link_name, kdl_chain_);
+            kdl_tree_.getChain(start_link_name, cl->name, kdl_chain_);
             KDL::ChainFkSolverPos_recursive fk_solver(kdl_chain_);
             kdl_chain_joint_array.resize(kdl_chain_.getNrOfJoints());
             if(joint_type != urdf::Joint::FIXED)
             {
                 kdl_chain_joint_array.data[0]=robot_state_.robot_joints_[joint_name].getJointValue();
                  LOG_DEBUG( "[RobotModel] DFSTraversing : The joint between %s and %s is of type %f and is of value %d", 
-                             start_link_name.c_str(), child_link_name.c_str(), joint_type, kdl_chain_joint_array.data[0] ); 
+                             start_link_name.c_str(), cl->name.c_str(), joint_type, kdl_chain_joint_array.data[0] ); 
           }
 
           fk_solver.JntToCart(kdl_chain_joint_array, Child_link_Frame_in_Parent_Frame);
@@ -223,7 +226,7 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
           // if the parent link is root no more composing frames, the link pose has been already calculated 
           if(start_link_name == urdf_model_->getRoot()->name)
           {
-              robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_Parent_Frame);
+              robot_state_.robot_links_[cl->name].setLinkFrame(Child_link_Frame_in_Parent_Frame);
 
               //LOG_DEBUG("============================================================================== ");
               //LOG_DEBUG("Frame: %s", child_link_name.c_str());
@@ -236,7 +239,7 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
           {
               Parent_link_in_base_link        = robot_state_.robot_links_[start_link_name].getLinkFrame();
               Child_link_Frame_in_base_link   = Parent_link_in_base_link * Child_link_Frame_in_Parent_Frame;
-              robot_state_.robot_links_[child_link_name].setLinkFrame(Child_link_Frame_in_base_link);
+              robot_state_.robot_links_[cl->name].setLinkFrame(Child_link_Frame_in_base_link);
 
               //LOG_DEBUG("============================================================================== ");
               //LOG_DEBUG("Frame: %s w.r.t frame: %s", child_link_name.c_str(), start_link_name.c_str());
@@ -247,11 +250,11 @@ void RobotModel::dfsTraversing(std::string start_link_name, std::vector<std::str
 
             }
             // now we have to calculate the position of the visuals and collision of the robot in the world coordinate (global pose)
-            robot_state_.robot_links_[child_link_name].calculateLinkVisualsPoseInGlobalPose();
-            robot_state_.robot_links_[child_link_name].calculateLinkCollisionPoseinGlobalPose();
+            //robot_state_.robot_links_[cl->name].calculateLinkVisualsPoseInGlobalPose();
+            robot_state_.robot_links_[cl->name].calculateLinkCollisionPoseinGlobalPose();
 
             // recursive dfs 
-            dfsTraversing(child_link_name, visited_links);
+            dfsTraversing(cl->name, visited_links);
 
         }
     }
@@ -321,7 +324,7 @@ void RobotModel::initializeLinksCollisions()
         LOG_DEBUG("For the link:%s there are %i collision objects in this link", link_name.c_str(), link_collisions.size());
         total_number_of_collision_should_be = total_number_of_collision_should_be + link_collisions.size();      
 
-        for(std::size_t i = 0; i < link_collisions.size(); i++ )
+        for(std::size_t i = 0; i < link_collisions.size(); i++ )        
         {
             collision_object_name = link_name+"_" +lexical_cast<std::string>(i);
 
@@ -1008,7 +1011,9 @@ void RobotModel::addGraspObject(urdf::CollisionSharedPtr grasp_object, std::stri
 
     robot_state_.robot_links_[grasp_object->name].setLinkFrame(grasp_object_frame_in_base_link);
 
-    robot_state_.robot_links_[grasp_object->name].calculateLinkVisualsPoseInGlobalPose();
+    
+    //robot_state_.robot_links_[grasp_object->name].calculateLinkVisualsPoseInGlobalPose();
+    robot_state_.robot_links_[grasp_object->name].calculateLinkCollisionPoseinGlobalPose();
 
     // disable the collision between the grasp object and its parent link
     srdf::Model::DisabledCollision disable_collision_grasp_object_w_parent_link;
@@ -1238,15 +1243,21 @@ void RobotModel::updateJoint(std::string joint_name, double joint_value)
 
 
             ////////////////////link visual and collision pose has been updated in dfstraverse, but we have to update teh collision manger //////////////////////////////////
-            for(std::size_t i=0;i<visited_links.size();i++)
+            //for(std::size_t i=0;i<visited_links.size();i++)
+            for(auto &vl: visited_links)
             {
-                name_of_visited_link=visited_links.at(i);
+                //name_of_visited_link=visited_links.at(i);
+                name_of_visited_link = vl;
 
-                std::vector<urdf::CollisionSharedPtr >link_collisions = robot_state_.robot_links_[name_of_visited_link].getLinkCollisions() ;
+                //std::vector<urdf::CollisionSharedPtr >link_collisions = robot_state_.robot_links_[name_of_visited_link].getLinkCollisions() ;
+                std::vector<urdf::CollisionSharedPtr >link_collisions(0);
+                robot_state_.robot_links_[name_of_visited_link].getLinkCollisions(link_collisions) ;
 
-                for(std::size_t j=0;j<link_collisions.size();j++ )
+                //for(std::size_t j=0;j<link_collisions.size();j++ )
+                for(auto &lc: link_collisions)
                 {
-                    urdf::CollisionSharedPtr link_collision_global_pose =link_collisions.at(j);
+                    //urdf::CollisionSharedPtr link_collision_global_pose =link_collisions.at(j);
+                    urdf::CollisionSharedPtr link_collision_global_pose = lc;
 
                     collision_object_pose.position.x() = link_collision_global_pose->origin.position.x;
                     collision_object_pose.position.y() = link_collision_global_pose->origin.position.y;
@@ -1258,7 +1269,8 @@ void RobotModel::updateJoint(std::string joint_name, double joint_value)
                     collision_object_pose.orientation.z() = link_collision_global_pose->origin.rotation.z;
 
 
-                    name_of_collision_object=name_of_visited_link+"_"+lexical_cast<std::string>(j);
+                    //name_of_collision_object=name_of_visited_link+"_"+lexical_cast<std::string>(j);
+                    name_of_collision_object=name_of_visited_link+"_"+lexical_cast<std::string>(&lc - &link_collisions[0]);
                     robot_collision_detector_->updateCollisionObjectTransform(name_of_collision_object, collision_object_pose);
                 }
 
@@ -1273,9 +1285,16 @@ void RobotModel::updateJointGroup(const std::vector<std::string> &joint_names, c
     assert(joint_names.size() == joint_values.size());	    
     //auto start_time = std::chrono::high_resolution_clock::now(); 
 
-    for(std::size_t i=0;i<joint_names.size();i++)
+    //for(std::size_t i=0;i<joint_names.size();i++)
+    //    this->updateJoint(joint_names.at(i) ,joint_values(i) ) ;
+    
+    for(auto &jn: joint_names)
+    {
+        auto i = &jn - &joint_names[0];
         this->updateJoint(joint_names.at(i) ,joint_values(i) ) ;
-      // 	    auto finish_time = std::chrono::high_resolution_clock::now();
+    }
+    
+    //auto finish_time = std::chrono::high_resolution_clock::now();
    //std::chrono::duration<double> elapsed = finish_time - start_time;
    //std::cout << "Elapsed time colli: " << elapsed.count() << " s\n";
 }
