@@ -44,9 +44,13 @@ class MotionPlanners
     bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
                                 std::string &planningGroupName, PlannerStatus &planner_status);
 
-    void assignPlanningScene(const Eigen::Vector3d &sensor_origin);    
+    void assignPointcloudPlanningScene(const Eigen::Vector3d &sensor_origin);
+    
+    void assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin);
 
-    void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);    
+    void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);
+    
+    void updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin);
 
     bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken);
 
