@@ -10,6 +10,7 @@
     <depend package="base/cmake" />
     <depend package="planning/kinematics_library" />
     <depend package="planning/collision_detection" />
+    <depend package="slam/octomap" />
     <name>motion_planners</name>
     <maintainer>Sankar Natarajan/sankar.natarajan@dfki.de</maintainer>
     <stage>-1</stage>

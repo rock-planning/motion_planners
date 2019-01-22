@@ -1329,6 +1329,26 @@ void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl
     world_collision_detector_->updateEnvironment(pcl_cloud, sensor_origin, collision_object_name);
 }
 
+void RobotModel::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin,
+                               std::string collision_object_name)
+{
+    world_collision_detector_->updateEnvironment(octomap, sensor_origin, collision_object_name);
+}
+
+void RobotModel::assignPlanningScene(   const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin,
+                                        const std::string &link_name, std::string collision_object_name)
+{
+
+    if(collision_object_name.empty())
+        collision_object_name = link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
+
+    base::Pose collision_object_pose;
+    collision_object_pose.position.setZero();
+    collision_object_pose.orientation.setIdentity();
+
+    world_collision_detector_->registerOctreeToCollisionManager(octomap, sensor_origin, collision_object_pose, collision_object_name );    
+}
+
 void RobotModel::assignPlanningScene(   const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
                                         const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
 {

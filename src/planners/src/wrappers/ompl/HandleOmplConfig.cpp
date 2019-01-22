@@ -4,51 +4,52 @@
 namespace YAML {
 template<>
 struct convert<ompl_config::PlannerType> 
-{     
+{
     static Node encode(const ompl_config::PlannerType& plannertype) 
     {
-	Node node;
-	node.push_back(plannertype);   
-	return node;
+        Node node;
+        node.push_back(plannertype);   
+        return node;
     }
 
     static bool decode(const Node& node, ompl_config::PlannerType& plannertype) 
     {
-      
-	if(!node.IsScalar())
-	    return false;  
 
-	std::unordered_map<std::string, ompl_config::PlannerType> stringToenum;
-	stringToenum.insert({":SBL", ompl_config::SBL});
-	stringToenum.insert({":EST", ompl_config::EST});
-	stringToenum.insert({":LBKPIECE", ompl_config::LBKPIECE});
-	stringToenum.insert({":BKPIECE", ompl_config::BKPIECE});
-	stringToenum.insert({":KPIECE", ompl_config::KPIECE});
-	stringToenum.insert({":RRT", ompl_config::RRT});
-	stringToenum.insert({":RRTConnect", ompl_config::RRTConnect});
-	stringToenum.insert({":RRTstar", ompl_config::RRTstar});
-	stringToenum.insert({":PRM", ompl_config::PRM});
-	stringToenum.insert({":PRMstar", ompl_config::PRMstar});
+        if(!node.IsScalar())
+            return false;  
 
-	LOG_DEBUG_S<<"[getOmplConfig]: Selected planner = "<<stringToenum.at(node.Scalar());
-	plannertype  = stringToenum.at(node.Scalar());
-	return true;
+        std::unordered_map<std::string, ompl_config::PlannerType> stringToenum;
+        stringToenum.insert({":SBL", ompl_config::SBL});
+        stringToenum.insert({":EST", ompl_config::EST});
+        stringToenum.insert({":LBKPIECE", ompl_config::LBKPIECE});
+        stringToenum.insert({":BKPIECE", ompl_config::BKPIECE});
+        stringToenum.insert({":KPIECE", ompl_config::KPIECE});
+        stringToenum.insert({":RRT", ompl_config::RRT});
+        stringToenum.insert({":RRTConnect", ompl_config::RRTConnect});
+        stringToenum.insert({":RRTstar", ompl_config::RRTstar});
+        stringToenum.insert({":PRM", ompl_config::PRM});
+        stringToenum.insert({":PRMstar", ompl_config::PRMstar});
+
+        LOG_DEBUG_S<<"[getOmplConfig]: Selected planner = "<<stringToenum.at(node.Scalar());
+        plannertype  = stringToenum.at(node.Scalar());
+        return true;
     }
 };
 }
 
 namespace handle_ompl_config
-{   
+{
 ompl_config::OmplConfig getOmplConfig(const YAML::Node &yaml_data)
 {
     ompl_config::OmplConfig config;    
-    
-    config.type_of_planner	= motion_planners::getValue<ompl_config::PlannerType>(yaml_data, "type_of_planner");  
-    config.max_solve_time	= motion_planners::getValue<double>(yaml_data, "max_solve_time");    
-    config.max_step_smoothing	= motion_planners::getValue<unsigned int>(yaml_data, "max_step_smoothing");    
+
+    config.type_of_planner                      = motion_planners::getValue<ompl_config::PlannerType>(yaml_data, "type_of_planner");  
+    config.max_solve_time                       = motion_planners::getValue<double>(yaml_data, "max_solve_time");    
+    config.max_step_smoothing                   = motion_planners::getValue<unsigned int>(yaml_data, "max_step_smoothing");
+    config.max_time_soln_simpilification        = motion_planners::getValue<double>(yaml_data, "max_time_soln_simpilification");
     config.planner_specific_parameters_range	= motion_planners::getValue<std::string>(yaml_data, "planner_specific_parameters_range");        
-    
+
     return config;
-}    
+}
 
 }

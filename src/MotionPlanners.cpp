@@ -177,13 +177,24 @@ void MotionPlanners::updatePointcloud(const base::samples::Pointcloud &pt_cloud,
 
 }
 
-void MotionPlanners::assignPlanningScene(const Eigen::Vector3d &sensor_origin)
+void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin)
+{
+    robot_model_->updateOctomap(octomap, sensor_origin, config_.env_config.env_object_name);   
+}
+
+void MotionPlanners::assignPointcloudPlanningScene(const Eigen::Vector3d &sensor_origin)
 {
     env_pcl_cloud_->clear();
 
     //assign  a empty planning scene;
     robot_model_->assignPlanningScene(env_pcl_cloud_, sensor_origin, config_.env_config.env_frame, config_.env_config.octree_resolution,
                                       config_.env_config.env_object_name);
+}
+
+void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin)
+{
+    //assign  a empty planning scene;
+    robot_model_->assignPlanningScene(octomap, sensor_origin, config_.env_config.env_frame, config_.env_config.env_object_name);
 }
 
 
