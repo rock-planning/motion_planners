@@ -1,5 +1,5 @@
 <package>
-    <description brief="Motion Planning Libraries">A framework for robot motion planning. This library contains different state of the art motion planners.
+    <description>"Motion Planning Libraries">A framework for robot motion planning. This library contains different state of the art motion planners.
     The current version supports optimization and sampling based planner. 
     Available motion planners are STOMP, TrajOpt and OMPL.</description>
     <author>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</author>
