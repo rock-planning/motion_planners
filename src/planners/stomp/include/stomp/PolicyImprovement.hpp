@@ -164,6 +164,7 @@ public:
 
     void getAllRollouts(std::vector<Rollout>& rollouts);
     void getNoiselessRollout(Rollout& rollout);
+    double getNoiselessRolloutTotalCost();
     void getAdaptedStddevs(std::vector<double>& stddevs);
 
     void setCostCumulation(bool use_cumulative_costs);

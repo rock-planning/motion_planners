@@ -310,6 +310,12 @@ void Stomp::getNoiselessRollout(Rollout& rollout)
   policy_improvement_.getNoiselessRollout(rollout);
 }
 
+
+double Stomp::getNoiselessRolloutTotalCost()
+{
+  return policy_improvement_.getNoiselessRolloutTotalCost();
+}
+
 void Stomp::getAdaptedStddevs(std::vector<double>& stddevs)
 {
   policy_improvement_.getAdaptedStddevs(stddevs);

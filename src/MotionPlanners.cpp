@@ -10,7 +10,7 @@ using namespace motion_planners;
 MotionPlanners::MotionPlanners(Config config)
 {
     config_ = config;
-    env_pcl_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);    
+    env_pcl_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
 }
 
 MotionPlanners::~MotionPlanners()
@@ -25,7 +25,8 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
     collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
     // get the kinematics solver
-    kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, planner_status.kinematic_status);	
+    kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, 
+                                                                                                         planner_status.kinematic_status);
     if(robot_kinematics==NULL)
         return false;
 
@@ -56,7 +57,8 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
 
     std::string base_link, tip_link;
     planning_group_joints_.clear();
-    robot_model_->getPlanningGroupJointinformation(config_.planner_config.robot_model_config.planning_group_name, planning_group_joints_, base_link, tip_link);
+    robot_model_->getPlanningGroupJointinformation(config_.planner_config.robot_model_config.planning_group_name, 
+                                                   planning_group_joints_, base_link, tip_link);
 
     goal_pose_.position = Eigen::Vector3d::Zero();
     goal_pose_.orientation = Eigen::Quaterniond::Identity();
@@ -93,7 +95,8 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
             }
             catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
             {
-                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given start value", planning_group_joints_.at(i).first.c_str());
+                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given start value", 
+                          planning_group_joints_.at(i).first.c_str());
                 return false;
             }
         }
@@ -197,9 +200,19 @@ void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::O
     robot_model_->assignPlanningScene(octomap, sensor_origin, config_.env_config.env_frame, config_.env_config.env_object_name);
 }
 
+bool MotionPlanners::usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status)
+{
+    base::samples::Joints start, goal;
+    solution.getJointsAtTimeStep(0, start);
+    solution.getJointsAtTimeStep(solution.size(), goal);
+    if(!assignPlanningRequest( start, goal, planner_status))
+        return false;
+    
+    planner_->updateInitialTrajectory(solution);
+}
 
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::Joints &target_jointvalues,
-                                            std::string &planningGroupName, PlannerStatus &planner_status)
+                                            PlannerStatus &planner_status)
 {
 
     if (checkStartState(start_jointvalues, planner_status))
@@ -216,23 +229,21 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
             }
             catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
             {
-                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value", planning_group_joints_.at(i).first.c_str());
+                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value", 
+                          planning_group_joints_.at(i).first.c_str());
                 return false;
             }
         }
 
         if(checkGoalState(goal_joint_status_, planner_status))
             return true;
-        else
-            return false;	
-
     }
     return false;
 }
 
 
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
-                                            std::string &planningGroupName, PlannerStatus &planner_status)
+                                            PlannerStatus &planner_status)
 {
 
     if (checkStartState(start_jointvalues, planner_status))
@@ -255,19 +266,18 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                     try
                     {
                         goal_joint_status_.names.at ( i )	= planning_group_joints_.at ( i ).first;
-                        goal_joint_status_.elements.at ( i )	= it->getElementByName ( planning_group_joints_.at ( i ).first );
+                        goal_joint_status_.elements.at ( i )    = it->getElementByName ( planning_group_joints_.at ( i ).first );
                     }
                     catch ( base::samples::Joints::InvalidName e )
                     {   //Only catch exception to write more explicit error msgs
-                        LOG_ERROR ( "[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value", planning_group_joints_.at ( i ).first.c_str() );
+                        LOG_ERROR ( "[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value", 
+                                    planning_group_joints_.at ( i ).first.c_str() );
                         return false;
                     }
                 }
 
                 if ( checkGoalState ( goal_joint_status_, planner_status ) )            
                     return true;            
-                //else            
-                //    return false;
             }
         }
     }
@@ -405,10 +415,13 @@ bool MotionPlanners::handleGraspObject ( const motion_planners::ModelObject &kno
     return true;
 }
 
+void MotionPlanners::setStartAndGoal()
+{
+    planner_->setStartGoalTrajectory(initial_joint_status_, goal_joint_status_);    
+}
 
 bool MotionPlanners::solve ( base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken )
 {
-    planner_->updateInitialTrajectory ( initial_joint_status_, goal_joint_status_, planner_status );
 
     auto start_time = std::chrono::high_resolution_clock::now();
 

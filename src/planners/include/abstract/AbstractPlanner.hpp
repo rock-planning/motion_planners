@@ -107,10 +107,10 @@ struct PlannerStatus
         APPROXIMATE_SOLUTION,
         // The planner found an exact solution
         EXACT_SOLUTION,
-        // Robot model initialisation failed
-        ROBOTMODEL_INITIALISATION_FAILED,
-        // Planner initialisation failed
-        PLANNER_INITIALISATION_FAILED,
+	// Robot model initialisation failed
+	ROBOTMODEL_INITIALISATION_FAILED,
+	// Planner initialisation failed
+	PLANNER_INITIALISATION_FAILED,
         /// The planner crashed
         CRASH,
         /// invalid state
@@ -175,7 +175,11 @@ public:
 //     virtual void onEveryIteration(){};
 
     virtual bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status) = 0;
-    virtual void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status) = 0;
+    
+    virtual void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal) = 0;
+    
+    virtual bool updateInitialTrajectory(const base::JointsTrajectory &trajectory) = 0;
+    
 
 };
 

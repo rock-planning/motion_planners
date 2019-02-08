@@ -29,7 +29,9 @@ class TrajoptPlanner: public motion_planners::AbstractPlanner
 
                 bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
-                void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
+	        void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
+	
+	        bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
 
 private:
                 std::shared_ptr<RobotModel> m_robot_model_;

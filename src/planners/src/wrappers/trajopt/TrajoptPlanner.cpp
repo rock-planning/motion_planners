@@ -75,7 +75,7 @@ bool TrajoptPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &plan
 }
 
 
-void TrajoptPlanner::updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status)
+void TrajoptPlanner::setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal)
 {
 
 
@@ -93,5 +93,8 @@ void TrajoptPlanner::updateInitialTrajectory(const base::samples::Joints &start,
     m_prb->initTraj(start_traj, goal_traj);
 
 }
+
+bool TrajoptPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajectory)
+{}
 
 }// end namespace

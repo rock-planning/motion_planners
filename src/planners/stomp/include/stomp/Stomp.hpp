@@ -68,6 +68,7 @@ public:
 
     void getAllRollouts(std::vector<Rollout>& rollouts);
     void getNoiselessRollout(Rollout& rollout);
+    double getNoiselessRolloutTotalCost();
     void getAdaptedStddevs(std::vector<double>& stddevs);
     void getBestNoiselessParameters(std::vector<base::VectorXd>& parameters, double& cost);
 

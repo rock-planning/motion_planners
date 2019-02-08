@@ -37,11 +37,14 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, st
     return true; 
 }
 
-void OmplPlanner::updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status)
+void OmplPlanner::setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal)
 {    
     start_joint_values_ = start;
     goal_joint_values_ = goal;
 }
+
+bool OmplPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajectory)
+{}
 
 bool OmplPlanner::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status )
 {

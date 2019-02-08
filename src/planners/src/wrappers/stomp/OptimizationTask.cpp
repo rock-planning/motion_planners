@@ -20,9 +20,12 @@ OptimizationTask::~OptimizationTask()
 }
 
 bool OptimizationTask::stompInitialize(int num_threads, int num_rollouts)
-{
+{    
+    derivative_costs_.clear();
     derivative_costs_.resize(stomp_config_.num_dimensions_, 
     base::MatrixXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING, stomp::NUM_DIFF_RULES));
+    
+    initial_trajectory_.clear();
     initial_trajectory_.resize(stomp_config_.num_dimensions_, 
     base::VectorXd::Zero(stomp_config_.num_time_steps_ + 2 * stomp::TRAJECTORY_PADDING));
 
@@ -33,7 +36,8 @@ bool OptimizationTask::stompInitialize(int num_threads, int num_rollouts)
     pos_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     vel_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
     acc_.resize(stomp_config_.num_dimensions_, stomp_config_.num_time_steps_ + 2*stomp::TRAJECTORY_PADDING);
-
+    
+    collision_costs_.resize(0);
     collision_costs_ = base::VectorXd::Zero(stomp_config_.num_time_steps_);
 
     return true;
@@ -101,6 +105,19 @@ void OptimizationTask::createPolicy()
     policy_->initialize(stomp_config_.num_time_steps_, stomp_config_.num_dimensions_, stomp_config_.movement_duration_, derivative_costs_, initial_trajectory_);
     policy_->setToMinControlCost();
     policy_->getParametersAll(initial_trajectory_);
+    vel_diff_matrix_ = policy_->getDifferentiationMatrix(stomp::STOMP_VELOCITY);
+    acc_diff_matrix_ = policy_->getDifferentiationMatrix(stomp::STOMP_ACCELERATION);
+
+    movement_dt_ = policy_->getMovementDt();
+
+}
+
+void OptimizationTask::updatePolicy()
+{
+    policy_.reset(new stomp::CovariantMovementPrimitive());
+    policy_->initialize(stomp_config_.num_time_steps_, stomp_config_.num_dimensions_, stomp_config_.movement_duration_, derivative_costs_, initial_trajectory_);
+    policy_->setParametersAll(initial_trajectory_);
+    policy_->updateMinControlCostParameters(initial_trajectory_);
     vel_diff_matrix_ = policy_->getDifferentiationMatrix(stomp::STOMP_VELOCITY);
     acc_diff_matrix_ = policy_->getDifferentiationMatrix(stomp::STOMP_ACCELERATION);
 

@@ -185,6 +185,8 @@ public:
     double getMovementDuration() const;
     double getMovementDt() const;
     
+    bool updateMinControlCostParameters(const std::vector<base::VectorXd>& parameters_all_);
+    
     std::vector<base::VectorXd> parameters_all_;
 private:
 

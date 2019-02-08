@@ -846,6 +846,11 @@ void PolicyImprovement::getNoiselessRollout(Rollout& rollout)
   rollout = noiseless_rollout_;
 }
 
+double PolicyImprovement::getNoiselessRolloutTotalCost()
+{
+  return noiseless_rollout_.total_cost_;
+}
+
 void PolicyImprovement::getAdaptedStddevs(std::vector<double>& stddevs)
 {
   stddevs = adapted_stddevs_;

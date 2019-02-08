@@ -39,10 +39,14 @@ class MotionPlanners
     bool initialize(PlannerStatus &error_status);
 
     bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::Joints &target_jointvalues,
-                                std::string &planningGroupName, PlannerStatus &planner_status);
+                               PlannerStatus &planner_status);
 
     bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
-                                std::string &planningGroupName, PlannerStatus &planner_status);
+                                PlannerStatus &planner_status);
+    
+    bool usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status);
+    
+    void setStartAndGoal();
 
     void assignPointcloudPlanningScene(const Eigen::Vector3d &sensor_origin);
     

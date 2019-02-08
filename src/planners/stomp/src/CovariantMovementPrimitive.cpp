@@ -134,6 +134,17 @@ bool CovariantMovementPrimitive::computeMinControlCostParameters()
   return true;
 }
 
+bool CovariantMovementPrimitive::updateMinControlCostParameters(const std::vector<base::VectorXd>& parameters_all_)
+{
+  min_control_cost_parameters_all_ = parameters_all_;
+  min_control_cost_parameters_free_.resize(num_dimensions_);
+  for (int d=0; d<num_dimensions_; ++d)
+  {
+    min_control_cost_parameters_free_[d] = min_control_cost_parameters_all_[d].segment(free_vars_start_index_, num_vars_free_);
+  }
+  return true;
+}
+
 bool CovariantMovementPrimitive::initializeVariables()
 {
   movement_dt_ = movement_duration_ / (num_time_steps_ + 1);
