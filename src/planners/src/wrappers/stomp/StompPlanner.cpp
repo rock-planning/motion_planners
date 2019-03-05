@@ -158,8 +158,8 @@ bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& traject
     //std::cout<<"update traj"<<std::endl;
     for (int d=0; d < stomp_config_.num_dimensions_; ++d)
     {
-        optimization_task_->initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= trajectory.elements.at(d).front().position * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);	
-        optimization_task_->initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= trajectory.elements.at(d).back().position  * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
+        optimization_task_->initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) = trajectory.elements.at(d).front().position * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);	
+        optimization_task_->initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) = trajectory.elements.at(d).back().position  * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
 
 
         for (int i=0; i < stomp_config_.num_time_steps_; i++){

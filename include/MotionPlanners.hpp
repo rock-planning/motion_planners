@@ -3,12 +3,9 @@
 
 #include <vector>
 #include <string>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/conversions.h>
 #include <base/samples/Joints.hpp>
 #include "Config.hpp"
 #include <base/JointsTrajectory.hpp>
-#include <base/samples/Pointcloud.hpp>
 #include <collision_detection/CollisionDetection.hpp>
 #include <kinematics_library/KinematicsFactory.hpp>
 #include "RobotModel.hpp"
@@ -43,22 +40,16 @@ class MotionPlanners
 
     bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
                                 PlannerStatus &planner_status);
-    
+
     bool usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status);
-    
+
     void setStartAndGoal();
 
-    void assignPointcloudPlanningScene(const Eigen::Vector3d &sensor_origin);
-    
-    void assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin);
+    void assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap);
 
-    void updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin);
-    
-    void updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin);
+    void updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap);
 
     bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken);
-
-    void getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud);   
 
     bool handleCollisionObjectInWorld(const motion_planners::ModelObject &known_object);
 
@@ -93,13 +84,9 @@ class MotionPlanners
 
     std::vector<base::commands::Joints> ik_solution_;
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr env_pcl_cloud_;
-
     bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status);
 
     bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
-
-    void applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud);
 
     bool convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object);
 

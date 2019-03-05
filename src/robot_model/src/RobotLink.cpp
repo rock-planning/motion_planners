@@ -174,6 +174,13 @@ void RobotLink::AddCollision(urdf::CollisionSharedPtr collision)
 }
 
 
+/* Subtracting the pointcloud using this method is not efficient because it creates a convex hull for the entire robot.
+ * In doing so, computation time is less but it will delete all the points between the robot links.
+ *
+ * The commented functions are not used due to the reason mentioned above and also self-filter should be done outside the motion planner
+ * Once in a while we also had issues with PCL and c++11. So due to the reasons mentioned above, functions related to plc based self filter are commented.
+ */
+/*
 void RobotLink::setVisualPointCloud(std::vector<pcl::PointCloud<pcl::PointXYZ> > link_point_clouds)
 {
     link_visual_point_clouds_ = link_point_clouds;
@@ -193,4 +200,4 @@ void RobotLink::setCollisionPointCloud(std::vector<pcl::PointCloud<pcl::PointXYZ
 std::vector<pcl::PointCloud<pcl::PointXYZ> >& RobotLink::getCollisionPointCloud()
 {
     return link_collision_point_clouds_;
-}
+}*/

@@ -2,6 +2,8 @@
 #ifndef STOMPPLANNER_HPP_
 #define STOMPPLANNER_HPP_
 
+#include <sys/stat.h> //needed to create director (mkdir function)
+
 #include <abstract/AbstractPlanner.hpp>
 #include "OptimizationTask.hpp"
 #include "HandleStompConfig.hpp"

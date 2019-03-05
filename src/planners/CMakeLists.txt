@@ -12,7 +12,7 @@ INCLUDE(FindPkgConfig)
 # get basic library
 find_package(Eigen3 REQUIRED)
 find_package(orocos_kdl REQUIRED)
-find_package(PCL 1.8 REQUIRED COMPONENTS core features filters io segmentation surface)
+
 pkg_check_modules(kdl_parser REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
@@ -29,7 +29,7 @@ get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY trajopt DEFINITION TRAJO
 set (PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 #set the header and library path
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} 
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} 
 		    ${YAML_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_PATH}/include ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
 link_directories(${kdl_parser_LIBRARY_DIRS})
 

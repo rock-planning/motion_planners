@@ -35,14 +35,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <pcl/io/pcd_io.h>
-#include <pcl/common/transforms.h>
-#include <pcl/point_types.h>
 
-#include <pcl/filters/crop_hull.h>
-#include <pcl/surface/concave_hull.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/filters/statistical_outlier_removal.h>
 
 #include "RobotLink.hpp"
 #include "RobotJoint.hpp"
@@ -132,15 +125,9 @@ class RobotModel
 
         void updateJointGroup(const std::vector<std::string> &joint_names,const std::vector<double> &joint_values);
 
-        void updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin, std::string collision_object_name="");
-        
-        void updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin, std::string collision_object_name="");
-        
-        void assignPlanningScene( const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin,
-                                  const std::string &link_name, std::string collision_object_name);
+        void updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, std::string collision_object_name="");
 
-        void assignPlanningScene(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
-                                 const std::string &link_name, const double &octree_resolution, std::string collision_object_name="");
+        void assignPlanningScene( const std::shared_ptr<octomap::OcTree> &octomap, const std::string &link_name, std::string collision_object_name);
 
         bool isStateValid(int self_collision_num_max_contacts=1, int external_collision_manager_num_max_contacts=1);
 
@@ -173,47 +160,32 @@ class RobotModel
 
         inline void setKinematicsSolver(kinematics_library::AbstractKinematicPtr robot_kinematics){robot_kinematics_ = robot_kinematics;}
 
-        template<class urdfT> 
-        void registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
 
-        void selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
-        std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
-
-        void selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
 
         std::vector< collision_detection::DistanceInformation>& getSelfDistanceInfo();
 
-        void createPointCloudFromVisual(std::vector<urdf::VisualSharedPtr > &link_visuals, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
 
-        void createPointCloudFromCollision(std::vector<urdf::CollisionSharedPtr> &link_collisions, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
 
         void computeJacobain(const std::string &chain_root_link,const  std::string& tip_link, std::map<std::string, double> joints_name_values, KDL::Jacobian  &jacobian);
 
         void manipulabilityIndex(KDL::Jacobian  &jacobian, double &manipulability_index);
 
-        void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense);
-
-        void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &box_cloud,double x, double y, double z);
-
-        void createPtCloudFromCylinder( pcl::PointCloud< pcl::PointXYZ >::Ptr transformed_cylinder_cloud_ptr, double radius, double height, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha = 10, bool dense = false );
-
-        void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha=5);
-
-        void createPtCloudFromSphere(	pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, 
-        int number_of_step_alpha=10, int number_of_step_beta=10);
-
-        void createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_cloud, double radius, int number_of_step_alpha=20, int number_of_step_beta=20);
-
-        //void subtractingPointClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr,pcl::PointCloud<pcl::PointXYZ>::Ptr  scene_ptr ,pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr );
-
         void addGraspObject(urdf::CollisionSharedPtr grasp_object, std::string parent_link_name);
 
-        void removeGraspObject(const std::string grasp_object_name);
+        bool removeGraspObject(const std::string grasp_object_name);
 
-        void removeWorldObject(const std::string world_object_name);
+        bool removeWorldObject(const std::string world_object_name);
+        
+        inline bool removeObjectFromOctree(Eigen::Vector3d object_pose, Eigen::Vector3d object_size)
+        {
+            return world_collision_detector_->removeObjectFromOctree(object_pose, object_size);
+        }
 
-        void pclStatisticalOutlierRemoval(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud);
-
+        inline void saveOctree()
+        {
+            return world_collision_detector_->saveOctree();
+        }
+        
         void printWorldCollisionObject();
 
         std::vector< std::pair<std::string, std::string> > getCollisionObjectNames()
@@ -257,21 +229,53 @@ class RobotModel
 
         void kdlFrameToEigenMatrix(KDL::Frame &frame,Eigen::Isometry3f &transform);
 
-        void scalePointCloud( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out,
-        double scale_x, double scale_y, double scale_z);
 
-        void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z,
-        Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix);
-
-        void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height,
-        Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10 );
-
-        void subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
-        pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud);
-
-        void subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud);
 
 };
 
 }// end namespace motion_planners
 #endif // ROBOTMODEL_HPP
+
+/* Subtracting the pointcloud using this method is not efficient because it creates a convex hull for the entire robot.
+ * In doing so, computation time is less but it will delete all the points between the robot links.
+ *
+ * The commented functions are not used due to the reason mentioned above and also self-filter should be done outside the motion planner
+ * Once in a while we also had issues with PCL and c++11. So due to the reasons mentioned above, functions related to plc based self filter are commented.
+ */
+/*
+#include <pcl/io/pcd_io.h>
+#include <pcl/common/transforms.h>
+#include <pcl/point_types.h>
+
+#include <pcl/filters/crop_hull.h>
+#include <pcl/surface/concave_hull.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+
+template<class urdfT> 
+void registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
+void scalePointCloud( pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out,
+                      double scale_x, double scale_y, double scale_z);
+void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z, 
+                          Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense);
+void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &box_cloud,double x, double y, double z);
+void createPtCloudFromCylinder( pcl::PointCloud< pcl::PointXYZ >::Ptr transformed_cylinder_cloud_ptr, double radius, double height, 
+                                Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha = 10, bool dense = false );
+void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha=5);
+void createPtCloudFromSphere(   pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, 
+                                Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, 
+                                int number_of_step_alpha=10, int number_of_step_beta=10);
+void createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_cloud, double radius, int number_of_step_alpha=20, int number_of_step_beta=20);
+void createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,double x, double y, double z,
+                            Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix);
+void createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr, double radius, double height,
+                                Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha=10 );
+void createPointCloudFromVisual(std::vector<urdf::VisualSharedPtr > &link_visuals, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
+void createPointCloudFromCollision(std::vector<urdf::CollisionSharedPtr> &link_collisions, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud );
+void subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
+                                pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud);
+void subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud);
+void selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
+                        std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
+void selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::string sensor_frame_name, USESELFCOLLISION use_selfcollision);
+void pclStatisticalOutlierRemoval(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud);*/

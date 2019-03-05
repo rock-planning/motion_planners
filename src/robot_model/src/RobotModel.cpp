@@ -157,16 +157,22 @@ bool RobotModel::initialization()
         robot_state_.robot_links_[link_name].setLinkVisuals( visual_array );
         robot_state_.robot_links_[link_name].setLinkCollisions(collision_array );
 
-        //convert visual and collision data to pointcloud and then assing to the robot state
-        //TODO: Why are we doing this ?
-        std::vector<pcl::PointCloud<pcl::PointXYZ> > link_visual_point_cloud, link_collision_point_cloud;        
-        // create pointcloud from visual link
-        registerLinks(visual_array, link_visual_point_cloud);
+        
+        // Reason for removing these function:
+        // ===================================
+        // Saving the link as pointcloud is deprecated as self filtering the robot link
+        // using the pointcloud seems to be computation expensive. Creating a plc::concavehull did
+        // gave a good result at the cost of heavy computation and self-filtering using
+        // pcl::convexhull remove more pointcloud than it suppose to remove. !
+        
+        // convert visual and collision data to pointcloud and then assing to the robot state
+        //std::vector<pcl::PointCloud<pcl::PointXYZ> > link_visual_point_cloud, link_collision_point_cloud;        
+        // create pointcloud from visual link        
+        //registerLinks(visual_array, link_visual_point_cloud);
         // create pointcloud from collision link
-        registerLinks(collision_array, link_collision_point_cloud);
-
-        robot_state_.robot_links_[link_name].setVisualPointCloud(link_visual_point_cloud);
-        robot_state_.robot_links_[link_name].setCollisionPointCloud(link_collision_point_cloud);
+        //registerLinks(collision_array, link_collision_point_cloud);
+        //robot_state_.robot_links_[link_name].setVisualPointCloud(link_visual_point_cloud);
+        //robot_state_.robot_links_[link_name].setCollisionPointCloud(link_collision_point_cloud);
     }
 
     std::vector<std::string>  list_of_visited_link_from_root;
@@ -391,293 +397,6 @@ void RobotModel::initializeLinksCollisions()
     return;
 }
 
-void RobotModel::scalePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out, double scale_x, double scale_y, double scale_z)
-{
-    double cloud_in_x,cloud_in_y,cloud_in_z;
-
-    for(std::size_t i=0; i < cloud_in->size();i++)
-    {
-        cloud_in_x=cloud_in->at(i).x;
-        cloud_in_y=cloud_in->at(i).y;
-        cloud_in_z=cloud_in->at(i).z;
-        cloud_out->push_back(pcl::PointXYZ(cloud_in_x /scale_x,cloud_in_y /scale_y, cloud_in_z /scale_z) );
-    }
-}
-
-void RobotModel::createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,
-                                            double x, double y, double z, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense)
-{
-    pcl::PointCloud<pcl::PointXYZ>::Ptr box_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>()) ;
-    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,-z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,-y/2 ,z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,-y/2 ,-z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,y/2 ,z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,y/2 ,-z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,-y/2 ,z/2 ) );
-    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,-y/2 ,-z/2 ) );
-
-    if(dense)
-    {
-        double delta_x= 0.02;
-        double delta_y= 0.02;
-        double delta_z= 0.02;
-
-        for(double deltaX = -x/2 + delta_x; deltaX < x/2; deltaX = deltaX+delta_x)
-        {
-            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,z/2 ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,-z/2 ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,z/2 ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,-z/2 ) );
-
-            for(double deltaZ = -z/2 + delta_z; deltaZ < z/2; deltaZ = deltaZ+delta_z)
-            {
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,deltaZ ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,deltaZ ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,deltaZ ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,deltaZ ) );
-
-            }
-
-            for(double deltaY = -y/2 + delta_y; deltaY < y/2; deltaY = deltaY+delta_y)
-            {
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,z/2 ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,-z/2 ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,z/2 ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,-z/2 ) );}
-
-        }
-
-        for(double deltaY = -y/2 + delta_y; deltaY < y/2; deltaY = deltaY+delta_y)
-        {
-            box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,z/2 ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,-z/2 ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,z/2 ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,-z/2 ) );
-
-            for(double deltaZ = -z/2 + delta_z; deltaZ < z/2; deltaZ = deltaZ+delta_z)
-            {
-                box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,deltaZ ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,deltaZ ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,deltaZ ) );
-                box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,deltaZ ) );
-            }
-        }
-        /*for(double deltaZ = -z/2 + delta_z; deltaZ < z/2; deltaZ = deltaZ+delta_z)
-        {
-            box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,deltaZ ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,-y/2 ,deltaZ ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,-y/2 ,deltaZ ) );
-            box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,y/2 ,deltaZ ) );
-        }*/
-    }
-
-    pcl::transformPointCloud (*box_cloud_ptr, *transformed_box_cloud_ptr, link_visual_pose_in_sensor_frame_eigen_matrix);
-}
-
-void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr,
-                                                 double radius, double height, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix,
-                                                 int number_of_step_alpha, bool dense )
-{
-    double alpha_angle=M_PI/number_of_step_alpha;
-    double z=height/2;
-    double x,y;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cylinder_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
-
-    for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
-    {
-        x=radius*cos(alpha);
-        y=radius*sin(alpha);
-        cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,z));
-        cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,-z));
-    }
-
-    if (dense)
-    {
-        double delta_z = z * 0.1;
-        for(double delta = delta_z; delta < z; delta = delta+delta_z)
-        {
-            for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
-            {
-                x=radius*cos(alpha);
-                y=radius*sin(alpha);
-                cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,delta));
-                cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,-delta));
-            }
-        }
-        for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
-        {
-            x=radius*cos(alpha);
-            y=radius*sin(alpha);
-            cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,0.0));
-        }
-    }
-
-    pcl::transformPointCloud (*cylinder_cloud_ptr, *transformed_cylinder_cloud_ptr, link_visual_pose_in_sensor_frame_eigen_matrix);
-}
-
-void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, 
-					 Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha, int number_of_step_beta)
-{
-
-    // alpha cretae point on a circle given radius, beta will give you the radius,
-
-    double alpha_angle, beta_angle;
-    double x_origin, y_origin, z_origin;
-
-    x_origin=link_visual_pose_in_sensor_frame_eigen_matrix(0,3);
-    y_origin=link_visual_pose_in_sensor_frame_eigen_matrix(1,3);
-    z_origin=link_visual_pose_in_sensor_frame_eigen_matrix(2,3);
-
-
-    alpha_angle= M_PI/number_of_step_alpha;
-    beta_angle= M_PI/number_of_step_beta;
-
-
-    double x,y,z,new_radius;
-
-    for(double beta=0;beta<M_PI/2;beta=beta+beta_angle)
-    {
-        new_radius=radius*cos(beta);
-        z=radius*sin(beta);
-
-        for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
-        {
-            x=new_radius*cos(alpha)+x_origin;
-            y=new_radius*sin(alpha)+y_origin;
-            transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x,y,z+z_origin));
-            transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x,y,-z+z_origin));
-        }
-    }
-
-    //top and bottom of the sphere
-    transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x_origin,y_origin,z_origin+radius));
-    transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x_origin,y_origin,z_origin-radius));
-
-
-}
-
-void RobotModel::createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &box_cloud,double x, double y, double z)
-{
-    box_cloud.push_back(pcl::PointXYZ(x/2 ,y/2 ,z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(x/2 ,y/2 ,-z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(x/2 ,-y/2 ,z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(x/2 ,-y/2 ,-z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(-x/2 ,y/2 ,z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(-x/2 ,y/2 ,-z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(-x/2 ,-y/2 ,z/2 ) );
-    box_cloud.push_back(pcl::PointXYZ(-x/2 ,-y/2 ,-z/2 ) );
-}
-
-void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha )
-{
-    double alpha_angle=M_PI/number_of_step_alpha;
-    double z=height/2;
-    double x,y;
-    for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
-    {
-        x=radius*cos(alpha);
-        y=radius*sin(alpha);
-        cylinder_cloud.push_back(pcl::PointXYZ(x,y,z));
-        cylinder_cloud.push_back(pcl::PointXYZ(x,y,-z));
-    }
-}
-
-void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_cloud, double radius, int number_of_step_alpha, int number_of_step_beta)
-{
-    // alpha cretae point on a circle given radius, beta will give you the radius,
-    double alpha_angle, beta_angle;
-    alpha_angle= M_PI/number_of_step_alpha;
-    beta_angle= M_PI/number_of_step_beta;
-    double x,y,z,new_radius;
-    for(double beta=0;beta<M_PI/2;beta=beta+beta_angle)
-    {
-        new_radius=radius*cos(beta);
-        z=radius*sin(beta);
-        for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
-        {
-            x=new_radius*cos(alpha);
-            y=new_radius*sin(alpha);
-            sphere_cloud.push_back(pcl::PointXYZ(x,y,z));
-            sphere_cloud.push_back(pcl::PointXYZ(x,y,-z));
-        }
-    }
-    //top and bottom of the sphere
-    sphere_cloud.push_back(pcl::PointXYZ(0,0,+radius));
-    sphere_cloud.push_back(pcl::PointXYZ(0,0,-radius));
-}
-
-/* Subtracting the pointcloud using this method is not efficient because it creates a convex hull for the entire robot.
- * In doing so, computation time is less but it will delete all the points between the robot links.
- */
-
-void RobotModel::subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
-					     pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud)
-{
-    std::vector<pcl::Vertices> polygons;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::ConvexHull<pcl::PointXYZ> hull;
-// Set alpha, which is the maximum length from a vertex to the center of the voronoi cell (the smaller, the greater the resolution of the hull).
-//    http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_3:_Cloud_processing_(advanced)#Concave_hull
-/*
-    pcl::ConcaveHull<pcl::PointXYZ> hull;
-    hull.setAlpha(0.1);
-*/
-    hull.setInputCloud(cloud_2);
-    hull.setDimension(3);
-    hull.reconstruct(*boundingbox_ptr.get(),polygons);
-
-    std::vector<int> indices;
-    pcl::CropHull<pcl::PointXYZ> bb_filter;
-
-    bb_filter.setDim(3);
-    bb_filter.setInputCloud(cloud_1);
-    bb_filter.setHullIndices(polygons);
-    bb_filter.setHullCloud(boundingbox_ptr);
-    bb_filter.filter(indices);
-
-    pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
-    fInliers->indices=indices ;
-    pcl::ExtractIndices<pcl::PointXYZ> extract ;
-    extract.setInputCloud (cloud_1);
-    extract.setIndices (fInliers);
-    extract.setNegative (true);
-
-    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    extract.filter (*output_cloud);    
-
-    pclStatisticalOutlierRemoval(output_cloud, subtracted_cloud);
-}
-
-void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud)
-{
-
-    std::vector<pcl::Vertices> polygons;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::ConvexHull<pcl::PointXYZ> hull;
-
-    hull.setInputCloud(robot_link_cloud);
-    hull.setDimension(3);
-    hull.reconstruct(*boundingbox_ptr.get(),polygons);
-
-    std::vector<int> indices;
-    pcl::CropHull<pcl::PointXYZ> bb_filter;
-
-    bb_filter.setDim(3);
-    bb_filter.setInputCloud(env_cloud);
-    bb_filter.setHullIndices(polygons);
-    bb_filter.setHullCloud(boundingbox_ptr);
-    bb_filter.filter(indices);
-
-    pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
-    fInliers->indices=indices ;
-    pcl::ExtractIndices<pcl::PointXYZ> extract ;
-    extract.setInputCloud (env_cloud);
-    extract.setIndices (fInliers);
-    extract.setNegative (true);    
-    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    extract.filter (*env_cloud);       
-}
 
 boost::filesystem::path RobotModel::resolve_path( const boost::filesystem::path& p, const boost::filesystem::path& base )
 {
@@ -871,67 +590,7 @@ urdf::ModelInterfaceSharedPtr const &  RobotModel::getURDF()
     return this->urdf_model_;
 }
 
-template<class urdfT>
-void RobotModel::registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud )
-{   
-    boost::filesystem::path abs_path_of_mesh_file;
-    std::string urdf_directory_path;
 
-    std::string abs_path_to_mesh_file;
-    
-    std::shared_ptr<collision_detection::MeshLoader> mesh_loader(new collision_detection::MeshLoader());    
-
-    for(std::size_t i=0;i<urdf_link.size();i++ )
-    {
-        if(urdf_link.at(i)->geometry->type == urdf::Geometry::MESH)
-        {    
-            LOG_DEBUG_S<<"[registerLinks]: Registering mesh file ";	    
-           
-            urdf::MeshSharedPtr urdf_mesh_ptr= urdf::static_pointer_cast <urdf::Mesh> (urdf_link.at(i)->geometry);
-
-            urdf_directory_path=urdf_file_abs_path_.substr(0, urdf_file_abs_path_.find_last_of("/") );
-
-            abs_path_of_mesh_file =resolve_path( urdf_mesh_ptr->filename, urdf_directory_path );
-
-            abs_path_to_mesh_file=abs_path_of_mesh_file.string();
-            pcl::PointCloud<pcl::PointXYZ> point_cloud;
-
-            mesh_loader->createPointCloudFromMesh(abs_path_to_mesh_file, point_cloud, urdf_mesh_ptr->scale.x, urdf_mesh_ptr->scale.y, urdf_mesh_ptr->scale.z);
-            link_point_cloud.push_back(point_cloud);
-        }
-        else if(urdf_link.at(i)->geometry->type == urdf::Geometry::BOX)
-        {
-            LOG_DEBUG_S<<"[registerLinks]: Registering box ";
-
-            urdf::BoxSharedPtr urdf_box_ptr= urdf::static_pointer_cast <urdf::Box> (urdf_link.at(i)->geometry);
-
-            pcl::PointCloud<pcl::PointXYZ> point_cloud;
-
-            createPtCloudFromBox(point_cloud,urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z);
-            link_point_cloud.push_back(point_cloud);
-        }
-        else if(urdf_link.at(i)->geometry->type == urdf::Geometry::CYLINDER)
-        {
-	    LOG_DEBUG_S<<"[registerLinks]: Registering cylinder ";
-
-            urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (urdf_link.at(i)->geometry);
-
-            pcl::PointCloud<pcl::PointXYZ> point_cloud;
-            createPtCloudFromCylinder(point_cloud, urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length);
-            link_point_cloud.push_back(point_cloud);
-        }
-        else if(urdf_link.at(i)->geometry->type == urdf::Geometry::SPHERE)
-        {
-            LOG_DEBUG_S<<"[registerLinks]: Registering sphere ";            
-
-            urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (urdf_link.at(i)->geometry);
-
-            pcl::PointCloud<pcl::PointXYZ> point_cloud;
-            createPtCloudFromSphere(point_cloud, urdf_sphere_ptr->radius);
-            link_point_cloud.push_back(point_cloud);
-        }
-    }
-}
 
 void RobotModel::addGraspObject(urdf::CollisionSharedPtr grasp_object, std::string parent_link_name)
 {
@@ -1121,34 +780,24 @@ void RobotModel::addGraspObject(urdf::CollisionSharedPtr grasp_object, std::stri
     std::cout<<" ==============================End ADD grasp object=="<<std::endl;
     #endif
 
-
 }
 
-
-void RobotModel::removeGraspObject(const std::string grasp_object_name)
+bool RobotModel::removeGraspObject(const std::string grasp_object_name)
 {
-    //#define REMOVEGRASPOBJECT_LOG
 
-    #ifdef REMOVEGRASPOBJECT_LOG
-        std::cout<<" ==Start REMOVE grasp object =============================="<<std::endl;
-    #endif
-
-    #ifdef REMOVEGRASPOBJECT_LOG
-    std::cout<<"The following links are available in the urdf_model before removing the link "<<grasp_object_name<<std::endl;
-    for(std::map<std::string, urdf::LinkSharedPtr >::iterator it=urdf_model_->links_.begin(); it!=urdf_model_->links_.end();it++)
-    {
-        std::cout<<it->second->name<<std::endl;
-    }
-    std::cout<<""<<std::endl;
-    #endif
-
-
+//     LOG_DEBUG_S<<"[RobotModel]: The following links are available in the urdf_model before removing the link %s, grasp_object_name.c_str()";
+//     for(std::map<std::string, urdf::LinkSharedPtr >::iterator it=urdf_model_->links_.begin(); it!=urdf_model_->links_.end();it++)
+//     {
+//         std::cout<<it->second->name<<std::endl;
+//     }
+//     std::cout<<""<<std::endl;
+    
     // remove grasp link from urdf model
     urdf::LinkConstSharedPtr link_ptr;
     if (urdf_model_->links_.find(grasp_object_name) == urdf_model_->links_.end())
     {
         std::cout<<" No grasp object is available with name "<< grasp_object_name<<std::endl;
-        return;
+        return false;
     }
     else
     {
@@ -1165,43 +814,26 @@ void RobotModel::removeGraspObject(const std::string grasp_object_name)
         urdf_model_->links_.erase(grasp_object_name);
     }
 
-    #ifdef REMOVEGRASPOBJECT_LOG
-    std::cout<<"The following links are available in the urdf_model after removing the link "<<grasp_object_name<<std::endl;
-    for(std::map<std::string, urdf::LinkSharedPtr >::iterator it=urdf_model_->links_.begin(); it!=urdf_model_->links_.end();it++)
-    {
-        std::cout<<it->second->name<<std::endl;
-    }
-    #endif
+//     std::cout<<"The following links are available in the urdf_model after removing the link "<<grasp_object_name<<std::endl;
+//     for(std::map<std::string, urdf::LinkSharedPtr >::iterator it=urdf_model_->links_.begin(); it!=urdf_model_->links_.end();it++)
+//     {
+//         std::cout<<it->second->name<<std::endl;
+//     }
+    
     // remove grasp link from robot model
     robot_state_.robot_links_.erase(grasp_object_name);
 
-    // remove the grasp link form collision pair
-    //(this->self_collision_detection.removeDisabledCollisionLink(grasp_object_name);
+    // remove the grasp link form collision pair    
     robot_collision_detector_->removeDisabledCollisionLink(grasp_object_name);
 
      // remove the grasp link from collision data base
-    //this->self_collision_detection.removeSelfCollisionObject(grasp_object_name);    
-    robot_collision_detector_->removeSelfCollisionObject(grasp_object_name);
-
-    #ifdef REMOVEGRASPOBJECT_LOG
-        std::cout<<" ==============================End REMOVE grasp =="<<std::endl;
-    #endif
+    return robot_collision_detector_->removeSelfCollisionObject(grasp_object_name);
 
 }
 
-void RobotModel::removeWorldObject(const std::string world_object_name)
+bool RobotModel::removeWorldObject(const std::string world_object_name)
 {
-    //#define REMOVEWORLDOBJECT_LOG
-
-    #ifdef REMOVEGRASPOBJECT_LOG
-        std::cout<<" ==Start REMOVE world object =============================="<<std::endl;
-    #endif
-
-    world_collision_detector_->removeWorldCollisionObject(world_object_name);
-
-    #ifdef REMOVEWORLDOBJECT_LOG
-        std::cout<<" ==============================End REMOVE grasp =="<<std::endl;
-    #endif
+    return world_collision_detector_->removeWorldCollisionObject(world_object_name);
 }
 
 void RobotModel::updateJoint(std::string joint_name, double joint_value)
@@ -1323,20 +955,12 @@ void RobotModel::updateJointGroup( const std::vector<std::string> &joint_names, 
     }
 }
 
-void RobotModel::updatePointcloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
-                                  std::string collision_object_name)
+void RobotModel::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, std::string collision_object_name)
 {
-    world_collision_detector_->updateEnvironment(pcl_cloud, sensor_origin, collision_object_name);
+    world_collision_detector_->updateEnvironment(octomap, collision_object_name);
 }
 
-void RobotModel::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin,
-                               std::string collision_object_name)
-{
-    world_collision_detector_->updateEnvironment(octomap, sensor_origin, collision_object_name);
-}
-
-void RobotModel::assignPlanningScene(   const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin,
-                                        const std::string &link_name, std::string collision_object_name)
+void RobotModel::assignPlanningScene(   const std::shared_ptr<octomap::OcTree> &octomap, const std::string &link_name, std::string collision_object_name)
 {
 
     if(collision_object_name.empty())
@@ -1346,25 +970,13 @@ void RobotModel::assignPlanningScene(   const std::shared_ptr<octomap::OcTree> &
     collision_object_pose.position.setZero();
     collision_object_pose.orientation.setIdentity();
 
-    world_collision_detector_->registerOctreeToCollisionManager(octomap, sensor_origin, collision_object_pose, collision_object_name );    
-}
-
-void RobotModel::assignPlanningScene(   const pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_cloud, const Eigen::Vector3d &sensor_origin,
-                                        const std::string &link_name, const double &octree_resolution, std::string collision_object_name)
-{
-
-    if(collision_object_name.empty())
-        collision_object_name = link_name+"_" +lexical_cast<std::string>(world_collision_detector_->numberOfObjectsInCollisionManger());
-
-    base::Pose collision_object_pose;
-    collision_object_pose.position.setZero();
-    collision_object_pose.orientation.setIdentity();
-
-    world_collision_detector_->registerPointCloudToCollisionManager(pcl_cloud, sensor_origin, collision_object_pose, octree_resolution, collision_object_name );    
+    world_collision_detector_->registerOctreeToCollisionManager(octomap, collision_object_pose, collision_object_name );    
 }
 
 bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_collision_manager_num_max_contacts)
 {
+//     auto start_time = std::chrono::high_resolution_clock::now();
+
     if (robot_collision_detector_->checkSelfCollision(self_collision_num_max_contacts))
     {
 
@@ -1372,15 +984,24 @@ bool RobotModel::isStateValid(int self_collision_num_max_contacts, int external_
 
         if(robot_collision_detector_->checkWorldCollision(external_collision_manager_num_max_contacts))
         {
-            LOG_DEBUG("[RobotModel]: There is no collision against environment" );           
+            LOG_DEBUG("[RobotModel]: There is no collision against environment" );  
+//             auto finish_time = std::chrono::high_resolution_clock::now();
+//             std::chrono::duration<double> elapsed = finish_time - start_time;
+//             std::cout<<"Col Time = "<<elapsed.count()<<std::endl;
             return true;
         }
         else
         {
             LOG_DEBUG("[RobotModel]: There is collision against environment" );
+//             auto finish_time = std::chrono::high_resolution_clock::now();
+//             std::chrono::duration<double> elapsed = finish_time - start_time;
+//             std::cout<<"Col Time = "<<elapsed.count()<<std::endl;
             return false;
         }
     }
+//     auto finish_time = std::chrono::high_resolution_clock::now();
+//     std::chrono::duration<double> elapsed = finish_time - start_time;
+//     std::cout<<"Col Time = "<<elapsed.count()<<std::endl;
     return false;
 }
 
@@ -1573,8 +1194,426 @@ float RobotModel::randomFloat(const float& min,const  float &max)
     return min + r * (max - min);
 }
 
+
+
+void RobotModel::printWorldCollisionObject()
+{
+     world_collision_detector_->printCollisionObject();
+}
+
+bool RobotModel::getChainJointState(std::string base_link, std::string tip_link,
+                                                  std::map< std::string, double > &planning_groups_joints)
+{
+    //    planning_groups_joints are in  order from base to tip! very important
+    if(!kdl_tree_.getChain(base_link, tip_link , kdl_chain_))
+    return false;
+    for(std::size_t i=0;i<kdl_chain_.segments.size();i++ )
+    {
+        //KDL JointType: RotAxis,RotX,RotY,RotZ,TransAxis,TransX,TransY,TransZ,None;
+        if(! (kdl_chain_.getSegment(i).getJoint().getType()==KDL::Joint::None) )
+        {
+            std::string joint_name=kdl_chain_.getSegment(i).getJoint().getName();
+            double joint_state = getRobotState().robot_joints_[joint_name].getJointValue();
+            planning_groups_joints[joint_name] = joint_state;
+        }
+    }
+
+    return true;
+}
+
+void RobotModel::getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation)
+{
+
+    KDL::Frame link = robot_state_.robot_links_[link_name].getLinkFrame();
+
+    position.x() = link.p[0];
+    position.y() = link.p[1];
+    position.z() = link.p[2];
+
+    link.M.GetQuaternion(orientation.x(), orientation.y(), orientation.z(), orientation.w());
+
+}
+
+bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info)
+{
+    bool no_collision = isStateValid();
+    if(!no_collision)
+    {
+        contact_info = robot_collision_detector_->getSelfContacts();
+        contact_info.insert(contact_info.end(), robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end());
+    }
+    return no_collision;
+}
+
+void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info)
+{
+    robot_collision_detector_->computeSelfDistanceInfo();
+    distance_info = robot_collision_detector_->getSelfDistanceInfo();
+    robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
+    distance_info.insert(distance_info.end(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().begin(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().end());
+
+
+}
+
+}// end namespace 
+
+
+
+/* Subtracting the pointcloud using this method is not efficient because it creates a convex hull for the entire robot.
+ * In doing so, computation time is less but it will delete all the points between the robot links.
+ *
+ * The commented functions are not used due to the reason mentioned above and also self-filter should be done outside the motion planner
+ * Once in a while we also had issues with PCL and c++11. So due to the reasons mentioned above, functions related to plc based self filter are commented.
+ */
+
+/*
+template<class urdfT>
+void RobotModel::registerLinks(const urdfT &urdf_link, std::vector<pcl::PointCloud<pcl::PointXYZ> > &link_point_cloud )
+{   
+    boost::filesystem::path abs_path_of_mesh_file;
+    std::string urdf_directory_path;
+
+    std::string abs_path_to_mesh_file;
+    
+    std::shared_ptr<collision_detection::MeshLoader> mesh_loader(new collision_detection::MeshLoader());    
+
+    for(std::size_t i=0;i<urdf_link.size();i++ )
+    {
+        if(urdf_link.at(i)->geometry->type == urdf::Geometry::MESH)
+        {    
+            LOG_DEBUG_S<<"[registerLinks]: Registering mesh file ";         
+           
+            urdf::MeshSharedPtr urdf_mesh_ptr= urdf::static_pointer_cast <urdf::Mesh> (urdf_link.at(i)->geometry);
+
+            urdf_directory_path=urdf_file_abs_path_.substr(0, urdf_file_abs_path_.find_last_of("/") );
+
+            abs_path_of_mesh_file =resolve_path( urdf_mesh_ptr->filename, urdf_directory_path );
+
+            abs_path_to_mesh_file=abs_path_of_mesh_file.string();
+            pcl::PointCloud<pcl::PointXYZ> point_cloud;
+
+            mesh_loader->createPointCloudFromMesh(abs_path_to_mesh_file, point_cloud, urdf_mesh_ptr->scale.x, urdf_mesh_ptr->scale.y, urdf_mesh_ptr->scale.z);
+            link_point_cloud.push_back(point_cloud);
+        }
+        else if(urdf_link.at(i)->geometry->type == urdf::Geometry::BOX)
+        {
+            LOG_DEBUG_S<<"[registerLinks]: Registering box ";
+
+            urdf::BoxSharedPtr urdf_box_ptr= urdf::static_pointer_cast <urdf::Box> (urdf_link.at(i)->geometry);
+
+            pcl::PointCloud<pcl::PointXYZ> point_cloud;
+
+            createPtCloudFromBox(point_cloud,urdf_box_ptr->dim.x, urdf_box_ptr->dim.y, urdf_box_ptr->dim.z);
+            link_point_cloud.push_back(point_cloud);
+        }
+        else if(urdf_link.at(i)->geometry->type == urdf::Geometry::CYLINDER)
+        {
+            LOG_DEBUG_S<<"[registerLinks]: Registering cylinder ";
+
+            urdf::CylinderSharedPtr urdf_cylinder_ptr= urdf::static_pointer_cast <urdf::Cylinder> (urdf_link.at(i)->geometry);
+
+            pcl::PointCloud<pcl::PointXYZ> point_cloud;
+            createPtCloudFromCylinder(point_cloud, urdf_cylinder_ptr->radius, urdf_cylinder_ptr->length);
+            link_point_cloud.push_back(point_cloud);
+        }
+        else if(urdf_link.at(i)->geometry->type == urdf::Geometry::SPHERE)
+        {
+            LOG_DEBUG_S<<"[registerLinks]: Registering sphere ";            
+
+            urdf::SphereSharedPtr urdf_sphere_ptr= urdf::static_pointer_cast <urdf::Sphere> (urdf_link.at(i)->geometry);
+
+            pcl::PointCloud<pcl::PointXYZ> point_cloud;
+            createPtCloudFromSphere(point_cloud, urdf_sphere_ptr->radius);
+            link_point_cloud.push_back(point_cloud);
+        }
+    }
+}
+
+void RobotModel::scalePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out, double scale_x, double scale_y, double scale_z)
+{
+    double cloud_in_x,cloud_in_y,cloud_in_z;
+
+    for(std::size_t i=0; i < cloud_in->size();i++)
+    {
+        cloud_in_x=cloud_in->at(i).x;
+        cloud_in_y=cloud_in->at(i).y;
+        cloud_in_z=cloud_in->at(i).z;
+        cloud_out->push_back(pcl::PointXYZ(cloud_in_x /scale_x,cloud_in_y /scale_y, cloud_in_z /scale_z) );
+    }
+}
+
+void RobotModel::createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_box_cloud_ptr,
+                                            double x, double y, double z, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, bool dense)
+{
+    pcl::PointCloud<pcl::PointXYZ>::Ptr box_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>()) ;
+    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,-z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,-y/2 ,z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,-y/2 ,-z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,y/2 ,z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,y/2 ,-z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,-y/2 ,z/2 ) );
+    box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,-y/2 ,-z/2 ) );
+
+    if(dense)
+    {
+        double delta_x= 0.02;
+        double delta_y= 0.02;
+        double delta_z= 0.02;
+
+        for(double deltaX = -x/2 + delta_x; deltaX < x/2; deltaX = deltaX+delta_x)
+        {
+            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,z/2 ) );
+            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,-z/2 ) );
+            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,z/2 ) );
+            box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,-z/2 ) );
+
+            for(double deltaZ = -z/2 + delta_z; deltaZ < z/2; deltaZ = deltaZ+delta_z)
+            {
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,deltaZ ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,deltaZ ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,-y/2 ,deltaZ ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,y/2 ,deltaZ ) );
+
+            }
+
+            for(double deltaY = -y/2 + delta_y; deltaY < y/2; deltaY = deltaY+delta_y)
+            {
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,z/2 ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,-z/2 ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,z/2 ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(deltaX ,deltaY ,-z/2 ) );}
+
+        }
+
+        for(double deltaY = -y/2 + delta_y; deltaY < y/2; deltaY = deltaY+delta_y)
+        {
+            box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,z/2 ) );
+            box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,-z/2 ) );
+            box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,z/2 ) );
+            box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,-z/2 ) );
+
+            for(double deltaZ = -z/2 + delta_z; deltaZ < z/2; deltaZ = deltaZ+delta_z)
+            {
+                box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,deltaZ ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,deltaY ,deltaZ ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,deltaZ ) );
+                box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,deltaY ,deltaZ ) );
+            }
+        }
+//         for(double deltaZ = -z/2 + delta_z; deltaZ < z/2; deltaZ = deltaZ+delta_z)
+//         {
+//             box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,y/2 ,deltaZ ) );
+//             box_cloud_ptr->push_back(pcl::PointXYZ(x/2 ,-y/2 ,deltaZ ) );
+//             box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,-y/2 ,deltaZ ) );
+//             box_cloud_ptr->push_back(pcl::PointXYZ(-x/2 ,y/2 ,deltaZ ) );
+//         }
+    }
+
+    pcl::transformPointCloud (*box_cloud_ptr, *transformed_box_cloud_ptr, link_visual_pose_in_sensor_frame_eigen_matrix);
+}
+
+void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cylinder_cloud_ptr,
+                                                 double radius, double height, Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix,
+                                                 int number_of_step_alpha, bool dense )
+{
+    double alpha_angle=M_PI/number_of_step_alpha;
+    double z=height/2;
+    double x,y;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cylinder_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
+
+    for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
+    {
+        x=radius*cos(alpha);
+        y=radius*sin(alpha);
+        cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,z));
+        cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,-z));
+    }
+
+    if (dense)
+    {
+        double delta_z = z * 0.1;
+        for(double delta = delta_z; delta < z; delta = delta+delta_z)
+        {
+            for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
+            {
+                x=radius*cos(alpha);
+                y=radius*sin(alpha);
+                cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,delta));
+                cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,-delta));
+            }
+        }
+        for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
+        {
+            x=radius*cos(alpha);
+            y=radius*sin(alpha);
+            cylinder_cloud_ptr->push_back(pcl::PointXYZ(x,y,0.0));
+        }
+    }
+
+    pcl::transformPointCloud (*cylinder_cloud_ptr, *transformed_cylinder_cloud_ptr, link_visual_pose_in_sensor_frame_eigen_matrix);
+}
+
+void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_sphere_cloud_ptr, double radius, 
+                                         Eigen::Isometry3f link_visual_pose_in_sensor_frame_eigen_matrix, int number_of_step_alpha, int number_of_step_beta)
+{
+
+    // alpha cretae point on a circle given radius, beta will give you the radius,
+
+    double alpha_angle, beta_angle;
+    double x_origin, y_origin, z_origin;
+
+    x_origin=link_visual_pose_in_sensor_frame_eigen_matrix(0,3);
+    y_origin=link_visual_pose_in_sensor_frame_eigen_matrix(1,3);
+    z_origin=link_visual_pose_in_sensor_frame_eigen_matrix(2,3);
+
+
+    alpha_angle= M_PI/number_of_step_alpha;
+    beta_angle= M_PI/number_of_step_beta;
+
+
+    double x,y,z,new_radius;
+
+    for(double beta=0;beta<M_PI/2;beta=beta+beta_angle)
+    {
+        new_radius=radius*cos(beta);
+        z=radius*sin(beta);
+
+        for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
+        {
+            x=new_radius*cos(alpha)+x_origin;
+            y=new_radius*sin(alpha)+y_origin;
+            transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x,y,z+z_origin));
+            transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x,y,-z+z_origin));
+        }
+    }
+
+    //top and bottom of the sphere
+    transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x_origin,y_origin,z_origin+radius));
+    transformed_sphere_cloud_ptr->push_back(pcl::PointXYZ(x_origin,y_origin,z_origin-radius));
+
+
+}
+
+void RobotModel::createPtCloudFromBox(pcl::PointCloud<pcl::PointXYZ> &box_cloud,double x, double y, double z)
+{
+    box_cloud.push_back(pcl::PointXYZ(x/2 ,y/2 ,z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(x/2 ,y/2 ,-z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(x/2 ,-y/2 ,z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(x/2 ,-y/2 ,-z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(-x/2 ,y/2 ,z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(-x/2 ,y/2 ,-z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(-x/2 ,-y/2 ,z/2 ) );
+    box_cloud.push_back(pcl::PointXYZ(-x/2 ,-y/2 ,-z/2 ) );
+}
+
+void RobotModel::createPtCloudFromCylinder(pcl::PointCloud<pcl::PointXYZ> &cylinder_cloud, double radius, double height, int number_of_step_alpha )
+{
+    double alpha_angle=M_PI/number_of_step_alpha;
+    double z=height/2;
+    double x,y;
+    for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
+    {
+        x=radius*cos(alpha);
+        y=radius*sin(alpha);
+        cylinder_cloud.push_back(pcl::PointXYZ(x,y,z));
+        cylinder_cloud.push_back(pcl::PointXYZ(x,y,-z));
+    }
+}
+
+void RobotModel::createPtCloudFromSphere(pcl::PointCloud<pcl::PointXYZ> &sphere_cloud, double radius, int number_of_step_alpha, int number_of_step_beta)
+{
+    // alpha cretae point on a circle given radius, beta will give you the radius,
+    double alpha_angle, beta_angle;
+    alpha_angle= M_PI/number_of_step_alpha;
+    beta_angle= M_PI/number_of_step_beta;
+    double x,y,z,new_radius;
+    for(double beta=0;beta<M_PI/2;beta=beta+beta_angle)
+    {
+        new_radius=radius*cos(beta);
+        z=radius*sin(beta);
+        for(double alpha=0;alpha<2*M_PI;alpha=alpha+alpha_angle)
+        {
+            x=new_radius*cos(alpha);
+            y=new_radius*sin(alpha);
+            sphere_cloud.push_back(pcl::PointXYZ(x,y,z));
+            sphere_cloud.push_back(pcl::PointXYZ(x,y,-z));
+        }
+    }
+    //top and bottom of the sphere
+    sphere_cloud.push_back(pcl::PointXYZ(0,0,+radius));
+    sphere_cloud.push_back(pcl::PointXYZ(0,0,-radius));
+}
+
+void RobotModel::subtractingPtCloudsFullBody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_1, pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud_2, 
+                                             pcl::PointCloud<pcl::PointXYZ>::Ptr subtracted_cloud)
+{
+    std::vector<pcl::Vertices> polygons;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::ConvexHull<pcl::PointXYZ> hull;
+    // Set alpha, which is the maximum length from a vertex to the center of the voronoi cell (the smaller, the greater the resolution of the hull).
+    //    http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_3:_Cloud_processing_(advanced)#Concave_hull
+    //
+    //pcl::ConcaveHull<pcl::PointXYZ> hull;
+    //hull.setAlpha(0.1);
+    
+    hull.setInputCloud(cloud_2);
+    hull.setDimension(3);
+    hull.reconstruct(*boundingbox_ptr.get(),polygons);
+
+    std::vector<int> indices;
+    pcl::CropHull<pcl::PointXYZ> bb_filter;
+
+    bb_filter.setDim(3);
+    bb_filter.setInputCloud(cloud_1);
+    bb_filter.setHullIndices(polygons);
+    bb_filter.setHullCloud(boundingbox_ptr);
+    bb_filter.filter(indices);
+
+    pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
+    fInliers->indices=indices ;
+    pcl::ExtractIndices<pcl::PointXYZ> extract ;
+    extract.setInputCloud (cloud_1);
+    extract.setIndices (fInliers);
+    extract.setNegative (true);
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    extract.filter (*output_cloud);    
+
+    pclStatisticalOutlierRemoval(output_cloud, subtracted_cloud);
+}
+
+void RobotModel::subtractingPtClouds(pcl::PointCloud<pcl::PointXYZ>::Ptr env_cloud, pcl::PointCloud<pcl::PointXYZ>::ConstPtr robot_link_cloud)
+{
+
+    std::vector<pcl::Vertices> polygons;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr boundingbox_ptr (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::ConvexHull<pcl::PointXYZ> hull;
+
+    hull.setInputCloud(robot_link_cloud);
+    hull.setDimension(3);
+    hull.reconstruct(*boundingbox_ptr.get(),polygons);
+
+    std::vector<int> indices;
+    pcl::CropHull<pcl::PointXYZ> bb_filter;
+
+    bb_filter.setDim(3);
+    bb_filter.setInputCloud(env_cloud);
+    bb_filter.setHullIndices(polygons);
+    bb_filter.setHullCloud(boundingbox_ptr);
+    bb_filter.filter(indices);
+
+    pcl::PointIndices::Ptr fInliers (new pcl::PointIndices);
+    fInliers->indices=indices ;
+    pcl::ExtractIndices<pcl::PointXYZ> extract ;
+    extract.setInputCloud (env_cloud);
+    extract.setIndices (fInliers);
+    extract.setNegative (true);    
+    pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    extract.filter (*env_cloud);       
+}
 void RobotModel::selfFilterFullbody(pcl::PointCloud<pcl::PointXYZ>::ConstPtr scene_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr new_scene_ptr, 
-				    std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
+                                    std::string sensor_frame_name, USESELFCOLLISION use_selfcollision)
 {    
     double start_time = omp_get_wtime();
 
@@ -1676,7 +1715,6 @@ void RobotModel::selfFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr scene_ptr, std::
     return;    
 }
 
-
 void RobotModel::pclStatisticalOutlierRemoval(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud)
 {
     pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
@@ -1686,63 +1724,5 @@ void RobotModel::pclStatisticalOutlierRemoval(pcl::PointCloud<pcl::PointXYZ>::Pt
     sor.filter (*filtered_cloud);
 }
 
-void RobotModel::printWorldCollisionObject()
-{
-     world_collision_detector_->printCollisionObject();
-}
+*/
 
-bool RobotModel::getChainJointState(std::string base_link, std::string tip_link,
-                                                  std::map< std::string, double > &planning_groups_joints)
-{
-    //    planning_groups_joints are in  order from base to tip! very important
-    if(!kdl_tree_.getChain(base_link, tip_link , kdl_chain_))
-    return false;
-    for(std::size_t i=0;i<kdl_chain_.segments.size();i++ )
-    {
-        //KDL JointType: RotAxis,RotX,RotY,RotZ,TransAxis,TransX,TransY,TransZ,None;
-        if(! (kdl_chain_.getSegment(i).getJoint().getType()==KDL::Joint::None) )
-        {
-            std::string joint_name=kdl_chain_.getSegment(i).getJoint().getName();
-            double joint_state = getRobotState().robot_joints_[joint_name].getJointValue();
-            planning_groups_joints[joint_name] = joint_state;
-        }
-    }
-
-    return true;
-}
-
-void RobotModel::getLinkTransformByName(const std::string link_name, Eigen::Vector3d &position, Eigen::Vector4d &orientation)
-{
-
-    KDL::Frame link = robot_state_.robot_links_[link_name].getLinkFrame();
-
-    position.x() = link.p[0];
-    position.y() = link.p[1];
-    position.z() = link.p[2];
-
-    link.M.GetQuaternion(orientation.x(), orientation.y(), orientation.z(), orientation.w());
-
-}
-
-bool RobotModel::getRobotCollisionInfo(std::vector<collision_detection::DistanceInformation> &contact_info)
-{
-    bool no_collision = isStateValid();
-    if(!no_collision)
-    {
-        contact_info = robot_collision_detector_->getSelfContacts();
-        contact_info.insert(contact_info.end(), robot_collision_detector_->getEnvironmentalContacts().begin(), robot_collision_detector_->getEnvironmentalContacts().end());
-    }
-    return no_collision;
-}
-
-void RobotModel::getRobotDistanceToCollisionInfo(std::vector<collision_detection::DistanceInformation> &distance_info)
-{
-    robot_collision_detector_->computeSelfDistanceInfo();
-    distance_info = robot_collision_detector_->getSelfDistanceInfo();
-    robot_collision_detector_->computeClosestObstacleToRobotDistanceInfo();
-    distance_info.insert(distance_info.end(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().begin(), robot_collision_detector_->getClosestObstacleToRobotDistanceInfo().end());
-
-
-}
-
-}// end namespace 

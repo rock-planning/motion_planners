@@ -10,7 +10,6 @@ using namespace motion_planners;
 MotionPlanners::MotionPlanners(Config config)
 {
     config_ = config;
-    env_pcl_cloud_.reset(new pcl::PointCloud<pcl::PointXYZ>);
 }
 
 MotionPlanners::~MotionPlanners()
@@ -19,11 +18,10 @@ MotionPlanners::~MotionPlanners()
 
 bool MotionPlanners::initialize(PlannerStatus &planner_status)
 {
-
     // CAUTION: Don't use different collision library for robot and world.
     // IN FCL wrapper the base pointer is downcasted.
-    collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
-    collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL);
+    collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL, config_.env_config.octree_debug_config);
+    collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL, config_.env_config.octree_debug_config);
     // get the kinematics solver
     kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, 
                                                                                                          planner_status.kinematic_status);
@@ -122,82 +120,16 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     return false;
 }
 
-void MotionPlanners::getSelfFilteredPointcloud(base::samples::Pointcloud &env_ptcloud)
+void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap)
 {
-    env_ptcloud.points.clear();
-
-    env_ptcloud.points.resize(env_pcl_cloud_->size());
-
-    for (size_t i = 0;  i < env_pcl_cloud_->size() ; ++i)
-    {
-        env_ptcloud.points[i].x() = env_pcl_cloud_->points[i].x;
-        env_ptcloud.points[i].y() = env_pcl_cloud_->points[i].y;
-        env_ptcloud.points[i].z() = env_pcl_cloud_->points[i].z;
-    }
-
-    env_ptcloud.time = base::Time::now();
+    robot_model_->updateOctomap(octomap, config_.env_config.env_object_name);
+    robot_model_->saveOctree();
 }
 
-void MotionPlanners::applyVoxelFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud)
-{
-    pcl::PCLPointCloud2::Ptr point_cloud2(new pcl::PCLPointCloud2 ());
-    pcl::PCLPointCloud2::Ptr filtered_pt2(new pcl::PCLPointCloud2 ());
-    pcl::toPCLPointCloud2(*input_cloud, *point_cloud2);
-    pcl::VoxelGrid<pcl::PCLPointCloud2> voxel_filter;
-    voxel_filter.setInputCloud(point_cloud2);
-    voxel_filter.setLeafSize (0.005f, 0.005f, 0.005f);
-    voxel_filter.filter(*filtered_pt2);
-    pcl::fromPCLPointCloud2(*filtered_pt2, *input_cloud);
-
-}
-
-void MotionPlanners::updatePointcloud(const base::samples::Pointcloud &pt_cloud, const Eigen::Vector3d &sensor_origin)
-{
-    //convert pointcloud to PCL-Pointcloud
-    env_pcl_cloud_->clear();
-
-    for (std::vector<base::Vector3d>::const_iterator it = pt_cloud.points.begin() ; it != pt_cloud.points.end(); ++it)
-    {
-        pcl::PointXYZ point((*it)[0],(*it)[1],(*it)[2]);
-        env_pcl_cloud_->push_back(point);
-    }
-
-    //self filtering      
-    LOG_DEBUG_S<<"[MotionPlanners]: Input point cloud is of size = "<<env_pcl_cloud_->size();    
-
-    //self filtering    
-    if(config_.env_config.do_self_filter)
-    {
-        // Pointcloud downsampling using voxel filter
-        applyVoxelFilter(env_pcl_cloud_);
-        //self filtering
-        robot_model_->selfFilter(env_pcl_cloud_, config_.env_config.env_frame, motion_planners::COLLISION);
-        LOG_DEBUG_S<<"[MotionPlanners]: Self filtered point cloud is of size = "<<env_pcl_cloud_->size();
-    }
-
-    // add pointloud to collision model    
-    robot_model_->updatePointcloud(env_pcl_cloud_, sensor_origin, config_.env_config.env_object_name);   
-
-}
-
-void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin)
-{
-    robot_model_->updateOctomap(octomap, sensor_origin, config_.env_config.env_object_name);   
-}
-
-void MotionPlanners::assignPointcloudPlanningScene(const Eigen::Vector3d &sensor_origin)
-{
-    env_pcl_cloud_->clear();
-
-    //assign  a empty planning scene;
-    robot_model_->assignPlanningScene(env_pcl_cloud_, sensor_origin, config_.env_config.env_frame, config_.env_config.octree_resolution,
-                                      config_.env_config.env_object_name);
-}
-
-void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap, const Eigen::Vector3d &sensor_origin)
+void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap)
 {
     //assign  a empty planning scene;
-    robot_model_->assignPlanningScene(octomap, sensor_origin, config_.env_config.env_frame, config_.env_config.env_object_name);
+    robot_model_->assignPlanningScene(octomap, config_.env_config.env_frame, config_.env_config.env_object_name);
 }
 
 bool MotionPlanners::usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status)
@@ -305,9 +237,9 @@ bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::Mo
         if ( known_object.primitive_object.primitive_type == collision_detection::BOX )
         {
             std::shared_ptr<urdf::Box> urdf_box_ptr ( new urdf::Box );
-            urdf_box_ptr->dim.x = known_object.primitive_object.dimensions.at ( 0 );
-            urdf_box_ptr->dim.y = known_object.primitive_object.dimensions.at ( 1 );
-            urdf_box_ptr->dim.z = known_object.primitive_object.dimensions.at ( 2 );
+            urdf_box_ptr->dim.x = known_object.primitive_object.dimensions.x();
+            urdf_box_ptr->dim.y = known_object.primitive_object.dimensions.y();
+            urdf_box_ptr->dim.z = known_object.primitive_object.dimensions.z();
 
             collision_object->geometry = urdf_box_ptr;
         }
@@ -339,6 +271,8 @@ bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::Mo
 
         collision_object->geometry = urdf_mesh_ptr;
     }
+    else if (known_object.model_type == collision_detection::OCTREE)
+    {}
     else
     {
         LOG_WARN ( "[MotionPlanners]: Object type is undefined" );
@@ -355,6 +289,12 @@ bool MotionPlanners::handleCollisionObjectInWorld ( const motion_planners::Model
         return false;
     }
 
+    if( known_object.model_type == collision_detection::UNDEFINED)
+    {
+        LOG_INFO ( "[MotionPlanners]: Remove known object with name %s is of UNDEFINED type", known_object.object_name.c_str() );
+        return false;
+    }
+
     std::shared_ptr<urdf::Collision> collision_object = std::make_shared<urdf::Collision>();
 
     if ( convertModelObjectToURDFCollision ( known_object, collision_object ) )
@@ -362,7 +302,13 @@ bool MotionPlanners::handleCollisionObjectInWorld ( const motion_planners::Model
         if ( known_object.operation == collision_detection::REMOVE )
         {
             LOG_INFO ( "[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str() );
-            robot_model_->removeWorldObject ( known_object.object_name );
+
+            if( (known_object.model_type == collision_detection::OCTREE))
+                return robot_model_->removeObjectFromOctree(known_object.relative_pose.position, known_object.primitive_object.dimensions);
+            
+            if(!robot_model_->removeWorldObject ( known_object.object_name ))
+                    return false;
+            
         }
         else if ( known_object.operation == collision_detection::ADD )
         {
@@ -396,7 +342,8 @@ bool MotionPlanners::handleGraspObject ( const motion_planners::ModelObject &kno
         if ( known_object.operation == collision_detection::REMOVE )
         {
             LOG_INFO ( "[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str() );
-            robot_model_->removeGraspObject ( known_object.object_name );
+            if(!robot_model_->removeGraspObject ( known_object.object_name ))
+                return false;
         }
         else if ( known_object.operation == collision_detection::ADD )
         {

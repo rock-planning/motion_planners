@@ -72,18 +72,20 @@ struct PlannerConfig
 
 struct EnvironmentConfig
 {
+    // attach the environment to this frame
     std::string env_frame;
-    double octree_resolution;
+    // octree config 
+    collision_detection::OctreeDebugConfig octree_debug_config;
+    // name of the environment
     std::string env_object_name;
-    bool do_self_filter;
+    // disable collision pair between the environment with the robot's link
     std::vector <std::pair<std::string,std::string> > disabled_collision_pair;
-    
 };
 
 struct Config
 {
     PlannerConfig planner_config;
-    EnvironmentConfig env_config;    
+    EnvironmentConfig env_config;
 };
 
 }// end motion_planners
