@@ -45,7 +45,6 @@
 #include <base/samples/Joints.hpp>
 
 #include <collision_detection/abstract/AbstractCollisionDetection.hpp>
-#include <collision_detection/abstract/MeshLoader.hpp>
 #include <kinematics_library/KinematicsFactory.hpp>
 
 #include <chrono>  // for high_resolution_clock - Available for C+11
