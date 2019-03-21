@@ -100,17 +100,9 @@ class RobotModel
 
         urdf::ModelInterfaceSharedPtr const &  getURDF();
 
-        void dfsTraversing(std::string start_link_name, std::vector<std::string>& visited_links);
+        inline RobotState getRobotState () const { return robot_state_;}
 
-        void settingVisitedFlagLinkToFalse();
-
-        void settingVisitedFlagLinkToFalse(std::vector<std::string> visted_links_names);
-
-        RobotState  getRobotState();
-
-        void setRobotState(RobotState &robot_state );
-
-        void initializeLinksCollisions();
+        inline void setRobotState(RobotState &robot_state ){robot_state_ = robot_state;}
 
         void populate_disabled_collision_pairs();
 
@@ -159,11 +151,7 @@ class RobotModel
 
         inline void setKinematicsSolver(kinematics_library::AbstractKinematicPtr robot_kinematics){robot_kinematics_ = robot_kinematics;}
 
-
-
         std::vector< collision_detection::DistanceInformation>& getSelfDistanceInfo();
-
-
 
         void computeJacobain(const std::string &chain_root_link,const  std::string& tip_link, std::map<std::string, double> joints_name_values, KDL::Jacobian  &jacobian);
 
@@ -225,6 +213,14 @@ class RobotModel
         collision_detection::AbstractCollisionPtr robot_collision_detector_, world_collision_detector_;
 
         bool initialiseURDFandSRDF();
+        
+        void dfsTraversing(std::string start_link_name, std::vector<std::string>& visited_links);
+
+        void settingVisitedFlagLinkToFalse();
+
+        void settingVisitedFlagLinkToFalse(std::vector<std::string> visted_links_names);
+        
+        bool initializeLinksCollisions();
 
         void kdlFrameToEigenMatrix(KDL::Frame &frame,Eigen::Isometry3f &transform);
 
