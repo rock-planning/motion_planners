@@ -40,6 +40,10 @@ class MotionPlanners
 
     bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
                                 PlannerStatus &planner_status);
+	
+	
+	bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
+												PlannerStatus &planner_status);
 
     bool usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
@@ -77,7 +81,9 @@ class MotionPlanners
     Config config_;
 
     std::vector< std::pair<std::string,urdf::Joint> > planning_group_joints_;
-
+	
+	std::map< std::string, std::map< std::string,double > > named_group_states_;
+	
     base::samples::Joints initial_joint_status_, goal_joint_status_;
 
     base::samples::RigidBodyState goal_pose_;
@@ -89,6 +95,9 @@ class MotionPlanners
     bool checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status);
 
     bool convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object);
+	
+	void createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model);
+	
 
 };
 
