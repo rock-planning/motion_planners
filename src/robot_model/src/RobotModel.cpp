@@ -178,7 +178,8 @@ bool RobotModel::initialization()
     std::vector<std::string>  list_of_visited_link_from_root;
     dfsTraversing(urdf_model_->getRoot()->name, list_of_visited_link_from_root);
     settingVisitedFlagLinkToFalse();
-    initializeLinksCollisions();
+    if(!initializeLinksCollisions())
+        return false;
 
     auto finish_initialisation = std::chrono::high_resolution_clock::now();
 
@@ -285,16 +286,6 @@ void RobotModel::settingVisitedFlagLinkToFalse(std::vector<std::string> visted_l
     }
 }
 
-RobotState RobotModel::getRobotState()
-{
-    return robot_state_;
-}
-
-void RobotModel::setRobotState(RobotState &robot_state )
-{
-    robot_state_ = robot_state;
-}
-
 void RobotModel::setDisabledEnvironmentCollision(std::vector <std::pair<std::string,std::string> > disabled_collision_pair)
 {
      for(int i = 0; i < disabled_collision_pair.size(); i++)
@@ -307,7 +298,7 @@ void RobotModel::setDisabledEnvironmentCollision(std::vector <std::pair<std::str
      } 
 }
 
-void RobotModel::initializeLinksCollisions()
+bool RobotModel::initializeLinksCollisions()
 {     
     boost::filesystem::path abs_path_of_mesh_file;
     std::string urdf_directory_path;
@@ -364,7 +355,11 @@ void RobotModel::initializeLinksCollisions()
 
                 abs_path_to_mesh_file=abs_path_of_mesh_file.string();
 
-                robot_collision_detector_->registerMeshToCollisionManager(abs_path_to_mesh_file, mesh_scale, collision_object_name, collision_object_pose, link_padding_);
+                if(!robot_collision_detector_->registerMeshToCollisionManager(abs_path_to_mesh_file, mesh_scale, 
+                                                                              collision_object_name, collision_object_pose, link_padding_))
+                {
+                    return false;                    
+                }
             }
             else if(link_collisions.at(i)->geometry->type == urdf::Geometry::BOX)
             {
@@ -394,7 +389,7 @@ void RobotModel::initializeLinksCollisions()
     LOG_DEBUG_S<<"[initializeLinksCollisions]: Initialisation completed with "<<robot_collision_detector_->numberOfObjectsInCollisionManger()<< 
                  " collision objects and "<<robot_collision_detector_->disabled_collisions_.size()<< " disabled collision pair";
 
-    return;
+    return true;
 }
 
 
