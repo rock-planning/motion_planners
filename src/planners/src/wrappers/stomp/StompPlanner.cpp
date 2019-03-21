@@ -30,6 +30,7 @@ bool StompPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, s
     //get planning grouup joint names.
     robot_model_->getPlanningGroupJointsName(planning_group_name_, planning_group_joints_name_);
 
+	assert(planning_group_joints_name_.size()==stomp_config_.num_dimensions_);
     optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
     optimization_task_->stompInitialize(1,1);
     
