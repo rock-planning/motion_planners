@@ -33,7 +33,7 @@ if (HAVE_BPMPD)
         set(BPMPD_LIBRARY "${TRAJOPT_SCO_DIR_PATH}/3rdpartylib/bpmpd_linux32.a")
   endif()
 
-target_link_libraries(bpmpd_caller ${BPMPD_LIBRARY})
+target_link_libraries(bpmpd_caller ${BPMPD_LIBRARY} -static)
 list(APPEND SCO_SOURCE_FILES  ${TRAJOPT_SCO_DIR_PATH}/src/bpmpd_interface.cpp)
 set_property(SOURCE  ${TRAJOPT_SCO_DIR_PATH}/src/bpmpd_interface.cpp APPEND PROPERTY COMPILE_DEFINITIONS BPMPD_CALLER="\\\"${CMAKE_CURRENT_BINARY_DIR}/bpmpd_caller\\\"")
 
