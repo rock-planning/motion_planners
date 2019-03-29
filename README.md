@@ -11,7 +11,7 @@ are currently integrated:
 
 # Requirements 
 
-![motion_planner_framework](/uploads/4ef1b5e1de6351329b48b31ef9a1f5a0/motion_planner_framework.png)
+![motion_planner_framework](/uploads/122cf2c7b691a8b37ad5defdfb257519/framework_1.png)
 
 As shown in the above figure this package contains only the planner part, for collision detection and kinematics
 it depends on the following library:
