@@ -5,7 +5,7 @@
 
 #include <Eigen/Core>
 #include <yaml-cpp/yaml.h>
-#include "RobotModel.hpp"
+#include <robot_model/RobotModel.hpp>
 #include <base/JointsTrajectory.hpp>
 #include <kinematics_library/KinematicsConfig.hpp>
 
@@ -134,7 +134,7 @@ public:
      * @param num_threads Number of threads for multi-threading
      * @return
      */
-    virtual bool initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string planner_specfic) = 0;
+    virtual bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string planner_specfic) = 0;
 
     /**
      * Executes the task for the given policy parameters, and returns the costs per timestep

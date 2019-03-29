@@ -25,7 +25,7 @@
 
 #include <base-logging/Logging.hpp>
 #include <abstract/AbstractPlanner.hpp>
-#include <RobotModel.hpp>
+#include <robot_model/RobotModel.hpp>
 #include "RobotFreeJointParameter.hpp"
 #include "OmplConfig.hpp"
 #include "HandleOmplConfig.hpp"
@@ -39,7 +39,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
     public:
         OmplPlanner();
         ~OmplPlanner();
-        bool initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path);
+        bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path);
         bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);		
         void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
@@ -71,7 +71,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool setUpPlanningTaskInJointSpace(PlannerStatus &planner_status);
         bool setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_status);	
 
-        std::shared_ptr<RobotModel> robot_model_;		
+        std::shared_ptr<robot_model::RobotModel> robot_model_;		
         std::string planning_group_name_;	
         std::vector< std::pair<std::string,urdf::Joint> > planning_group_joints_;
 

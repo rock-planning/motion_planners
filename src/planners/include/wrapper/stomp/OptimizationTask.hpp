@@ -6,7 +6,7 @@
 #include <stomp/StompTask.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <base/samples/Joints.hpp>
-#include <RobotModel.hpp>
+#include <robot_model/RobotModel.hpp>
 
 namespace motion_planners
 {
@@ -15,7 +15,7 @@ namespace motion_planners
 class OptimizationTask: public stomp::StompTask, public boost::enable_shared_from_this<motion_planners::OptimizationTask>
 {
     public:
-        OptimizationTask(stomp::StompConfig config, std::shared_ptr<RobotModel>& robot_model);
+        OptimizationTask(stomp::StompConfig config, std::shared_ptr<robot_model::RobotModel>& robot_model);
 
         virtual ~OptimizationTask();
 
@@ -101,7 +101,7 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
 
         void computeCollisionCost();
         
-        std::shared_ptr<RobotModel> robot_model_;
+        std::shared_ptr<robot_model::RobotModel> robot_model_;
         std::string planning_group_name_;
         std::vector< std::string> planning_group_joints_names_;
         std::vector< double > lower_limits_;

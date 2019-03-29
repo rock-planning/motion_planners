@@ -2,7 +2,7 @@
 #define ROBOTMODELWRAPPER_H
 
 #include "trajopt/trajoptinterface.h"
-#include <RobotModel.hpp>
+#include <robot_model/RobotModel.hpp>
 #include <vector>
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> DblMatrix;
@@ -10,7 +10,7 @@ typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> D
 typedef std::vector<double> DblVec;
 
 using namespace trajopt;
-using namespace motion_planners;
+using namespace robot_model;
 
 class RobotModelWrapper : public Configuration
 {

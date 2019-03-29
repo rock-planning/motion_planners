@@ -16,11 +16,11 @@ find_package(orocos_kdl REQUIRED)
 pkg_check_modules(kdl_parser REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
+pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 pkg_check_modules(YAML REQUIRED yaml-cpp)
 
 # get the planners
 get_directory_property(STOMP_PATH DIRECTORY stomp DEFINITION STOMP_DIR_PATH)
-get_directory_property(ROBOT_MODEL_PATH DIRECTORY ../robot_model DEFINITION ROBOT_MODEL_DIR_PATH)
 get_directory_property(TRAJOPT_PATH DIRECTORY trajopt DEFINITION TRAJOPT_PATH)
 
 get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY trajopt DEFINITION TRAJOPT_INCLUDE_HEADER)
@@ -30,7 +30,7 @@ set (PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 #set the header and library path
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} 
-		    ${YAML_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_PATH}/include ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
+		    ${YAML_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
 link_directories(${kdl_parser_LIBRARY_DIRS})
 
 #store wrapper's library name

@@ -1,11 +1,12 @@
 #ifndef FCLCOLLISIONCHECKER_H
 #define FCLCOLLISIONCHECKER_H
 
+#include <robot_model/RobotModel.hpp>
 #include "trajopt/trajoptinterface.h"
-#include "RobotModel.hpp"
+
 
 using namespace trajopt;
-using namespace motion_planners;
+using namespace robot_model;
 
 class FCLCollisionChecker : public CollisionChecker
 {

@@ -3,7 +3,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-#include <RobotModel.hpp>
+#include <robot_model/RobotModel.hpp>
 
 namespace motion_planners
 {

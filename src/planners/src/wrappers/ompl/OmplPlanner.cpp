@@ -11,7 +11,7 @@ OmplPlanner::~OmplPlanner()
 {
 }
 
-bool OmplPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path)
+bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
 {
     LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised";
     robot_model_ = robot_model;      

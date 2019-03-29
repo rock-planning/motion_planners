@@ -8,7 +8,7 @@
 #include <base/JointsTrajectory.hpp>
 #include <collision_detection/CollisionDetection.hpp>
 #include <kinematics_library/KinematicsFactory.hpp>
-#include "RobotModel.hpp"
+#include <robot_model/RobotModel.hpp>
 #include "PlannerFactory.hpp"
 #include "abstract/AbstractPlanner.hpp"
 

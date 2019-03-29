@@ -20,7 +20,7 @@ class StompPlanner: public motion_planners::AbstractPlanner
 
 		~StompPlanner();
 	
-		bool initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path);
+		bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path);
 	
 		bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
@@ -33,7 +33,7 @@ class StompPlanner: public motion_planners::AbstractPlanner
 	
 	private:	
 		boost::shared_ptr<stomp::Stomp> stomp_;
-		std::shared_ptr<RobotModel> robot_model_;
+		std::shared_ptr<robot_model::RobotModel> robot_model_;
 		stomp::StompConfig stomp_config_;
 		stomp::DebugConfig debug_config_;
 		std::shared_ptr<OptimizationTask> optimization_task_;

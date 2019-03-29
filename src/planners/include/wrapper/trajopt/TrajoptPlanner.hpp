@@ -3,7 +3,7 @@
 #define TRAJOPTPLANNER_HPP_
 
 #include <abstract/AbstractPlanner.hpp>
-#include <RobotModel.hpp>
+#include <robot_model/RobotModel.hpp>
 #include "json/json.h"
 #include "trajopt/problem_description.hpp"
 #include "sco/optimizers.hpp"

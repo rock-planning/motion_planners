@@ -13,8 +13,8 @@ pkg_check_modules(kdl_parser REQUIRED kdl_parser)
 pkg_check_modules(OCTOMAP REQUIRED octomap)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
+pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 
-get_directory_property(ROBOT_MODEL_PATH DIRECTORY robot_model DEFINITION ROBOT_MODEL_DIR_PATH)
 get_directory_property(PLANNERS_PATH DIRECTORY planners DEFINITION PLANNERS_DIR_PATH)
 get_directory_property(STOMP_PATH DIRECTORY planners DEFINITION STOMP_PATH)
 get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY planners DEFINITION TRAJOPT_INCLUDE_HEADER)
@@ -24,7 +24,7 @@ get_directory_property(WRAPPERS_LINK_DIR DIRECTORY planners DEFINITION WRAPPERS_
 
 set(DEPS_INCLUDE_HEADER ${EIGEN3_INCLUDE_DIR} ${kdl_parser_INCLUDE_DIRS} 
                          ${OCTOMAP_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${KINEMATICS_INCLUDE_DIRS} ${PLANNERS_PATH}/include
-                         ${ROBOT_MODEL_PATH}/include ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
+                         ${ROBOT_MODEL_INCLUDE_DIRS} ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 include_directories(${CMAKE_SOURCE_DIR}/include ${DEPS_INCLUDE_HEADER})
 link_directories(${kdl_parser_LIBRARY_DIRS} ${WRAPPERS_LINK_DIR})
 

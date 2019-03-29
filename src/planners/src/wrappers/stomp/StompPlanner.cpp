@@ -12,7 +12,7 @@ StompPlanner::~StompPlanner()
 {
 }
 
-bool StompPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path)
+bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
 {    
     robot_model_ = robot_model;      
     

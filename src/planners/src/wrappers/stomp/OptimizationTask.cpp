@@ -5,7 +5,7 @@
 namespace motion_planners
 {
 
-OptimizationTask::OptimizationTask(stomp::StompConfig config, std::shared_ptr<RobotModel>& robot_model):stomp_config_(config), robot_model_(robot_model)
+OptimizationTask::OptimizationTask(stomp::StompConfig config, std::shared_ptr<robot_model::RobotModel>& robot_model):stomp_config_(config), robot_model_(robot_model)
 {
     
     planning_group_name_ = robot_model_->getPlanningGroupName();
