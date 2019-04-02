@@ -11,10 +11,11 @@ are currently integrated:
 
 # Requirements 
 
-![motion_planner_framework](/uploads/4ef1b5e1de6351329b48b31ef9a1f5a0/motion_planner_framework.png)
+![motion_planner_framework](/uploads/f3c99b5f66ce5888fde8757c9026116a/framework_1.png)
 
 As shown in the above figure this package contains only the planner part, for collision detection and kinematics
 it depends on the following library:
+- [Robot Model Library](https://git.hb.dfki.de/dfki-planning/robot_model)
 - [Kinematics Library](https://git.hb.dfki.de/dfki-planning/kinematics_library)
 - [Collision Detection Library](https://git.hb.dfki.de/dfki-planning/collision_detection)
 
@@ -43,7 +44,6 @@ can alsp be build even without OMPL planner.
 motion_planners contains the following directories:
 - include - contains header c++ files
 - src - contains source c++ files
-- src/robot_model - contains RobotModel source and header files. The RobotModel class holds the robot status information
 - src/planners/   - contains planner factory class.
 - src/planners/stomp - contains original [stomp](https://github.com/kalakris/stomp/tree/master/stomp) core library. In order to maintian
                         the originality of the the code, only the ROS dependency is removed and some minor corrections are made.
