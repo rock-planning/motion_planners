@@ -1,13 +1,11 @@
 #ifndef ROBOTFREEJOINTPARAMETER_HPP
 #define ROBOTFREEJOINTPARAMETER_HPP
 #include <string>
-#include <boost/shared_ptr.hpp>
 
 #include <robot_model/RobotModel.hpp>
 
 namespace motion_planners
 {
-class RobotModel;
 
 class RobotFreeJointParameter 
 {
@@ -19,10 +17,9 @@ class RobotFreeJointParameter
     double joint_position;
     bool joint_position_has_been_set;
 
-
 public:
-    RobotFreeJointParameter(std::string joint_name, double step_size, boost::shared_ptr<RobotModel> &robot_model_ptr);
-    RobotFreeJointParameter(std::string joint_name, double step_size,double pivot ,boost::shared_ptr<RobotModel> &robot_model_ptr);
+    RobotFreeJointParameter(std::string joint_name, double step_size, boost::shared_ptr<robot_model::RobotModel> &robot_model_ptr);
+    RobotFreeJointParameter(std::string joint_name, double step_size,double pivot ,boost::shared_ptr<robot_model::RobotModel> &robot_model_ptr);
     RobotFreeJointParameter(std::string joint_name, double position );
     RobotFreeJointParameter();
 
