@@ -6,6 +6,7 @@
 #include <vector>
 #include <kinematics_library/KinematicsConfig.hpp>
 #include <collision_detection/CollisionConfig.hpp>
+#include <robot_model/RobotModelConfig.hpp>
 
 
 namespace motion_planners
@@ -41,20 +42,6 @@ struct ModelObject
     base::Pose relative_pose;
 };
 
-    /**
- *  @struct RobotModelParameters.
- * @brief This struct contains parameters used in the robot model.
- */
-struct RobotModelParameters
-{
-    // srdf file abs path
-    std::string srdf_file;
-    // urdf file abs path
-    std::string urdf_file;
-    // planning group
-    std::string planning_group_name;
-};
-
 enum PlannerLibrary
 {
     STOMP, OMPL, TRAJOPT
@@ -63,7 +50,7 @@ enum PlannerLibrary
 struct PlannerConfig
 {
     kinematics_library::KinematicsConfig kinematics_config; 
-    RobotModelParameters robot_model_config;
+    robot_model::RobotModelConfig robot_model_config;
     std::string planner_specific_config;
     double distance;
     enum PlannerLibrary planner;

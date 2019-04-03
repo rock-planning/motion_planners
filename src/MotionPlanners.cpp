@@ -30,8 +30,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
 
 
     // initialise robot model    
-    robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config.urdf_file, config_.planner_config.robot_model_config.srdf_file, 
-    config_.planner_config.robot_model_config.planning_group_name));
+    robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config));
     robot_model_->setRobotCollisionDetector(robot_collision_detector);
     robot_model_->setWorldCollisionDetector(world_collision_detector); 
     robot_model_->setKinematicsSolver(robot_kinematics);
