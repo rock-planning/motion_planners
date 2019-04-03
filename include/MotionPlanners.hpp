@@ -6,7 +6,7 @@
 #include <base/samples/Joints.hpp>
 #include "Config.hpp"
 #include <base/JointsTrajectory.hpp>
-#include <collision_detection/CollisionDetection.hpp>
+#include <collision_detection/CollisionFactory.hpp>
 #include <kinematics_library/KinematicsFactory.hpp>
 #include <robot_model/RobotModel.hpp>
 #include "PlannerFactory.hpp"
@@ -72,7 +72,7 @@ class MotionPlanners
 
     std::shared_ptr<RobotModel> robot_model_;
 
-    collision_detection::CollisionDetection collision_factory_;
+    collision_detection::CollisionFactory collision_factory_;
 
     std::vector< std::pair<std::string, std::string> > collision_object_names_;
 
