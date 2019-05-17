@@ -7,6 +7,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <base/samples/Joints.hpp>
 #include <robot_model/RobotModel.hpp>
+#include <abstract/AbstractPlanner.hpp>
 
 namespace motion_planners
 {
@@ -78,6 +79,8 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
          */
         virtual double getControlCostWeight();
 
+        void setOptimizationConstraints(Constraints constraints){constraints_ = constraints;}
+
         boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;        
 
         std::vector<base::VectorXd> initial_trajectory_;
@@ -99,13 +102,17 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
         base::VectorXd collision_costs_;
 
 
-        void computeCollisionCost();
+        void computeCollisionCost( base::VectorXd& costs, bool& validity);
+        
+        void computeOrientationConstraintCost( base::VectorXd& costs);
         
         std::shared_ptr<robot_model::RobotModel> robot_model_;
         std::string planning_group_name_;
         std::vector< std::string> planning_group_joints_names_;
         std::vector< double > lower_limits_;
         std::vector< double > upper_limits_;
+        
+        Constraints constraints_;
     
     
 };

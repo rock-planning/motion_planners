@@ -13,11 +13,13 @@ StompPlanner::~StompPlanner()
 }
 
 bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
-{    
-    robot_model_ = robot_model;      
-    
+{
+    robot_model_ = robot_model;
+
     planning_group_name_ = robot_model_->getPlanningGroupName();
-    
+
+    constraints_.use_orientation_constraint = false;
+
     // assign the config
     YAML::Node input_config;
     motion_planners::loadConfigFile(config_file_path, input_config);
@@ -39,7 +41,9 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
 
 bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
-    //optimization_task_->createPolicy();   
+    //optimization_task_->createPolicy();
+    
+    optimization_task_->setOptimizationConstraints(constraints_);
     
     stomp_.reset(new stomp::Stomp());
 
@@ -180,6 +184,12 @@ double StompPlanner::getMovementDeltaTime()
 	return optimization_task_->policy_->getMovementDt();
     return 0.0;
 }
+
+void StompPlanner::setConstraints ( const Constraints constraints )
+{
+
+}
+
 
 
 }// end namespace 

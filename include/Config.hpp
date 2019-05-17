@@ -47,12 +47,13 @@ enum PlannerLibrary
     STOMP, OMPL, TRAJOPT
 };
 
+
 struct PlannerConfig
 {
     kinematics_library::KinematicsConfig kinematics_config; 
     robot_model::RobotModelConfig robot_model_config;
     std::string planner_specific_config;
-    double distance;
+//     double distance;
     enum PlannerLibrary planner;
 };
 

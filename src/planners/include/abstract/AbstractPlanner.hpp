@@ -74,6 +74,17 @@ struct CartesianContraints
     Limits x,y,z, rx, ry, rz;
 };
 
+
+struct Constraints
+{
+    bool use_orientation_constraint;
+    // roll, pitch and yaw
+    base::Vector3d orientation_constraint;
+    // tolerance for roll, pitch and yaw. Please provide only positive value
+    base::Vector3d orientation_constraint_tolerance;
+};
+
+
 struct PlannerStatus
 {
     enum StatusCode
@@ -177,6 +188,8 @@ public:
     virtual bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status) = 0;
     
     virtual void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal) = 0;
+    
+    virtual void setConstraints(const Constraints constraints) = 0;
     
     virtual bool updateInitialTrajectory(const base::JointsTrajectory &trajectory) = 0;
     

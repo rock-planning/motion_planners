@@ -141,7 +141,7 @@ bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
     costs = base::VectorXd::Zero(stomp_config_.num_time_steps_);
     collision_costs_.setZero();
     validity = true;
-    double collision_cost=0.0;
+
 
     for (int d=0; d<stomp_config_.num_dimensions_; ++d)
     {
@@ -153,9 +153,28 @@ bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
 
     }
 
+    // calculate collision cost
+    computeCollisionCost(costs, validity);
+    // calculate orientation cost
+    if(constraints_.use_orientation_constraint)
+        computeOrientationConstraintCost(costs);
+
+    //auto finish_time = std::chrono::high_resolution_clock::now();
+    //std::chrono::duration<double> elapsed = finish_time - start_time;
+    //std::cout << "Elapsed time colli: " << elapsed.count() << " s\n";    
+    //costs = collision_costs_;    
+    //std::cout<<"COST = "<<costs<<std::endl;
+
+    return true;    
+}
+
+void OptimizationTask::computeCollisionCost( base::VectorXd& costs, bool& validity)
+{
+    double collision_cost=0.0;
+    
     for (int t = stomp::TRAJECTORY_PADDING; t < stomp::TRAJECTORY_PADDING + stomp_config_.num_time_steps_; ++t)
     {
-        // State cost	
+        // State cost
         robot_model_->updateJointGroup(planning_group_joints_names_, pos_.block(0,t,stomp_config_.num_dimensions_,1));
 
         if(!robot_model_->isStateValid())
@@ -172,19 +191,43 @@ bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
 
     }
 
-    //auto finish_time = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double> elapsed = finish_time - start_time;
-    //std::cout << "Elapsed time colli: " << elapsed.count() << " s\n";    
-    //costs = collision_costs_;    
-    //std::cout<<"COST = "<<costs<<std::endl;
-
-    return true;    
 }
 
-void OptimizationTask::computeCollisionCost()
+void OptimizationTask::computeOrientationConstraintCost( base::VectorXd& costs)
 {
+    double orientation_cost=0.0;
+    kinematics_library::KinematicsStatus kinematic_status;
+    
+    for (int t = stomp::TRAJECTORY_PADDING; t < stomp::TRAJECTORY_PADDING + stomp_config_.num_time_steps_; ++t)
+    {
+        std::vector<double> jt_angle(planning_group_joints_names_.size());
+        VectorXd::Map(&jt_angle[0], pos_.block(0,t,stomp_config_.num_dimensions_,1).size()) = pos_.block(0,t,stomp_config_.num_dimensions_,1);
+        base::samples::Joints current_jt = base::samples::Joints::Positions(jt_angle, planning_group_joints_names_);
+        base::samples::RigidBodyState fk_pose;                
+        robot_model_->robot_kinematics_->solveFK(current_jt, fk_pose, kinematic_status );
+        base::Vector3d euler_angle;
+        kinematics_library::quaternionToEuler(fk_pose.orientation, euler_angle);
+        double delta_roll       = constraints_.orientation_constraint_tolerance.x() - fabs(constraints_.orientation_constraint.x() - euler_angle.x());
+        double delta_pitch      = constraints_.orientation_constraint_tolerance.y() - fabs(constraints_.orientation_constraint.y() - euler_angle.y());
+        double delta_yaw        = constraints_.orientation_constraint_tolerance.z() - fabs(constraints_.orientation_constraint.z() - euler_angle.z());
+        
+        if(delta_roll < 0.0)
+            orientation_cost = orientation_cost + (-1.0 * delta_roll);
+        if(delta_pitch < 0.0)
+            orientation_cost = orientation_cost + (-1.0 * delta_pitch);
+        if(delta_yaw < 0.0)
+            orientation_cost = orientation_cost + (-1.0 * delta_yaw);
+        double orientation_contraint_weight = 2.0;
+        orientation_cost = orientation_contraint_weight * (orientation_cost + 1.0);
+        costs(t-stomp::TRAJECTORY_PADDING) = costs(t-stomp::TRAJECTORY_PADDING) + orientation_cost;
+
+    }
 
 }
+
+
+
+
 
 }
 // end namespace 

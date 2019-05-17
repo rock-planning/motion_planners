@@ -20,34 +20,37 @@ namespace motion_planners
 
 class TrajoptPlanner: public motion_planners::AbstractPlanner
 {
-	public:
-                TrajoptPlanner();
+    public:
+        TrajoptPlanner();
 
-                ~TrajoptPlanner();
-	
-		bool initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path);
+        ~TrajoptPlanner();
 
-                bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
+        bool initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path);
 
-	        void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
-	
-	        bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+        bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
-private:
-                std::shared_ptr<RobotModel> m_robot_model_;
+        void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
 
-                std::string m_planning_group_name_;
-                std::vector< std::string> m_planning_group_joints_name_;
+        void setConstraints(const Constraints constraints){};
 
-                TrajOptProbPtr m_prb;
-                BasicTrustRegionSQP m_opt;
+        bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
 
-                RobotModelWrapperPtr m_robot_model_wrapper;
-                FCLCollisionCheckerPtr m_collision_checker_wrapper;
+    private:
+        
+        std::shared_ptr<RobotModel> m_robot_model_;
 
-                YAML::Node m_input_config;
+        std::string m_planning_group_name_;
+        std::vector< std::string> m_planning_group_joints_name_;
 
-                TrajOptResultPtr m_results;
+        TrajOptProbPtr m_prb;
+        BasicTrustRegionSQP m_opt;
+
+        RobotModelWrapperPtr m_robot_model_wrapper;
+        FCLCollisionCheckerPtr m_collision_checker_wrapper;
+
+        YAML::Node m_input_config;
+
+        TrajOptResultPtr m_results;
 
 };
 }// end planner
