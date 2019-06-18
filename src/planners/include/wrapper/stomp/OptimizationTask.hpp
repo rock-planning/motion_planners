@@ -79,11 +79,12 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
          */
         virtual double getControlCostWeight();
 
-        void setOptimizationConstraints(Constraints constraints){constraints_ = constraints;}
+        void setOptimizationConstraints(ConstraintPlanning constraints){constraints_ = constraints;}
 
-        boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;        
+        boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
 
         std::vector<base::VectorXd> initial_trajectory_;
+
     private:
 
         stomp::StompConfig stomp_config_;
@@ -98,13 +99,7 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
         base::MatrixXd proj_pos_, pos_;
         base::MatrixXd vel_, acc_;
 
-
         base::VectorXd collision_costs_;
-
-
-        void computeCollisionCost( base::VectorXd& costs, bool& validity);
-        
-        void computeOrientationConstraintCost( base::VectorXd& costs);
         
         std::shared_ptr<robot_model::RobotModel> robot_model_;
         std::string planning_group_name_;
@@ -112,9 +107,17 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
         std::vector< double > lower_limits_;
         std::vector< double > upper_limits_;
         
-        Constraints constraints_;
-    
-    
+        ConstraintPlanning constraints_;
+
+        void computeCollisionCost( base::VectorXd& costs, bool& validity);
+
+        void computeJointsConstraintCost( base::VectorXd& costs);
+        
+        double getConstrainDifference(const base::VectorXd &value, const base::VectorXd &tolerance, const base::VectorXd &current_value,
+                                      const double &constraint_weight);
+
+        
+
 };
 }// end planner
 

@@ -52,12 +52,12 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
         return false;
     }
 
-    std::string base_link, tip_link;
-    planning_group_joints_.clear();
-    robot_model_->getPlanningGroupJointinformation(config_.planner_config.robot_model_config.planning_group_name, 
-                                                   planning_group_joints_, base_link, tip_link);
 
-	createNamedGroupStates(robot_model_->getSRDF());
+    planning_group_joints_.clear();
+    robot_model_->getPlanningGroupJointInformation(config_.planner_config.robot_model_config.planning_group_name, 
+                                                   planning_group_joints_);
+
+    createNamedGroupStates(robot_model_->getSRDF());
     goal_pose_.position = Eigen::Vector3d::Zero();
     goal_pose_.orientation = Eigen::Quaterniond::Identity();
 
@@ -168,7 +168,10 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
         }
 
         if(checkGoalState(goal_joint_status_, planner_status))
+        {
+            constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
             return true;
+        }
     }
     return false;
 }
@@ -177,7 +180,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
                                             PlannerStatus &planner_status)
 {
-
+std::cout<<"im constrinaed planneing"<<std::endl;
     if (checkStartState(start_jointvalues, planner_status))
     {
         // assign the goal joint values from the target joint status
@@ -199,6 +202,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                     {
                         goal_joint_status_.names.at ( i )	= planning_group_joints_.at ( i ).first;
                         goal_joint_status_.elements.at ( i )    = it->getElementByName ( planning_group_joints_.at ( i ).first );
+                        std::cout<<goal_joint_status_.elements.at ( i ).position<<"  ";
                     }
                     catch ( base::samples::Joints::InvalidName e )
                     {   //Only catch exception to write more explicit error msgs
@@ -207,9 +211,12 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                         return false;
                     }
                 }
-
-                if ( checkGoalState ( goal_joint_status_, planner_status ) )            
-                    return true;            
+std::cout<<std::endl;
+                if ( checkGoalState ( goal_joint_status_, planner_status ) )
+                {
+                    constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
+                    return true;
+                }
             }
         }
     }
@@ -217,44 +224,73 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 }
 
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
-											PlannerStatus &planner_status)
+                                            PlannerStatus &planner_status)
 {
-	
-	if (checkStartState(start_jointvalues, planner_status))
-	{
-		// assign the goal joint values from the target group state
-		auto it = named_group_states_.find(target_group_state);
-		if(it == named_group_states_.end())
-		{
-			LOG_ERROR("[MotionPlanners]: Group State %s does not exist in the named group states for the planning group", target_group_state.c_str());
-			return false;
-		}
-		auto joint_map = it->second;
-		goal_joint_status_.clear();
-		goal_joint_status_.resize(planning_group_joints_.size());
-		for(size_t i = 0; i < planning_group_joints_.size(); i++)
-		{
-			try
-			{
-				goal_joint_status_.names.at(i)		= planning_group_joints_.at(i).first;
-				auto joint_it = joint_map.find((planning_group_joints_.at(i).first));
-				goal_joint_status_.elements.at(i).position	= joint_it->second;
-			}
-			catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
-			{
-				LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value", 
-						  planning_group_joints_.at(i).first.c_str());
-				return false;
-			}
-		}
-		for(int i = 0; i<goal_joint_status_.size(); ++i)
-		{
-			LOG_DEBUG("[MotionPlanners]: Named Goal Joint Value  for Joint %s = %f", goal_joint_status_.names.at(i).c_str(),goal_joint_status_.elements.at(i).position );
-		}
-		if(checkGoalState(goal_joint_status_, planner_status))
-			return true;
-	}
-	return false;
+
+    if (checkStartState(start_jointvalues, planner_status))
+    {
+        // assign the goal joint values from the target group state
+        auto it = named_group_states_.find(target_group_state);
+        if(it == named_group_states_.end())
+        {
+            LOG_ERROR("[MotionPlanners]: Group State %s does not exist in the named group states for the planning group", target_group_state.c_str());
+            return false;
+        }
+        auto joint_map = it->second;
+        goal_joint_status_.clear();
+        goal_joint_status_.resize(planning_group_joints_.size());
+        for(size_t i = 0; i < planning_group_joints_.size(); i++)
+        {
+            try
+            {
+                goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
+                auto joint_it = joint_map.find((planning_group_joints_.at(i).first));
+                goal_joint_status_.elements.at(i).position = joint_it->second;
+            }
+            catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
+            {
+                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value", 
+                planning_group_joints_.at(i).first.c_str());
+                return false;
+            }
+        }
+        for(int i = 0; i<goal_joint_status_.size(); ++i)
+        {
+            LOG_DEBUG("[MotionPlanners]: Named Goal Joint Value  for Joint %s = %f", goal_joint_status_.names.at(i).c_str(),goal_joint_status_.elements.at(i).position );
+        }
+        if(checkGoalState(goal_joint_status_, planner_status))
+        {
+            constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const ConstraintPlanning &constrainted_target,
+                                            PlannerStatus &planner_status)
+{
+std::cout<<"im constrinaed planneing1"<<std::endl;
+    if(constrainted_target.use_constraint == motion_planners::JOINTS_CONSTRAINT)
+    {
+        if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_joints_value, planner_status) )
+            return false;
+
+    }
+    else if((constrainted_target.use_constraint != motion_planners::NO_CONSTRAINT))
+    {
+        if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_pose, planner_status) )
+            return false;
+    }
+    else
+    {
+        planner_status.statuscode = PlannerStatus::NO_CONSTRAINT_AVAILABLE;
+        return false;
+    }
+    
+    constrainted_target_ = constrainted_target;    
+    return true;
+
 }
 
 bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object)
@@ -404,6 +440,7 @@ bool MotionPlanners::handleGraspObject ( const motion_planners::ModelObject &kno
 
 void MotionPlanners::setStartAndGoal()
 {
+    planner_->setConstraints(constrainted_target_);
     planner_->setStartGoalTrajectory(initial_joint_status_, goal_joint_status_);    
 }
 
@@ -424,18 +461,18 @@ bool MotionPlanners::solve ( base::JointsTrajectory &solution, PlannerStatus &pl
 
 void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model)
 {
-	std::vector<srdf::Model::GroupState> group_states = srdf_model->getGroupStates();
-	std::string planning_group_name = config_.planner_config.robot_model_config.planning_group_name;
-	for(auto group_state:group_states)
-	{
-		if(group_state.group_ == planning_group_name)
-		{
-			std::map<std::string, double> named_group_state;
-			for(auto it = group_state.joint_values_.begin(); it !=group_state.joint_values_.end(); ++it)
-			{
-				named_group_state.insert(std::pair<std::string, double>(it->first, it->second.at(0)));
-			}
-			named_group_states_.insert(std::pair<std::string, std::map<std::string, double> >(group_state.name_, named_group_state));
-		}
-	}
+    std::vector<srdf::Model::GroupState> group_states = srdf_model->getGroupStates();
+    std::string planning_group_name = config_.planner_config.robot_model_config.planning_group_name;
+    for(auto group_state:group_states)
+    {
+        if(group_state.group_ == planning_group_name)
+        {
+            std::map<std::string, double> named_group_state;
+            for(auto it = group_state.joint_values_.begin(); it !=group_state.joint_values_.end(); ++it)
+            {
+                named_group_state.insert(std::pair<std::string, double>(it->first, it->second.at(0)));
+            }
+            named_group_states_.insert(std::pair<std::string, std::map<std::string, double> >(group_state.name_, named_group_state));
+        }
+    }
 }

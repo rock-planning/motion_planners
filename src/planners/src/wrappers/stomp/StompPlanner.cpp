@@ -14,11 +14,6 @@ StompPlanner::~StompPlanner()
 
 bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
 {
-    robot_model_ = robot_model;
-
-    planning_group_name_ = robot_model_->getPlanningGroupName();
-
-    constraints_.use_orientation_constraint = false;
 
     // assign the config
     YAML::Node input_config;
@@ -28,11 +23,11 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
     
     stomp_config_ = handle_stomp_config::getStompConfig(stomp_node);
     debug_config_ = handle_stomp_config::getDebugConfig(debug_node);
-       
-    //get planning grouup joint names.
-    robot_model_->getPlanningGroupJointsName(planning_group_name_, planning_group_joints_name_);
 
-	assert(planning_group_joints_name_.size()==stomp_config_.num_dimensions_);
+    //assigning planning grouup joint names.
+    assignPlanningJointInformation(robot_model);    
+
+    assert(planning_group_joints_name_.size()==stomp_config_.num_dimensions_);
     optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
     optimization_task_->stompInitialize(1,1);
     
@@ -42,9 +37,9 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
 bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
     //optimization_task_->createPolicy();
-    
+
     optimization_task_->setOptimizationConstraints(constraints_);
-    
+
     stomp_.reset(new stomp::Stomp());
 
     stomp_->initialize(stomp_config_, optimization_task_);
@@ -184,12 +179,5 @@ double StompPlanner::getMovementDeltaTime()
 	return optimization_task_->policy_->getMovementDt();
     return 0.0;
 }
-
-void StompPlanner::setConstraints ( const Constraints constraints )
-{
-
-}
-
-
 
 }// end namespace 

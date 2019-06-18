@@ -43,16 +43,15 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);		
         void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
-        void setConstraints(const Constraints constraints){};
+        void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;};
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
     private:
 
         std::map <std::string, double> lower_limits_;
         std::map <std::string, double> upper_limits_;
-        CartesianContraints cartesian_contraints_;
-        bool hasCartesianConstraint_;
         base::samples::Joints start_joint_values_, goal_joint_values_;
         base::samples::RigidBodyState start_pose_, goal_pose_;
+        ConstraintPlanning constraints_;
 
         //planner_type_ type_of_planner_;
         ompl_config::OmplConfig ompl_config_;
@@ -67,15 +66,14 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         std::vector <std::map<std::string , double > >  path_joint_values_;
         std::vector <std::map<std::string , double > >  cartesian_path_;
 
-        std::string chain_link_, tip_link_;
-
         bool setUpPlanningTaskInJointSpace(PlannerStatus &planner_status);
         bool setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_status);	
 
-        std::shared_ptr<robot_model::RobotModel> robot_model_;		
-        std::string planning_group_name_;	
-        std::vector< std::pair<std::string,urdf::Joint> > planning_group_joints_;
 
+        double getConstrainDifference( const base::Vector3d &value, const base::Vector3d &tolerance, const base::Vector3d &current_value,
+                                       const double &constraint_weight);
+        
+        bool jointSpaceStateValidChecker(const ompl::base::State *state);
         bool collisionCheckerStateValid(const ompl::base::State *state);
         void setUpPlanner (ompl::base::PlannerPtr &planner, ompl::base::SpaceInformationPtr &space_information, ompl::base::ProblemDefinitionPtr &problem_definition_ptr);
         bool solveProblem(ompl::base::PlannerPtr &planner,  const ompl::base::SpaceInformationPtr &space_information, const ompl::base::ProblemDefinitionPtr &problem_definition_ptr, 
@@ -85,7 +83,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool solveTaskInCartesianSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status);
         bool solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status);
         bool cartesianSpaceStateValidityChecker(const ompl::base::State *state);    
-        void setCartesianConstraints(CartesianContraints constraints);
+//         void setCartesianConstraints(CartesianContraints constraints);
         void simplifySolution(const ompl::base::ProblemDefinitionPtr &problem, ompl::geometric::PathSimplifier &path_simplifier, 
                               unsigned int step_size = 1, double duration = 0.0);
 

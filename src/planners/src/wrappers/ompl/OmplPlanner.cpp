@@ -13,17 +13,13 @@ OmplPlanner::~OmplPlanner()
 
 bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
 {
-    LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised";
-    robot_model_ = robot_model;      
+    //assigning planning grouup joint names.
+    assignPlanningJointInformation(robot_model);
     
-    planning_group_name_ = robot_model_->getPlanningGroupName();         
+//     robot_model_->getPlanningGroupJointInformation(planning_group_name_, planning_group_joints_, base_link_,  tip_link_);
+
     LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised for the planning group ="<<planning_group_name_;
-    
-    planning_group_joints_.clear();
-    robot_model_->getPlanningGroupJointinformation(planning_group_name_, planning_group_joints_, chain_link_, tip_link_);
-    
     LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised with size = "<<planning_group_joints_.size();
-    
     LOG_DEBUG_S<<"[OmplPlanner]: Reading OMPL planner config ";
     // assign the config
     YAML::Node input_config;    
@@ -32,8 +28,8 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& ro
     ompl_config_ = handle_ompl_config::getOmplConfig(ompl_config_node);    
 
     number_of_dimensions_= planning_group_joints_.size();
-    hasCartesianConstraint_ = false;
 
+    LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised";
     return true; 
 }
 
@@ -46,71 +42,48 @@ void OmplPlanner::setStartGoalTrajectory(const base::samples::Joints &start, con
 bool OmplPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajectory)
 {}
 
-bool OmplPlanner::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status )
-{
-    // check whether the start state is in collision
-    //this->has_orientation_constraint=false;
-    robot_model_->updateJointGroup(current_robot_status);
-
-    if(!robot_model_->isStateValid())
-    {
-        planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;         
-        return false;
-    }
-    else
-    {
-        // assign the start joint values from current robot status
-        start_joint_values_.clear();
-        start_joint_values_.resize(number_of_dimensions_);
-
-        for(size_t i = 0; i < number_of_dimensions_; i++)
-        {
-            try
-            {
-                base::JointState current_jointstate = current_robot_status.getElementByName(planning_group_joints_.at(i).first);		
-
-                start_joint_values_.names.at(i) = planning_group_joints_.at(i).first;
-                start_joint_values_.elements.at(i) = current_jointstate;
-
-            }
-            catch(std::runtime_error const &e) 
-            {
-                LOG_INFO_S<<"[OmplPlanner]: Cannot get the joint with name %s", planning_group_joints_.at(i).first.c_str();
-
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
 bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
 {
-
-    std::string joint_name;
-    double lower_limit, upper_limit;
-    for(std::vector< std::pair<std::string, urdf::Joint> >::iterator it = planning_group_joints_.begin(); it != planning_group_joints_.end(); it++ )
-    {
-        joint_name                      = it->first;
-        lower_limit                     = it->second.limits->lower;
-        upper_limit                     = it->second.limits->upper;
-        lower_limits_[joint_name]       = lower_limit;
-        upper_limits_[joint_name]       = upper_limit;
-    }
 
     if(start_joint_values_.size() != number_of_dimensions_ )
     {
         planner_status.statuscode = PlannerStatus::START_JOINTANGLES_NOT_AVAILABLE;
         return false;
     }
-
-    if( goal_joint_values_.size() != number_of_dimensions_)
+    
+    // now we assign constraint if available
+    if(constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT)
     {
-        planner_status.statuscode = PlannerStatus::GOAL_JOINTANGLES_NOT_AVAILABLE;
-        return false;
+        if( (constraints_.joint_constraint.value.size() != number_of_dimensions_) ||  
+            (constraints_.joint_constraint.tolerance.size() != number_of_dimensions_))
+        {
+            planner_status.statuscode = PlannerStatus::JOINT_CONSTRAINT_SIZE_ERROR;
+            return false;
+        }
+        for(size_t i = 0; i < number_of_dimensions_; i++)
+        {
+            lower_limits_[planning_group_joints_.at(i).first] = constraints_.joint_constraint.value(i) - constraints_.joint_constraint.tolerance(i);
+            upper_limits_[planning_group_joints_.at(i).first] = constraints_.joint_constraint.value(i) + constraints_.joint_constraint.tolerance(i);
+        }
     }
+    else
+    {
+
+        for(std::vector< std::pair<std::string, urdf::Joint> >::iterator it = planning_group_joints_.begin(); it != planning_group_joints_.end(); it++ )
+        {
+            lower_limits_[it->first]       = it->second.limits->lower;
+            upper_limits_[it->first]       = it->second.limits->upper;
+        }
+
+        if( goal_joint_values_.size() != number_of_dimensions_)
+        {
+            planner_status.statuscode = PlannerStatus::GOAL_JOINTANGLES_NOT_AVAILABLE;
+            return false;
+        }
+    }
+    
     return true;
+    
 }
 
 bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status)
@@ -156,7 +129,7 @@ bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, Planne
     joint_space->as<ompl::base::RealVectorStateSpace>()->setBounds(joint_space_bounds);
     ompl::base::SpaceInformationPtr  joint_space_Space_Information_ptr (new ompl::base::SpaceInformation(joint_space));
 
-    joint_space_Space_Information_ptr->setStateValidityChecker(  boost::bind( &OmplPlanner::collisionCheckerStateValid,this, _1) );
+    joint_space_Space_Information_ptr->setStateValidityChecker(  boost::bind( &OmplPlanner::jointSpaceStateValidChecker,this, _1) );
 
     joint_space_Space_Information_ptr->enforceBounds( joint_space_start.get());
     joint_space_Space_Information_ptr->enforceBounds( joint_space_goal.get());
@@ -221,7 +194,10 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
 
     if(ompl_planner_status)
     {
-        LOG_DEBUG_S<<"[OmplPlanner]: Found solution";
+        solution_path_ptr_ = std::static_pointer_cast<ompl::geometric::PathGeometric>(problem_definition_ptr->getSolutionPath());
+        
+        LOG_DEBUG_S<<"[OmplPlanner]: Found solution with size "<<solution_path_ptr_->getStates().size();
+        std::cout<<"Solution found after simplifying with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
 
         solved = true;
 
@@ -230,22 +206,52 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
         //simplify the solution
         simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
 
-        solution_path_ptr_ = std::static_pointer_cast<ompl::geometric::PathGeometric>(problem_definition_ptr->getSolutionPath());
+        solution.resize(planning_group_joints_.size(), solution_path_ptr_->getStates().size());
 
-        solution.resize(number_of_dimensions_, solution_path_ptr_->getStates().size());
-
-        for(size_t i = 0; i < number_of_dimensions_; ++i)
+        for(size_t i = 0; i < planning_group_joints_.size(); ++i)
             solution.names.at(i) = planning_group_joints_.at(i).first;
 
+        
         for(std::size_t i = 0; i < solution_path_ptr_->getStates().size(); i++)
         {
             ompl::base::RealVectorStateSpace::StateType* x=(ompl::base::RealVectorStateSpace::StateType*) solution_path_ptr_->getState(i);
+            
+            
+            if(constraints_.use_constraint == motion_planners::NO_CONSTRAINT)
+            {
+                for(size_t j = 0; j < number_of_dimensions_; j++)
+                    solution.elements.at(j).at(i).position = x->values[j];
+            }
+            else
+            {
+                
+                base::samples::RigidBodyState target_pose;
+                target_pose.sourceFrame = start_pose_.sourceFrame;
+                target_pose.targetFrame = start_pose_.targetFrame;
+                
+                target_pose.position.x() = x->values[0];
+                target_pose.position.y() = x->values[1];
+                target_pose.position.z() = x->values[2];
+                target_pose.orientation = base::Quaterniond(  base::AngleAxisd(x->values[5], Eigen::Matrix<double,3,1>::UnitZ())*
+                                                              base::AngleAxisd(x->values[4], Eigen::Matrix<double,3,1>::UnitY())*
+                                                              base::AngleAxisd(x->values[3], Eigen::Matrix<double,3,1>::UnitX()));
+                
+                std::vector<base::commands::Joints> ik_solution;
+                kinematics_library::KinematicsStatus solver_status;
 
-            for(size_t j = 0; j < number_of_dimensions_; j++)
-                solution.elements.at(j).at(i).position = x->values[j];    
+                robot_model_->robot_kinematics_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
+                
+                if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
+                    return false;
+                
+                for(size_t j = 0; j < planning_group_joints_.size(); j++)
+                    solution.elements.at(j).at(i).position = ik_solution[0].elements.at(j).position;
+                   
+            }
+            
 
         }
-        std::cout<<"Solution found with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
+        std::cout<<"Solution found after simplifying with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
         planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
     }
     else
@@ -263,39 +269,97 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
 bool OmplPlanner::setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_status)
 {
 
+    // 6 dof - 3 Position + 3 orientation
     number_of_dimensions_ = 6;
 
     double x_start,y_start,z_start,roll_start,pitch_start,yaw_start,x_goal,y_goal,z_goal,roll_goal,pitch_goal,yaw_goal;
 
-    if( (cartesian_contraints_.x.max < cartesian_contraints_.x.min)   || (cartesian_contraints_.y.max < cartesian_contraints_.y.min)   ||
-        (cartesian_contraints_.z.max < cartesian_contraints_.z.min)   || (cartesian_contraints_.rx.max < cartesian_contraints_.rx.min) ||
-        (cartesian_contraints_.ry.max < cartesian_contraints_.ry.min) || (cartesian_contraints_.rz.max < cartesian_contraints_.rz.min) )
+    lower_limits_["x"] = -5.0; upper_limits_["x"] = 5.0; lower_limits_["y"] = -5.0; upper_limits_["y"] = 5.0;
+    lower_limits_["z"] = -5.0; upper_limits_["z"] = 5.0;
+    lower_limits_["roll"] = -3.145; upper_limits_["roll"] = 3.145;lower_limits_["pitch"] = -3.145; upper_limits_["pitch"] = 3.145;
+    lower_limits_["yaw"] = -3.145; upper_limits_["yaw"] = 3.145;
+
+    if(constraints_.use_constraint == motion_planners::ORIENTATION_CONSTRAINT)
     {
-        planner_status.statuscode = PlannerStatus::CONSTRAINED_POSE_NOT_WITHIN_BOUNDS;
-        return false;
+        lower_limits_["roll"]  = constraints_.orientation_constraint.value(0) - constraints_.orientation_constraint.tolerance(0);
+        upper_limits_["roll"]  = constraints_.orientation_constraint.value(0) + constraints_.orientation_constraint.tolerance(0);
+
+        lower_limits_["pitch"] = constraints_.orientation_constraint.value(1) - constraints_.orientation_constraint.tolerance(1);
+        upper_limits_["pitch"] = constraints_.orientation_constraint.value(1) + constraints_.orientation_constraint.tolerance(1);
+
+        lower_limits_["yaw"]   = constraints_.orientation_constraint.value(2) - constraints_.orientation_constraint.tolerance(2);
+        upper_limits_["yaw"]   = constraints_.orientation_constraint.value(2) + constraints_.orientation_constraint.tolerance(2);
     }
+    else if(constraints_.use_constraint == motion_planners::POSITION_CONSTRAINT)
+    {
+        lower_limits_["x"] = constraints_.position_constraint.value(0) - constraints_.position_constraint.tolerance(0);
+        upper_limits_["x"] = constraints_.position_constraint.value(0) + constraints_.position_constraint.tolerance(0);
 
-    lower_limits_["x"]=cartesian_contraints_.x.min;
-    upper_limits_["x"]=cartesian_contraints_.x.max;
+        lower_limits_["y"] = constraints_.position_constraint.value(1) - constraints_.position_constraint.tolerance(1);
+        upper_limits_["y"] = constraints_.position_constraint.value(1) + constraints_.position_constraint.tolerance(1);
 
-    lower_limits_["y"]=cartesian_contraints_.y.min;
-    upper_limits_["y"]=cartesian_contraints_.y.max;
+        lower_limits_["z"] = constraints_.position_constraint.value(2) - constraints_.position_constraint.tolerance(2);
+        upper_limits_["z"] = constraints_.position_constraint.value(2) + constraints_.position_constraint.tolerance(2);
 
-    lower_limits_["z"]=cartesian_contraints_.z.min;
-    upper_limits_["z"]=cartesian_contraints_.z.max;
+    }
+    else if(constraints_.use_constraint == motion_planners::POSE_CONSTRAINT)
+    {
+        lower_limits_["x"] = constraints_.position_constraint.value(0) - constraints_.position_constraint.tolerance(0);
+        upper_limits_["x"] = constraints_.position_constraint.value(0) + constraints_.position_constraint.tolerance(0);
 
-    lower_limits_["roll"]=cartesian_contraints_.rx.min;
-    upper_limits_["roll"]=cartesian_contraints_.rx.max;
+        lower_limits_["y"] = constraints_.position_constraint.value(1) - constraints_.position_constraint.tolerance(1);
+        upper_limits_["y"] = constraints_.position_constraint.value(1) + constraints_.position_constraint.tolerance(1);
 
-    lower_limits_["pitch"]=cartesian_contraints_.ry.min;
-    upper_limits_["pitch"]=cartesian_contraints_.ry.max;
+        lower_limits_["z"] = constraints_.position_constraint.value(2) - constraints_.position_constraint.tolerance(2);
+        upper_limits_["z"] = constraints_.position_constraint.value(2) + constraints_.position_constraint.tolerance(2);
+        
+        lower_limits_["roll"]  = constraints_.orientation_constraint.value(0) - constraints_.orientation_constraint.tolerance(0);
+        upper_limits_["roll"]  = constraints_.orientation_constraint.value(0) + constraints_.orientation_constraint.tolerance(0);
+
+        lower_limits_["pitch"] = constraints_.orientation_constraint.value(1) - constraints_.orientation_constraint.tolerance(1);
+        upper_limits_["pitch"] = constraints_.orientation_constraint.value(1) + constraints_.orientation_constraint.tolerance(1);
+
+        lower_limits_["yaw"]   = constraints_.orientation_constraint.value(2) - constraints_.orientation_constraint.tolerance(2);
+        upper_limits_["yaw"]   = constraints_.orientation_constraint.value(2) + constraints_.orientation_constraint.tolerance(2);
+        
+    }
     
-    lower_limits_["yaw"]=cartesian_contraints_.rz.min;
-    upper_limits_["yaw"]=cartesian_contraints_.rz.max;
+    // assigning start and goal pose
+    kinematics_library::KinematicsStatus solver_status;
+    
+    robot_model_->robot_kinematics_->solveFK(start_joint_values_, start_pose_, solver_status);
+    if(solver_status.statuscode != kinematics_library::KinematicsStatus::FK_FOUND)
+        return false;
+    
+    robot_model_->robot_kinematics_->solveFK(goal_joint_values_, goal_pose_, solver_status);
+    if(solver_status.statuscode != kinematics_library::KinematicsStatus::FK_FOUND)
+        return false;
 
     return true;
 }
 
+
+bool OmplPlanner::jointSpaceStateValidChecker(const ompl::base::State *state)
+{
+
+    ompl::base::RealVectorStateSpace::StateType* joint_values_to_be_checked = (ompl::base::RealVectorStateSpace::StateType*)state ;
+    base::samples::Joints joint_values;
+    joint_values.resize(planning_group_joints_name_.size());
+    
+    joint_values.names = planning_group_joints_name_;
+        
+    for(int i = 0; i < planning_group_joints_name_.size(); i++)
+    {
+        joint_values.elements.at(i).position = joint_values_to_be_checked->values[i];        
+    }
+
+    // checking for collision
+    robot_model_->updateJointGroup(joint_values);
+    if(!robot_model_->isStateValid())
+        return false;
+
+    return true;
+}
 
 bool OmplPlanner::collisionCheckerStateValid(const ompl::base::State *state)
 {
@@ -322,42 +386,35 @@ bool OmplPlanner::collisionCheckerStateValid(const ompl::base::State *state)
 
 bool OmplPlanner::cartesianSpaceStateValidityChecker(const ompl::base::State *state)
 {
-//     ompl::base::RealVectorStateSpace::StateType* cartesian_pose_to_be_checked=(ompl::base::RealVectorStateSpace::StateType*)state ;
-//     KDL::Frame kdl_frame_to_be_checked_in_base_link;
-//     double x,y,z,roll, pitch, yaw;
-//     x=cartesian_pose_to_be_checked->values[0];
-//     y=cartesian_pose_to_be_checked->values[1];
-//     z=cartesian_pose_to_be_checked->values[2];
-//     roll=cartesian_pose_to_be_checked->values[3];
-//     pitch=cartesian_pose_to_be_checked->values[4];
-//     yaw=cartesian_pose_to_be_checked->values[5];
-//     kdl_frame_to_be_checked_in_base_link.p.x(x);
-//     kdl_frame_to_be_checked_in_base_link.p.y(y);
-//     kdl_frame_to_be_checked_in_base_link.p.z(z);
-//     kdl_frame_to_be_checked_in_base_link.M=kdl_frame_to_be_checked_in_base_link.M.RPY(roll, pitch, yaw);
-// 
-//     KDL::Frame kdl_frame_to_be_checked_in_kinematic_chain;
-//     robot_model_->ConvertPoseBetweenFrames(this->B_Frame,kdl_frame_to_be_checked_in_base_link, this->A_Frame , kdl_frame_to_be_checked_in_kinematic_chain);
-// 
-// 
-//     double roll_, pitch_, yaw_;
-// 
-//     kdl_frame_to_be_checked_in_kinematic_chain.M.GetRPY(roll_, pitch_, yaw_);    
-// 
-//     std::map<std::string,double> joints_for_given_pose;
-//     std::string planningGroupName=this->motion_planning_request.getplanningGroupName();
-//     std::vector<RobotFreeJointParameter> robot_free_joint_parameters=this->motion_planning_request.getRobotFreeJointParameter() ;
-// 
-//     PlannerStatus ik_result = this->motion_planning_request.getRobotModelptr()->ikSolverUsingIKFAST(    kdl_frame_to_be_checked_in_kinematic_chain,
-//                                                                                                         planningGroupName,robot_free_joint_parameters, joints_for_given_pose);
-// 
-// 
-//     if(ik_result.statuscode != PlannerStatus::IK_SUCCESS)
-//         return false;
-//     else
-//         return true;
     
-    return true;
+    ompl::base::RealVectorStateSpace::StateType* cartesian_pose_to_be_checked = (ompl::base::RealVectorStateSpace::StateType*)state ;
+    
+    base::samples::RigidBodyState target_pose;
+    target_pose.sourceFrame = start_pose_.sourceFrame;
+    target_pose.targetFrame = start_pose_.targetFrame;
+    
+    target_pose.position.x() = cartesian_pose_to_be_checked->values[0];
+    target_pose.position.y() = cartesian_pose_to_be_checked->values[1];
+    target_pose.position.z() = cartesian_pose_to_be_checked->values[2];
+    
+    target_pose.orientation = base::Quaterniond(base::AngleAxisd(cartesian_pose_to_be_checked->values[5], Eigen::Matrix<double,3,1>::UnitZ())*
+                                                base::AngleAxisd(cartesian_pose_to_be_checked->values[4], Eigen::Matrix<double,3,1>::UnitY())*
+                                                base::AngleAxisd(cartesian_pose_to_be_checked->values[3], Eigen::Matrix<double,3,1>::UnitX()));
+
+    
+    
+    std::vector<base::commands::Joints> ik_solution;
+    kinematics_library::KinematicsStatus solver_status;
+
+    robot_model_->robot_kinematics_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
+
+    if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
+        return false;
+    
+    robot_model_->updateJointGroup(ik_solution[0]);
+    return robot_model_->isStateValid();
+    
+    
 }
 
 
@@ -403,7 +460,20 @@ bool OmplPlanner::solveTaskInCartesianSpace(base::JointsTrajectory &solution, Pl
     cartesian_space_bounds.setHigh(5 , upper_limits_["yaw"] );
     cartesian_space_start->values[5] = start_pose_.getYaw();
     cartesian_space_goal->values[5] = goal_pose_.getYaw();
-
+    
+    std::cout<<cartesian_space_start->values[0]<<"  "<<cartesian_space_start->values[1]<<"  "<<cartesian_space_start->values[2]<<"  "<<cartesian_space_start->values[3]<<"  "<<cartesian_space_start->values[4]<<"  "<<cartesian_space_start->values[5]<<std::endl;
+    std::cout<<cartesian_space_goal->values[0]<<"  "<<cartesian_space_goal->values[1]<<"  "<<cartesian_space_goal->values[2]<<"  "<<cartesian_space_goal->values[3]<<"  "<<cartesian_space_goal->values[4]<<"  "<<cartesian_space_goal->values[5]<<std::endl;
+    std::cout<<"Low = "<<std::endl;
+    for(int i = 0; i< cartesian_space_bounds.low.size(); i++)
+    {
+        std::cout<<cartesian_space_bounds.low.at(i)<<" ";
+    }
+std::cout<<"\nHigh = "<<std::endl;
+    for(int i = 0; i< cartesian_space_bounds.high.size(); i++)
+    {
+        std::cout<<cartesian_space_bounds.high.at(i)<<" ";        
+    }
+    std::cout<<std::endl;
     cartesian_space->as<ompl::base::RealVectorStateSpace>()->setBounds(cartesian_space_bounds);
     ompl::base::SpaceInformationPtr  cartesian_space_Space_Information_ptr (new ompl::base::SpaceInformation(cartesian_space));
 
@@ -443,7 +513,9 @@ void OmplPlanner::simplifySolution(const ompl::base::ProblemDefinitionPtr &probl
             else
             {
                 path_simplifier.simplify(static_cast<ompl::geometric::PathGeometric &>(*p), duration);
+                std::cout<<"Finisihed simlfying"<<std::endl;
                 path_simplifier.smoothBSpline(static_cast<ompl::geometric::PathGeometric &>(*p), step_size);
+                std::cout<<"Finisihed smoothing"<<std::endl;
             }
 
             double simplify_time = ompl::time::seconds(ompl::time::now() - start);
@@ -458,20 +530,15 @@ void OmplPlanner::simplifySolution(const ompl::base::ProblemDefinitionPtr &probl
 
 bool OmplPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
-    if(hasCartesianConstraint_)
+    if( (constraints_.use_constraint == motion_planners::NO_CONSTRAINT) || 
+        (constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT) )
     {
-        return solveTaskInCartesianSpace(solution, planner_status);
+        return solveTaskInJointSpace(solution, planner_status);
     }
     else
     {
-       return solveTaskInJointSpace(solution, planner_status);
+        return solveTaskInCartesianSpace(solution, planner_status);
     }
-}
-
-void OmplPlanner::setCartesianConstraints(CartesianContraints constraints)
-{
-    cartesian_contraints_ = constraints;
-    hasCartesianConstraint_ = true;     
 }
 
 void OmplPlanner::setPlannerStatus(const ompl::base::PlannerStatus::StatusType &ompl_status, motion_planners::PlannerStatus &planner_status)

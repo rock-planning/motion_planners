@@ -140,10 +140,10 @@ DblMatrix RobotModelWrapper::getPositionJacobian(std::string link_name, const Ve
     m *= 0.000;
 
     std::vector< std::pair<std::string,urdf::Joint> > planning_groups_joints;
-    std::string base_link, tip_link;
+    std::string base_link = m_robot_model->getBaseFrameName();
+    std::string tip_link = m_robot_model->getTipFrameName();
 
-    m_robot_model->getPlanningGroupJointinformation(m_planning_group_name_, planning_groups_joints,
-                                                    base_link, tip_link);
+    m_robot_model->getPlanningGroupJointInformation(m_planning_group_name_, planning_groups_joints);
 
     KDL::Jacobian  jacobian;
 

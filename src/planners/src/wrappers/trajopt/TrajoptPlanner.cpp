@@ -34,12 +34,12 @@ TrajoptPlanner::~TrajoptPlanner()
 bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model, std::string config_file_path)
 {
     motion_planners::loadConfigFile(config_file_path, m_input_config);
-    m_robot_model_ = robot_model;
-    m_robot_model_wrapper->setRobotModel(robot_model);
-    m_collision_checker_wrapper->setRobotModel(robot_model);
+    //assigning planning grouup joint names.
+    assignPlanningJointInformation(robot_model);
+    
+    m_robot_model_wrapper->setRobotModel(robot_model_);
+    m_collision_checker_wrapper->setRobotModel(robot_model_);
     m_collision_checker_wrapper->isCollsionCheckNeeded(motion_planners::getValue<bool>(m_input_config["debug_config"], "use_collision_check"));
-    m_planning_group_name_ = m_robot_model_->getPlanningGroupName();
-    m_robot_model_->getPlanningGroupJointsName(m_planning_group_name_, m_planning_group_joints_name_);
     return true;
 }
 
@@ -49,11 +49,11 @@ bool TrajoptPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     if(m_results->status != OptStatus::INVALID){
         const TrajArray& goal_traj  = m_results->traj;
 //        std::cout << "goal_traj : \n" << goal_traj << std::endl;
-        solution.names.resize(m_planning_group_joints_name_.size());
-        solution.elements.resize(m_planning_group_joints_name_.size());
+        solution.names.resize(planning_group_joints_name_.size());
+        solution.elements.resize(planning_group_joints_name_.size());
         for(int col = 0; col < goal_traj.cols(); col++)
         {
-            solution.names.at(col) = m_planning_group_joints_name_.at(col);
+            solution.names.at(col) = planning_group_joints_name_.at(col);
             solution.elements.at(col).resize(goal_traj.col(col).size());
             for( int row = 0; row < goal_traj.rows(); row++)
             {

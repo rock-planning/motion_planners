@@ -33,6 +33,13 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/includ
 		    ${YAML_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
 link_directories(${kdl_parser_LIBRARY_DIRS})
 
+
+add_library(abstract_planner SHARED
+            ${CMAKE_CURRENT_LIST_DIR}/src/abstract/AbstractPlanner.cpp
+)
+target_link_libraries(abstract_planner robot_model)
+
+
 #store wrapper's library name
 set (WRAPPERS_LIB "")
 #store link directory
@@ -44,7 +51,7 @@ add_library(stomp_wrapper SHARED
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/stomp/StompPlanner.cpp	 
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/stomp/HandleStompConfig.cpp
 )
-target_link_libraries(stomp_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} stomp collision_detection robot_model)
+target_link_libraries(stomp_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} abstract_planner stomp collision_detection robot_model)
 LIST(APPEND WRAPPERS_LIB "stomp_wrapper")
 
 add_library(trajopt_wrapper SHARED
@@ -55,7 +62,7 @@ add_library(trajopt_wrapper SHARED
 #            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/HandleTrajoptConfig.cpp
 )
 
-target_link_libraries(trajopt_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} trajopt collision_detection robot_model)
+target_link_libraries(trajopt_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} abstract_planner trajopt collision_detection robot_model)
 
 LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
@@ -77,7 +84,7 @@ if(${OMPL_FOUND})
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/OmplPlanner.cpp    	    
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/HandleOmplConfig.cpp)
 	    
-    target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} collision_detection robot_model)    
+    target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} abstract_planner collision_detection robot_model)    
     
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
     #If OMPL is installed through ROS, we need to specify the ompl install folder for linking.
@@ -107,6 +114,7 @@ set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${TRAJOPT_PATH}/trajopt/include")
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
 install(DIRECTORY include/ DESTINATION include/motion_planners/planner_factory)
+install(TARGETS abstract_planner DESTINATION lib)
 install(TARGETS stomp_wrapper DESTINATION lib)
 install(TARGETS trajopt_wrapper DESTINATION lib)
 

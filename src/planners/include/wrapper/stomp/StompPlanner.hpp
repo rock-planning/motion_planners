@@ -11,7 +11,6 @@
 
 namespace motion_planners
 {
-  
 
 class StompPlanner: public motion_planners::AbstractPlanner
 {
@@ -27,25 +26,18 @@ class StompPlanner: public motion_planners::AbstractPlanner
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
-        
-        void setConstraints(const Constraints constraints);
+
+        void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;}
 
         double getMovementDeltaTime();
 
-
     private:
         boost::shared_ptr<stomp::Stomp> stomp_;
-        std::shared_ptr<robot_model::RobotModel> robot_model_;
         stomp::StompConfig stomp_config_;
         stomp::DebugConfig debug_config_;
         std::shared_ptr<OptimizationTask> optimization_task_;
-        stomp::CovariantMovementPrimitive tmp_policy;
-
-        std::string planning_group_name_;
-        std::vector< std::string> planning_group_joints_name_;
-        
-        Constraints constraints_;
-
+        stomp::CovariantMovementPrimitive tmp_policy;        
+        ConstraintPlanning constraints_;
 };
 }// end planner
 

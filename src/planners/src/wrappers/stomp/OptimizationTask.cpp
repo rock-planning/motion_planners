@@ -155,9 +155,12 @@ bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
 
     // calculate collision cost
     computeCollisionCost(costs, validity);
-    // calculate orientation cost
-    if(constraints_.use_orientation_constraint)
-        computeOrientationConstraintCost(costs);
+    
+    // calculate given constrained cost
+    if(constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT)
+    {
+        computeJointsConstraintCost(costs);
+    }
 
     //auto finish_time = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double> elapsed = finish_time - start_time;
@@ -193,41 +196,39 @@ void OptimizationTask::computeCollisionCost( base::VectorXd& costs, bool& validi
 
 }
 
-void OptimizationTask::computeOrientationConstraintCost( base::VectorXd& costs)
+void OptimizationTask::computeJointsConstraintCost( base::VectorXd& costs)
 {
-    double orientation_cost=0.0;
-    kinematics_library::KinematicsStatus kinematic_status;
+    double joint_cost=0.0;
     
     for (int t = stomp::TRAJECTORY_PADDING; t < stomp::TRAJECTORY_PADDING + stomp_config_.num_time_steps_; ++t)
     {
-        std::vector<double> jt_angle(planning_group_joints_names_.size());
-        VectorXd::Map(&jt_angle[0], pos_.block(0,t,stomp_config_.num_dimensions_,1).size()) = pos_.block(0,t,stomp_config_.num_dimensions_,1);
-        base::samples::Joints current_jt = base::samples::Joints::Positions(jt_angle, planning_group_joints_names_);
-        base::samples::RigidBodyState fk_pose;                
-        robot_model_->robot_kinematics_->solveFK(current_jt, fk_pose, kinematic_status );
-        base::Vector3d euler_angle;
-        kinematics_library::quaternionToEuler(fk_pose.orientation, euler_angle);
-        double delta_roll       = constraints_.orientation_constraint_tolerance.x() - fabs(constraints_.orientation_constraint.x() - euler_angle.x());
-        double delta_pitch      = constraints_.orientation_constraint_tolerance.y() - fabs(constraints_.orientation_constraint.y() - euler_angle.y());
-        double delta_yaw        = constraints_.orientation_constraint_tolerance.z() - fabs(constraints_.orientation_constraint.z() - euler_angle.z());
-        
-        if(delta_roll < 0.0)
-            orientation_cost = orientation_cost + (-1.0 * delta_roll);
-        if(delta_pitch < 0.0)
-            orientation_cost = orientation_cost + (-1.0 * delta_pitch);
-        if(delta_yaw < 0.0)
-            orientation_cost = orientation_cost + (-1.0 * delta_yaw);
-        double orientation_contraint_weight = 2.0;
-        orientation_cost = orientation_contraint_weight * (orientation_cost + 1.0);
-        costs(t-stomp::TRAJECTORY_PADDING) = costs(t-stomp::TRAJECTORY_PADDING) + orientation_cost;
+        joint_cost = getConstrainDifference(constraints_.joint_constraint.value, constraints_.joint_constraint.tolerance,
+                                            pos_.block(0,t,stomp_config_.num_dimensions_,1), 1.0);
 
+        costs(t-stomp::TRAJECTORY_PADDING) += joint_cost;   
     }
-
 }
 
+double OptimizationTask::getConstrainDifference(const base::VectorXd &value, const base::VectorXd &tolerance, const base::VectorXd &current_value,
+                                                 const double &constraint_weight)
+{
+    
+    double constraint_cost = 0.0;
+    double diff_value = 0.0;
+    
+    for(size_t i = 0; i < current_value.size(); i++)
+    {
+            diff_value = tolerance(i) - fabs(value(i) - current_value(i));
+            if(diff_value < 0.0)
+                constraint_cost = constraint_cost + (-1.0 * diff_value);  // minus is added to convert the cost positive
+    }
 
+    constraint_cost = constraint_weight * constraint_cost ;
+    
+    return constraint_cost;
 
-
+}
 
 }
 // end namespace 
+
