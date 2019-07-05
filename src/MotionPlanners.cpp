@@ -180,7 +180,6 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
                                             PlannerStatus &planner_status)
 {
-std::cout<<"im constrinaed planneing"<<std::endl;
     if (checkStartState(start_jointvalues, planner_status))
     {
         // assign the goal joint values from the target joint status
@@ -201,8 +200,7 @@ std::cout<<"im constrinaed planneing"<<std::endl;
                     try
                     {
                         goal_joint_status_.names.at ( i )	= planning_group_joints_.at ( i ).first;
-                        goal_joint_status_.elements.at ( i )    = it->getElementByName ( planning_group_joints_.at ( i ).first );
-                        std::cout<<goal_joint_status_.elements.at ( i ).position<<"  ";
+                        goal_joint_status_.elements.at ( i )    = it->getElementByName ( planning_group_joints_.at ( i ).first );                        
                     }
                     catch ( base::samples::Joints::InvalidName e )
                     {   //Only catch exception to write more explicit error msgs
@@ -211,7 +209,6 @@ std::cout<<"im constrinaed planneing"<<std::endl;
                         return false;
                     }
                 }
-std::cout<<std::endl;
                 if ( checkGoalState ( goal_joint_status_, planner_status ) )
                 {
                     constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
