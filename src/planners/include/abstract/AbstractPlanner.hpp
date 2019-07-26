@@ -25,6 +25,26 @@ inline void loadConfigFile(std::string filename, YAML::Node &config)
     }
 }
 
+template<typename T, typename O>
+T getValue (const YAML::Node &yaml_data, std::string name)
+{
+        T value;
+
+        if (const YAML::Node data = yaml_data[name])
+        {
+            try {
+                value = data.as<T>();
+            } catch (const std::exception &e) {
+                value = static_cast<T>(data.as<O>());
+            }
+        }
+        else
+            std::cout << "Key "<< name <<" doesn't exist\n";
+
+        return value;
+
+}
+
 template<typename T>
 T getValue (const YAML::Node &yaml_data, std::string name)
 {

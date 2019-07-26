@@ -9,13 +9,13 @@ stomp::StompConfig getStompConfig(const YAML::Node &yaml_data)
 
     stomp::StompConfig config;
 
-    config.num_threads_                 = motion_planners::getValue<int>(yaml_data, "num_thread_");
-    config.min_rollouts_                = motion_planners::getValue<int>(yaml_data, "min_rollouts_");
-    config.max_rollouts_                = motion_planners::getValue<int>(yaml_data, "max_rollouts_");
-    config.num_rollouts_per_iteration_  = motion_planners::getValue<int>(yaml_data, "num_rollouts_per_iteration_");
-    config.num_time_steps_              = motion_planners::getValue<int>(yaml_data, "num_time_steps_");
-    config.num_dimensions_              = motion_planners::getValue<int>(yaml_data, "num_dimensions_");
-    config.num_iterations_              = motion_planners::getValue<int>(yaml_data, "num_iterations_"); 
+    config.num_threads_                 = motion_planners::getValue<int, double>(yaml_data, "num_thread_");
+    config.min_rollouts_                = motion_planners::getValue<int, double>(yaml_data, "min_rollouts_");
+    config.max_rollouts_                = motion_planners::getValue<int, double>(yaml_data, "max_rollouts_");
+    config.num_rollouts_per_iteration_  = motion_planners::getValue<int, double>(yaml_data, "num_rollouts_per_iteration_");
+    config.num_time_steps_              = motion_planners::getValue<int, double>(yaml_data, "num_time_steps_");
+    config.num_dimensions_              = motion_planners::getValue<int, double>(yaml_data, "num_dimensions_");
+    config.num_iterations_              = motion_planners::getValue<int, double>(yaml_data, "num_iterations_");
 
 
     const YAML::Node &noise_std_node    = yaml_data["noise_stddev_"];

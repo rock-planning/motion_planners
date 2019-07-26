@@ -253,6 +253,14 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
         }
         for(int i = 0; i<goal_joint_status_.size(); ++i)
         {
+            // set new goal positions so that are only rotations with a value below of PI
+            if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position > M_PI) {
+                goal_joint_status_.elements.at(i).position -= 2 * M_PI;
+            }
+            else if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position < - M_PI)
+            {
+                goal_joint_status_.elements.at(i).position += 2 * M_PI;
+            }
             LOG_DEBUG("[MotionPlanners]: Named Goal Joint Value  for Joint %s = %f", goal_joint_status_.names.at(i).c_str(),goal_joint_status_.elements.at(i).position );
         }
         if(checkGoalState(goal_joint_status_, planner_status))
@@ -288,6 +296,11 @@ std::cout<<"im constrinaed planneing1"<<std::endl;
     constrainted_target_ = constrainted_target;    
     return true;
 
+}
+
+const base::samples::Joints &MotionPlanners::getGoalJointAngles()
+{
+    return goal_joint_status_;
 }
 
 bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object)
