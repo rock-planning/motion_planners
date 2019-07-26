@@ -47,6 +47,8 @@ class MotionPlanners
         bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
                                     PlannerStatus &planner_status);
 
+        const base::samples::Joints &getGoalJointAngles();
+
         bool usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
         void setStartAndGoal();
