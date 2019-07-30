@@ -118,7 +118,7 @@ int main(int argc, char** argv)
   // lower bound on length per step
   double length_lb = (goal - start).norm() / (n_steps-1);
   // length per step variable
-  Var lengthvar = prob->createVariables(singleton<string>("speed"), singleton<double>(length_lb),singleton<double>(INFINITY))[0];
+  Var lengthvar = prob->createVariables(singleton<string>("speed"), singleton<double>(length_lb),singleton<double>(TRAJOPT_INFINITY))[0];
 
 
 

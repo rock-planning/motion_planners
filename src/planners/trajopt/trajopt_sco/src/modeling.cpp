@@ -5,6 +5,7 @@
 #include <cstdio>
 #include "sco/expr_ops.hpp"
 #include "sco/sco_common.hpp"
+#include "sco/SQPConfig.h"
 #include "utils/macros.h"
 #include <iostream>
 #include <sstream>
@@ -20,7 +21,7 @@ void ConvexObjective::addQuadExpr(const QuadExpr& quadexpr) {
   exprInc(quad_, quadexpr);
 }
 void ConvexObjective::addHinge(const AffExpr& affexpr, double coeff) {
-  Var hinge = model_->addVar("hinge", 0, INFINITY);
+  Var hinge = model_->addVar("hinge", 0, TRAJOPT_INFINITY);
   vars_.push_back(hinge);
   ineqs_.push_back(affexpr);
   exprDec(ineqs_.back(), hinge);
@@ -28,8 +29,8 @@ void ConvexObjective::addHinge(const AffExpr& affexpr, double coeff) {
   exprInc(quad_, hinge_cost);
 }
 void ConvexObjective::addAbs(const AffExpr& affexpr, double coeff) {
-  Var neg = model_->addVar("neg", 0, INFINITY);
-  Var pos = model_->addVar("pos", 0, INFINITY);
+  Var neg = model_->addVar("neg", 0, TRAJOPT_INFINITY);
+  Var pos = model_->addVar("pos", 0, TRAJOPT_INFINITY);
   vars_.push_back(neg);
   vars_.push_back(pos);
   AffExpr neg_plus_pos;
@@ -54,7 +55,7 @@ void ConvexObjective::addL2Norm(const AffExprVector& ev) {
   for (size_t i=0; i < ev.size(); ++i) exprInc(quad_, exprSquare(ev[i]));
 }
 void ConvexObjective::addMax(const AffExprVector& ev) {
-  Var m = model_->addVar("max", -INFINITY, INFINITY);
+  Var m = model_->addVar("max", -TRAJOPT_INFINITY, TRAJOPT_INFINITY);
   for (size_t i=0; i < ev.size(); ++i) {
     ineqs_.push_back(ev[i]);
     exprDec(ineqs_.back(), m);
@@ -144,7 +145,7 @@ double Constraint::violation(const DblVec& x) {
 OptProb::OptProb() : model_(createModel()) {}
 
 VarVector OptProb::createVariables(const vector<string>& var_names) {
-  return createVariables(var_names, DblVec(var_names.size(), -INFINITY), DblVec(var_names.size(), INFINITY));
+  return createVariables(var_names, DblVec(var_names.size(), -TRAJOPT_INFINITY), DblVec(var_names.size(), TRAJOPT_INFINITY));
 }
 VarVector OptProb::createVariables(const vector<string>& var_names, const DblVec& lb, const DblVec& ub) {
 

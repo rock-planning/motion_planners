@@ -47,25 +47,25 @@ void RobotAndDOF::GetDOFLimits(DblVec& lower, DblVec& upper) const {
   const int translation_dofs[3] = {DOF_X, DOF_Y, DOF_Z};
   for (int i=0; i < 3; ++i) {
     if (affinedofs & translation_dofs[i]) {
-      lower.push_back(-INFINITY);
-      upper.push_back(INFINITY);
+      lower.push_back(-TRAJOPT_INFINITY);
+      upper.push_back(TRAJOPT_INFINITY);
     }
   }
   if (affinedofs & DOF_RotationMask) {
     if (affinedofs & DOF_RotationAxis) {
-      lower.push_back(-INFINITY);
-      upper.push_back(INFINITY);
+      lower.push_back(-TRAJOPT_INFINITY);
+      upper.push_back(TRAJOPT_INFINITY);
     }
     else if (affinedofs & DOF_Rotation3D) {
       for (int i=0; i < 3; ++i) {
-        lower.push_back(-INFINITY);
-        upper.push_back(INFINITY);
+        lower.push_back(-TRAJOPT_INFINITY);
+        upper.push_back(TRAJOPT_INFINITY);
       }
     }
     else if (affinedofs & DOF_Rotation3D) {
       for (int i=0; i < 3; ++i) {
-        lower.push_back(-INFINITY);
-        upper.push_back(INFINITY);
+        lower.push_back(-TRAJOPT_INFINITY);
+        upper.push_back(TRAJOPT_INFINITY);
       }
     }
     else if (affinedofs & DOF_RotationQuat) {
