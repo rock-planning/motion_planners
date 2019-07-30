@@ -12,10 +12,25 @@
 namespace motion_planners
 {
 
+
+// struct CollisionInformation
+// {
+//     std::pair<std::string,std::string>  collision_pair;
+//     std::vector <std::pair<std::string,std::string> > collision_pair_names;
+// };
+
+struct CollisionLinkName
+{
+    CollisionLinkName(const std::string &link_1="", const std::string &link_2=""):
+    link_1(link_1), link_2(link_2){}
+    
+    std::string link_1;
+    std::string link_2;
+};
+
 struct CollisionInformation
 {
-    std::pair<std::string,std::string>  collision_pair;
-    std::vector <std::pair<std::string,std::string> > collision_pair_names;
+    std::vector<CollisionLinkName> collision_link_names;
 };
 
 

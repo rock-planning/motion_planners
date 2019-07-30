@@ -8,6 +8,7 @@
     <url>https://git.hb.dfki.de/dfki-planning/motion_planners.git</url>
     <logo>http://</logo>
     <depend package="base/cmake" />
+    <depend package="base/types" />
     <depend package="planning/kinematics_library" />
     <depend package="planning/collision_detection" />
     <depend package="slam/octomap" />

@@ -63,10 +63,7 @@ class MotionPlanners
 
         bool handleGraspObject(const motion_planners::ModelObject &known_object);
 
-        std::vector< std::pair<std::string, std::string> > getCollisionObjectNames()
-        {
-            return collision_object_names_;
-        }
+        CollisionInformation getCollisionObjectNames();
 
         base::JointsTrajectory planner_solution_;
 

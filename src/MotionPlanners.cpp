@@ -123,7 +123,8 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
 void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap)
 {
     robot_model_->updateOctomap(octomap, config_.env_config.env_object_name);
-    robot_model_->saveOctree();
+    if(config_.env_config.octree_debug_config.save_octree)
+        robot_model_->saveOctree();
 }
 
 void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap)
@@ -485,4 +486,16 @@ void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_
             named_group_states_.insert(std::pair<std::string, std::map<std::string, double> >(group_state.name_, named_group_state));
         }
     }
+}
+
+CollisionInformation MotionPlanners::getCollisionObjectNames()
+{
+    CollisionInformation collision_info;
+    
+    for(auto it = collision_object_names_.begin(); it !=collision_object_names_.end(); ++it)
+    {
+        CollisionLinkName collision_names(it->first, it->second);
+        collision_info.collision_link_names.push_back(collision_names);
+    }
+    return collision_info;
 }
