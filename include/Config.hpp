@@ -81,8 +81,8 @@ struct EnvironmentConfig
     collision_detection::OctreeDebugConfig octree_debug_config;
     // name of the environment
     std::string env_object_name;
-    // disable collision pair between the environment with the robot's link
-    std::vector <std::pair<std::string,std::string> > disabled_collision_pair;
+    // disable collision pair between the environment with the robot's link    
+    CollisionInformation disabled_collision_pair;
 };
 
 struct Config

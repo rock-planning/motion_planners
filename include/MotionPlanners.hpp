@@ -100,8 +100,8 @@ class MotionPlanners
         bool convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object);
 
         void createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model);
-
-
+        
+        std::vector <std::pair<std::string,std::string> > assignDisableCollisionObject(const CollisionInformation &disabled_collision_pair);
 };
 
 };

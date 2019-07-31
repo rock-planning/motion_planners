@@ -40,7 +40,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
         return false;
     }
 
-    robot_model_->setDisabledEnvironmentCollision(config_.env_config.disabled_collision_pair);
+    robot_model_->setDisabledEnvironmentCollision(assignDisableCollisionObject(config_.env_config.disabled_collision_pair));
 
     PlannerFactory planner_factory;
 
@@ -498,4 +498,20 @@ CollisionInformation MotionPlanners::getCollisionObjectNames()
         collision_info.collision_link_names.push_back(collision_names);
     }
     return collision_info;
+}
+
+std::vector <std::pair<std::string,std::string> > MotionPlanners::assignDisableCollisionObject(const CollisionInformation &disabled_collision_pair)
+{
+    std::vector <std::pair<std::string,std::string> > collision_pair;
+    
+    for(auto it = disabled_collision_pair.collision_link_names.begin(); it !=disabled_collision_pair.collision_link_names.end(); ++it)
+    {
+        std::pair<std::string, std::string> name_pair;
+
+        name_pair.first  = it->link_1;
+        name_pair.second = it->link_2;
+
+        collision_pair.push_back(name_pair);
+    }
+    return collision_pair;
 }
