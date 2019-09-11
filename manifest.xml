@@ -12,7 +12,9 @@
     <depend package="planning/kinematics_library" />
     <depend package="planning/collision_detection" />
     <depend package="slam/octomap" />
-    <depend package="planning/robot_model" />    
+    <depend package="planning/robot_model" />  
+    <depend package="planning/ompl" />      
+    <depend package="control/kdl_parser" />    
     <name>motion_planners</name>
     <maintainer>Sankar Natarajan/sankar.natarajan@dfki.de</maintainer>
     <stage>-1</stage>
