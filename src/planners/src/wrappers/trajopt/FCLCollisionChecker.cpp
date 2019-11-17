@@ -80,9 +80,12 @@ void FCLCollisionChecker::getContinuousCollisionInfo(const DblVec &startjoints, 
 
 void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions)
 {
+/*    
+    // This version works with 189f59ade1ca7b7b5c83292ea15c0f5978be79e2 "Master" version - 20191113
     std::vector<collision_detection::DistanceInformation> distance_info;
     m_robot_model_->getRobotDistanceToCollisionInfo(distance_info);
-    for(int i=0; i<distance_info.size(); i++){
+    for(int i=0; i<distance_info.size(); i++)
+    {
         Collision coll;
         collision_detection::DistanceInformation &dist = distance_info.at(i);
         if((!m_is_collision_check || dist.min_distance > 0) && dist.min_distance < m_distance_tolerance)
@@ -123,5 +126,5 @@ void FCLCollisionChecker::getDiscreteCollisionInfo(vector<Collision> &collisions
                 collisions.push_back(coll);
             }
         }
-    }
+    }*/
 }

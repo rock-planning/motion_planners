@@ -355,7 +355,8 @@ bool OmplPlanner::jointSpaceStateValidChecker(const ompl::base::State *state)
 
     // checking for collision
     robot_model_->updateJointGroup(joint_values);
-    if(!robot_model_->isStateValid())
+    
+    if(!robot_model_->isStateValid(collision_cost_))
         return false;
 
     return true;
@@ -380,7 +381,7 @@ bool OmplPlanner::collisionCheckerStateValid(const ompl::base::State *state)
     }
 
     robot_model_->updateJointGroup(joint_state_map);
-    return robot_model_->isStateValid();
+    return robot_model_->isStateValid(collision_cost_);
 
 }
 
@@ -412,7 +413,7 @@ bool OmplPlanner::cartesianSpaceStateValidityChecker(const ompl::base::State *st
         return false;
     
     robot_model_->updateJointGroup(ik_solution[0]);
-    return robot_model_->isStateValid();
+    return robot_model_->isStateValid(collision_cost_);
     
     
 }

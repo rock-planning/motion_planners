@@ -20,8 +20,8 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
 {
     // CAUTION: Don't use different collision library for robot and world.
     // IN FCL wrapper the base pointer is downcasted.
-    collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL, config_.env_config.octree_debug_config);
-    collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector(collision_detection::FCL, config_.env_config.octree_debug_config);
+    collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector( config_.env_config.collision_detection_config );
+    collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector( config_.env_config.collision_detection_config );
     // get the kinematics solver
     kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, 
                                                                                                          planner_status.kinematic_status);
@@ -70,7 +70,8 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
 
     robot_model_->updateJointGroup(current_robot_status);
 
-    if(!robot_model_->isStateValid())
+    double collision_cost = 0.0;
+    if(!robot_model_->isStateValid(collision_cost))
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollisionObjectNames();
@@ -106,7 +107,8 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
 {
     // check whether the goal state is in collision        
     robot_model_->updateJointGroup(goal);
-    if(!robot_model_->isStateValid())
+    double collision_cost = 0.0;
+    if(!robot_model_->isStateValid(collision_cost))
     {
         planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;	    
         collision_object_names_ = robot_model_->getCollisionObjectNames();
@@ -123,7 +125,7 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
 void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap)
 {
     robot_model_->updateOctomap(octomap, config_.env_config.env_object_name);
-    if(config_.env_config.octree_debug_config.save_octree)
+    if(config_.env_config.collision_detection_config.env_debug_config.save_octree)
         robot_model_->saveOctree();
 }
 

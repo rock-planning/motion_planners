@@ -157,10 +157,10 @@ bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
     computeCollisionCost(costs, validity);
     
     // calculate given constrained cost
-    if(constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT)
-    {
-        computeJointsConstraintCost(costs);
-    }
+//     if(constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT)
+//     {
+//         computeJointsConstraintCost(costs);
+//     }
 
     //auto finish_time = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double> elapsed = finish_time - start_time;
@@ -180,8 +180,9 @@ void OptimizationTask::computeCollisionCost( base::VectorXd& costs, bool& validi
         // State cost
         robot_model_->updateJointGroup(planning_group_joints_names_, pos_.block(0,t,stomp_config_.num_dimensions_,1));
 
-        if(!robot_model_->isStateValid())
+        if(!robot_model_->isStateValid(collision_cost))
         {
+            std::cout<<"Collision Cost = "<<collision_cost<<std::endl;
             collision_cost = 1.0;
             validity = false;
         }

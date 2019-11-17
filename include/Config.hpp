@@ -75,10 +75,9 @@ struct PlannerConfig
 
 struct EnvironmentConfig
 {
+    collision_detection::CollisionDetectionConfig collision_detection_config;
     // attach the environment to this frame
     std::string env_frame;
-    // octree config 
-    collision_detection::OctreeDebugConfig octree_debug_config;
     // name of the environment
     std::string env_object_name;
     // disable collision pair between the environment with the robot's link    

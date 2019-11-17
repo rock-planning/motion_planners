@@ -52,6 +52,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         base::samples::Joints start_joint_values_, goal_joint_values_;
         base::samples::RigidBodyState start_pose_, goal_pose_;
         ConstraintPlanning constraints_;
+        double collision_cost_;
 
         //planner_type_ type_of_planner_;
         ompl_config::OmplConfig ompl_config_;
