@@ -182,8 +182,7 @@ void OptimizationTask::computeCollisionCost( base::VectorXd& costs, bool& validi
 
         if(!robot_model_->isStateValid(collision_cost))
         {
-            std::cout<<"Collision Cost = "<<collision_cost<<std::endl;
-            collision_cost = 1.0;
+            collision_cost = 1.0 + (-1.0 * collision_cost);
             validity = false;
         }
         else
@@ -192,9 +191,7 @@ void OptimizationTask::computeCollisionCost( base::VectorXd& costs, bool& validi
             validity = true;
         }
         costs(t-stomp::TRAJECTORY_PADDING) = collision_cost;
-
     }
-
 }
 
 void OptimizationTask::computeJointsConstraintCost( base::VectorXd& costs)
