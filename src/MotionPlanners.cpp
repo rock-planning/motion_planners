@@ -74,7 +74,7 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     if(!robot_model_->isStateValid(collision_cost))
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
-        collision_object_names_ = robot_model_->getCollisionObjectNames();
+        collision_object_names_ = robot_model_->getCollidedObjectsNames();
         return false;
     }
     else
@@ -111,7 +111,7 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     if(!robot_model_->isStateValid(collision_cost))
     {
         planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;	    
-        collision_object_names_ = robot_model_->getCollisionObjectNames();
+        collision_object_names_ = robot_model_->getCollidedObjectsNames();
     }
     else
     {
@@ -490,7 +490,7 @@ void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_
     }
 }
 
-CollisionInformation MotionPlanners::getCollisionObjectNames()
+CollisionInformation MotionPlanners::getCollidedObjectsNames()
 {
     CollisionInformation collision_info;
     
