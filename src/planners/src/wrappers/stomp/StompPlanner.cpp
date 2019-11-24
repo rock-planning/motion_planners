@@ -31,6 +31,8 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
     optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
     optimization_task_->stompInitialize(1,1);
     
+    num_iterations_ = 0;
+    
     return true;    
 }
 
@@ -68,9 +70,12 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
     double old_cost = 0.0;
     double cost_improvement = 0.0;
     double current_trajectory_totalcost = 0.0;
+    num_iterations_ = 0;
     
     for(int i = 0; i < stomp_config_.num_iterations_; i++)
     {
+        num_iterations_++;
+        
         stomp_->runSingleIteration(i);
 
         current_trajectory_totalcost = stomp_->getNoiselessRolloutTotalCost();
@@ -171,6 +176,32 @@ bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& traject
 //std::cout<<"---------------"<<std::endl;
     optimization_task_->updatePolicy();   
     return true;
+}
+
+base::JointsTrajectory StompPlanner::getInitialTrajectory()
+{
+    int start = stomp::DIFF_RULE_LENGTH -1;
+    int end = (start + stomp_config_.num_time_steps_ -1);
+    int diff = (end -start) +1;
+    
+    base::JointsTrajectory trajectory;
+     
+    
+    trajectory.names.resize(planning_group_joints_name_.size());
+    trajectory.elements.resize(planning_group_joints_name_.size());
+
+    for(int d = 0; d < stomp_config_.num_dimensions_; d++)           
+    {
+        trajectory.names.at(d) = planning_group_joints_name_.at(d);
+        
+        trajectory.elements.at(d).resize(diff+2);
+        
+        for( int i = 0; i <= diff+1; i++)   
+            trajectory.elements.at(d).at(i).position =   optimization_task_->initial_trajectory_[d](i+(start-1));
+    
+    } 
+    
+    return trajectory;
 }
 
 double StompPlanner::getMovementDeltaTime()

@@ -93,6 +93,10 @@ class AbstractPlanner
         virtual void setConstraints(const ConstraintPlanning constraints) = 0;
 
         virtual bool updateInitialTrajectory(const base::JointsTrajectory &trajectory) = 0;
+        
+        virtual base::JointsTrajectory getInitialTrajectory() = 0;
+        
+        virtual size_t getNumOfIterationsUsed() = 0;
 
     protected:
         std::shared_ptr<robot_model::RobotModel> robot_model_;

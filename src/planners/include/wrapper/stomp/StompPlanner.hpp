@@ -26,10 +26,14 @@ class StompPlanner: public motion_planners::AbstractPlanner
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+        
+        base::JointsTrajectory getInitialTrajectory();
 
         void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;}
 
         double getMovementDeltaTime();
+        
+        size_t getNumOfIterationsUsed() { return num_iterations_;}
 
     private:
         boost::shared_ptr<stomp::Stomp> stomp_;
@@ -38,6 +42,7 @@ class StompPlanner: public motion_planners::AbstractPlanner
         std::shared_ptr<OptimizationTask> optimization_task_;
         stomp::CovariantMovementPrimitive tmp_policy;        
         ConstraintPlanning constraints_;
+        size_t num_iterations_;
 };
 }// end planner
 

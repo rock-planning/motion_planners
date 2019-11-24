@@ -45,6 +45,8 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
         void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;};
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+        base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();};
+        size_t getNumOfIterationsUsed(){return 0;}
     private:
 
         std::map <std::string, double> lower_limits_;

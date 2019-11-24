@@ -33,6 +33,10 @@ class TrajoptPlanner: public motion_planners::AbstractPlanner
         void setConstraints(const ConstraintPlanning constraints){};
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+        
+        base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();};
+        
+        size_t getNumOfIterationsUsed(){return 0;}
 
     private:
 
