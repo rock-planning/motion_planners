@@ -182,7 +182,7 @@ void OptimizationTask::computeCollisionCost( base::VectorXd& costs, bool& validi
 
         if(!robot_model_->isStateValid(collision_cost))
         {
-            collision_cost = 1.0 + (-1.0 * collision_cost);
+            collision_cost = 1.0 ;//+ (-1.0 * collision_cost);
             validity = false;
         }
         else
