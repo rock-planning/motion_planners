@@ -83,7 +83,7 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
         old_cost = current_trajectory_totalcost;
 
         LOG_DEBUG_S <<"Iteration = "<<i <<". Total Cost = "<<current_trajectory_totalcost<<" . Cost improvement = "<<cost_improvement;
-                std::cout <<"Iteration = "<<i <<". Total Cost = "<<current_trajectory_totalcost<<" . Cost improvement = "<<cost_improvement<<std::endl;
+        //std::cout <<"Iteration = "<<i <<". Total Cost = "<<current_trajectory_totalcost<<" . Cost improvement = "<<cost_improvement<<std::endl;
 
         // Stop Criteria 
         // Here the "current_trajectory_totalcost" < 1 means there is no collision.
