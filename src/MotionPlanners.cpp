@@ -79,7 +79,7 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     }
     else
     {
-        // assign the start joint values from current robot status	  
+        // assign the start joint values from current robot status    
         initial_joint_status_.clear();
         initial_joint_status_.resize(planning_group_joints_.size());
 
@@ -87,10 +87,10 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
         {
             try
             {
-                base::JointState current_jointstate = current_robot_status.getElementByName(planning_group_joints_.at(i).first);		
+                base::JointState current_jointstate = current_robot_status.getElementByName(planning_group_joints_.at(i).first);        
 
                 initial_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
-                initial_joint_status_.elements.at(i) = current_jointstate;		
+                initial_joint_status_.elements.at(i) = current_jointstate;      
             }
             catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
             {
@@ -110,7 +110,7 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     double collision_cost = 0.0;
     if(!robot_model_->isStateValid(collision_cost))
     {
-        planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;	    
+        planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;     
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
     }
     else
@@ -142,7 +142,7 @@ bool MotionPlanners::usePredictedTrajectory( base::JointsTrajectory &solution, P
     solution.getJointsAtTimeStep(solution.size(), goal);
     if(!assignPlanningRequest( start, goal, planner_status))
         return false;
-    
+        
     planner_->updateInitialTrajectory(solution);
 }
 
@@ -159,8 +159,8 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
         {
             try
             {
-                goal_joint_status_.names.at(i)		= planning_group_joints_.at(i).first;
-                goal_joint_status_.elements.at(i)	= target_jointvalues.getElementByName(planning_group_joints_.at(i).first);
+                goal_joint_status_.names.at(i)      = planning_group_joints_.at(i).first;
+                goal_joint_status_.elements.at(i)   = target_jointvalues.getElementByName(planning_group_joints_.at(i).first);
             }
             catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
             {
@@ -202,7 +202,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                 {
                     try
                     {
-                        goal_joint_status_.names.at ( i )	= planning_group_joints_.at ( i ).first;
+                        goal_joint_status_.names.at ( i )   = planning_group_joints_.at ( i ).first;
                         goal_joint_status_.elements.at ( i )    = it->getElementByName ( planning_group_joints_.at ( i ).first );                        
                     }
                     catch ( base::samples::Joints::InvalidName e )
