@@ -83,7 +83,7 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
 
         boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
 
-        std::vector<base::VectorXd> initial_trajectory_;
+        std::vector<base::VectorXd> initial_trajectory_, input_initial_trajectory_;
 
     private:
 

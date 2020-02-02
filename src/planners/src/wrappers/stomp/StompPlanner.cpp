@@ -120,8 +120,10 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
     stomp_.reset();    
 
     int start = stomp::DIFF_RULE_LENGTH -1;
-    int end = (start + stomp_config_.num_time_steps_ -1);
-    int diff = (end -start) +1;
+    int end = (start + stomp_config_.num_time_steps_);
+    int diff = (end -start) ;
+    //int end = (start + stomp_config_.num_time_steps_ -1);
+    //int diff = (end -start) +1;
      
     
     solution.names.resize(planning_group_joints_name_.size());
@@ -131,9 +133,11 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
     {
 	solution.names.at(d) = planning_group_joints_name_.at(d);
 	
-	solution.elements.at(d).resize(diff+2);
+	//solution.elements.at(d).resize(diff+2);
+	solution.elements.at(d).resize(stomp_config_.num_time_steps_+2);
 	
-	for( int i = 0; i <= diff+1; i++)	
+	//for( int i = 0; i <= diff+1; i++)	
+	for( int i = 0; i < stomp_config_.num_time_steps_+2; i++)	
 	    solution.elements.at(d).at(i).position =  optimization_task_->policy_->parameters_all_[d](i+(start-1));
 	
     }     
@@ -153,7 +157,10 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 void StompPlanner::setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal)
 {
     optimization_task_->updateTrajectory(start, goal);
+    optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
+    
     optimization_task_->createPolicy();   
+
 }
 
 bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& trajectory)
@@ -174,15 +181,17 @@ bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& traject
         //std::cout<<std::endl;
     } 
 //std::cout<<"---------------"<<std::endl;
+
+    optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
     optimization_task_->updatePolicy();   
+
     return true;
 }
 
 base::JointsTrajectory StompPlanner::getInitialTrajectory()
 {
     int start = stomp::DIFF_RULE_LENGTH -1;
-    int end = (start + stomp_config_.num_time_steps_ -1);
-    int diff = (end -start) +1;
+    int end = (start + stomp_config_.num_time_steps_);
     
     base::JointsTrajectory trajectory;
      
@@ -194,10 +203,11 @@ base::JointsTrajectory StompPlanner::getInitialTrajectory()
     {
         trajectory.names.at(d) = planning_group_joints_name_.at(d);
         
-        trajectory.elements.at(d).resize(diff+2);
+        //trajectory.elements.at(d).resize(diff+2);
+        trajectory.elements.at(d).resize(stomp_config_.num_time_steps_+2);
         
-        for( int i = 0; i <= diff+1; i++)   
-            trajectory.elements.at(d).at(i).position =   optimization_task_->initial_trajectory_[d](i+(start-1));
+        for( int i = 0; i < stomp_config_.num_time_steps_+2; i++)   
+            trajectory.elements.at(d).at(i).position =   optimization_task_->input_initial_trajectory_[d](i+(start-1));
     
     } 
     
