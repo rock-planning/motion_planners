@@ -139,11 +139,13 @@ bool MotionPlanners::usePredictedTrajectory( base::JointsTrajectory &solution, P
 {
     base::samples::Joints start, goal;
     solution.getJointsAtTimeStep(0, start);
-    solution.getJointsAtTimeStep(solution.size(), goal);
+    solution.getJointsAtTimeStep(solution.getTimeSteps()-1, goal);
     if(!assignPlanningRequest( start, goal, planner_status))
         return false;
     
     planner_->updateInitialTrajectory(solution);
+
+    return true;
 }
 
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const base::samples::Joints &target_jointvalues,
