@@ -83,8 +83,10 @@ struct PlannerStatus
         // Joint constraints value or tolerance size 
         //  doesn't match with planning dimension size
         JOINT_CONSTRAINT_SIZE_ERROR,
-        /// The planner crashed
+        // The planner crashed
         CRASH,
+        // Kinematics related error
+        KINEMATIC_ERROR,
         /// invalid state
         INVALID
     }statuscode;

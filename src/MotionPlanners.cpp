@@ -26,7 +26,10 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, 
                                                                                                          planner_status.kinematic_status);
     if(robot_kinematics==NULL)
+    {
+        planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
         return false;
+    }
 
 
     // initialise robot model    

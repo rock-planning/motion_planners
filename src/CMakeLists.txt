@@ -5,15 +5,21 @@ set(TARGET_NAME ${PROJECT_NAME})
 
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
 INCLUDE(FindPkgConfig)
 
 find_package(Eigen3 REQUIRED)
+find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 pkg_check_modules(kdl_parser REQUIRED kdl_parser)
-
 pkg_check_modules(OCTOMAP REQUIRED octomap)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
+
+set (DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
+              ${kdl_parser_LIBRARIES} ${OCTOMAP_LIBRARIES} ${KINEMATICS_LIBRARIES} ${COLLISION_DETECTION_LIBRARIES} 
+              ${ROBOTMODEL_LIBRARIES})
 
 get_directory_property(PLANNERS_PATH DIRECTORY planners DEFINITION PLANNERS_DIR_PATH)
 get_directory_property(STOMP_PATH DIRECTORY planners DEFINITION STOMP_PATH)
@@ -33,7 +39,7 @@ add_library(motion_planners SHARED
             ${CMAKE_CURRENT_LIST_DIR}/MotionPlanners.cpp
 )
 
-target_link_libraries(motion_planners octomap collision_detection kinematics_library robot_model planner_factory)
+target_link_libraries(motion_planners planner_factory ${DEPS_LIB})
 
 set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -I${CMAKE_SOURCE_DIR}/include;${DEPS_INCLUDE_HEADER}")
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)

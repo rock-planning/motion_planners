@@ -10,6 +10,7 @@ set (PLANNERS_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
 INCLUDE(FindPkgConfig)
 
 # get basic library
+find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(orocos_kdl REQUIRED)
 
@@ -19,18 +20,22 @@ pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 pkg_check_modules(YAML REQUIRED yaml-cpp)
 
+set (DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
+              ${kdl_parser_LIBRARIES} ${orocos_kdl_LIBRARIES} ${ROBOTMODEL_LIBRARIES} ${COLLISION_DETECTION_LIBRARIES} 
+              ${KINEMATICS_LIBRARIES} ${YAML_LIBRARIES})
+
 # get the planners
 get_directory_property(STOMP_PATH DIRECTORY stomp DEFINITION STOMP_DIR_PATH)
 get_directory_property(TRAJOPT_PATH DIRECTORY trajopt DEFINITION TRAJOPT_PATH)
-
 get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY trajopt DEFINITION TRAJOPT_INCLUDE_HEADER)
 
 # assign the available planner's path
 set (PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 #set the header and library path
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} 
-		    ${YAML_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} 
+                    ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} 
+                    ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
 link_directories(${kdl_parser_LIBRARY_DIRS})
 
 
@@ -51,7 +56,7 @@ add_library(stomp_wrapper SHARED
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/stomp/StompPlanner.cpp	 
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/stomp/HandleStompConfig.cpp
 )
-target_link_libraries(stomp_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} abstract_planner stomp collision_detection robot_model)
+target_link_libraries(stomp_wrapper  abstract_planner stomp ${DEPS_LIB})
 LIST(APPEND WRAPPERS_LIB "stomp_wrapper")
 
 add_library(trajopt_wrapper SHARED
@@ -62,7 +67,7 @@ add_library(trajopt_wrapper SHARED
 #            ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/HandleTrajoptConfig.cpp
 )
 
-target_link_libraries(trajopt_wrapper ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} abstract_planner trajopt collision_detection robot_model)
+target_link_libraries(trajopt_wrapper abstract_planner trajopt  ${DEPS_LIB})
 
 LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
@@ -101,7 +106,7 @@ add_library(planner_factory SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/PlannerFactory.cpp
 )
 
-target_link_libraries(planner_factory ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} ${WRAPPERS_LIB})
+target_link_libraries(planner_factory ${DEPS_LIB} ${WRAPPERS_LIB})
 
 set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} stomp")
 set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${STOMP_PATH}/include")
