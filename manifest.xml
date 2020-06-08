@@ -9,12 +9,14 @@
     <logo>http://</logo>
     <depend package="base/cmake" />
     <depend package="base/types" />
+    <depend package="base/logging" />
+    <depend package="control/kdl_parser" />
+    <depend package="control/urdfdom_headers" />
     <depend package="planning/kinematics_library" />
     <depend package="planning/collision_detection" />
-    <depend package="slam/octomap" />
     <depend package="planning/robot_model" />
+    <depend package="slam/octomap" />
     <depend package="planning/ompl" />
-    <depend package="control/kdl_parser" />
     <depend package="boost" />
     <name>motion_planners</name>
     <maintainer>Sankar Natarajan/sankar.natarajan@dfki.de</maintainer>

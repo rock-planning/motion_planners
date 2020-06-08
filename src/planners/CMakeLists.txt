@@ -12,17 +12,17 @@ INCLUDE(FindPkgConfig)
 # get basic library
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(orocos_kdl REQUIRED)
 
-pkg_check_modules(kdl_parser REQUIRED kdl_parser)
+pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
+pkg_check_modules(KDL_PARSER REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 pkg_check_modules(YAML REQUIRED yaml-cpp)
 
 set (DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-              ${kdl_parser_LIBRARIES} ${orocos_kdl_LIBRARIES} ${ROBOTMODEL_LIBRARIES} ${COLLISION_DETECTION_LIBRARIES} 
-              ${KINEMATICS_LIBRARIES} ${YAML_LIBRARIES})
+              ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOTMODEL_LIBRARIES}
+              ${COLLISION_DETECTION_LIBRARIES} ${KINEMATICS_LIBRARIES} ${YAML_LIBRARIES})
 
 # get the planners
 get_directory_property(STOMP_PATH DIRECTORY stomp DEFINITION STOMP_DIR_PATH)
@@ -34,9 +34,10 @@ set (PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 #set the header and library path
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} 
-                    ${kdl_parser_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} 
+                    ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} 
                     ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
-link_directories(${kdl_parser_LIBRARY_DIRS})
+
+link_directories(${KDL_PARSER_LIBRARY_DIRS})
 
 
 add_library(abstract_planner SHARED
@@ -87,13 +88,16 @@ if(${OMPL_FOUND})
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/OmplPlanner.cpp    	    
 	    ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/HandleOmplConfig.cpp)
 	    
-    target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${orocos_kdl_LIBRARIES} ${YAML_LIBRARIES} abstract_planner collision_detection robot_model)    
+    target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${OROCOS_KDL_LIBRARIES} ${YAML_LIBRARIES} abstract_planner collision_detection robot_model)    
     
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
     #If OMPL is installed through ROS, we need to specify the ompl install folder for linking.
     LIST(APPEND WRAPPERS_LINK_DIR ${OMPL_LIBRARY_DIRS}) 
     
     install(TARGETS ompl_wrapper DESTINATION lib)
+
+    set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} ${OMPL_LIBRARIES}")
+    set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${OMPL_INCLUDE_DIRS}")
     
 else(${OMPL_FOUND})
     message ("OMPL not found !")    

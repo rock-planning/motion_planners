@@ -38,7 +38,6 @@
 #ifndef STOMP_UTILS_HPP_
 #define STOMP_UTILS_HPP_
 
-#include <kdl/jntarray.hpp>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
