@@ -35,7 +35,8 @@ bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel>& robot_model,
 {
     motion_planners::loadConfigFile(config_file_path, m_input_config);
     //assigning planning grouup joint names.
-    assignPlanningJointInformation(robot_model);
+    if(!assignPlanningJointInformation(robot_model))
+        return false;
     
     m_robot_model_wrapper->setRobotModel(robot_model_);
     m_collision_checker_wrapper->setRobotModel(robot_model_);

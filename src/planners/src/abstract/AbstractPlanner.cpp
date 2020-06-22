@@ -20,7 +20,12 @@ bool AbstractPlanner::assignPlanningJointInformation(std::shared_ptr<robot_model
     planning_group_name_ = robot_model_->getPlanningGroupName();
 
     //get planning group joint names.
-    robot_model_->getPlanningGroupJointInformation(planning_group_name_, planning_group_joints_, planning_group_joints_name_);
+    if(!robot_model_->getPlanningGroupJointInformation(planning_group_name_, planning_group_joints_, planning_group_joints_name_))
+    {
+        LOG_ERROR_S<< "[AbstractPlanner]: Could not assignPlanningJointInformation. The error could be that the kdl chain cannot be found from "<<base_name_.c_str()<<" to" <<tip_name_.c_str();
+        return false;
+    }
+    return true;
 }
 
 }

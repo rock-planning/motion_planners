@@ -25,7 +25,8 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
     debug_config_ = handle_stomp_config::getDebugConfig(debug_node);
 
     //assigning planning grouup joint names.
-    assignPlanningJointInformation(robot_model);    
+    if(!assignPlanningJointInformation(robot_model))
+        return false;    
 
     assert(planning_group_joints_name_.size()==stomp_config_.num_dimensions_);
     optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));

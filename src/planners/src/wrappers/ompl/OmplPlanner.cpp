@@ -13,8 +13,9 @@ OmplPlanner::~OmplPlanner()
 
 bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
 {
-    //assigning planning grouup joint names.
-    assignPlanningJointInformation(robot_model);
+    //assigning planning group joint names.
+    if(!assignPlanningJointInformation(robot_model))
+        return false;
     
 //     robot_model_->getPlanningGroupJointInformation(planning_group_name_, planning_group_joints_, base_link_,  tip_link_);
 
@@ -462,19 +463,19 @@ bool OmplPlanner::solveTaskInCartesianSpace(base::JointsTrajectory &solution, Pl
     cartesian_space_start->values[5] = start_pose_.getYaw();
     cartesian_space_goal->values[5] = goal_pose_.getYaw();
     
-    std::cout<<cartesian_space_start->values[0]<<"  "<<cartesian_space_start->values[1]<<"  "<<cartesian_space_start->values[2]<<"  "<<cartesian_space_start->values[3]<<"  "<<cartesian_space_start->values[4]<<"  "<<cartesian_space_start->values[5]<<std::endl;
-    std::cout<<cartesian_space_goal->values[0]<<"  "<<cartesian_space_goal->values[1]<<"  "<<cartesian_space_goal->values[2]<<"  "<<cartesian_space_goal->values[3]<<"  "<<cartesian_space_goal->values[4]<<"  "<<cartesian_space_goal->values[5]<<std::endl;
-    std::cout<<"Low = "<<std::endl;
-    for(int i = 0; i< cartesian_space_bounds.low.size(); i++)
-    {
-        std::cout<<cartesian_space_bounds.low.at(i)<<" ";
-    }
-std::cout<<"\nHigh = "<<std::endl;
-    for(int i = 0; i< cartesian_space_bounds.high.size(); i++)
-    {
-        std::cout<<cartesian_space_bounds.high.at(i)<<" ";        
-    }
-    std::cout<<std::endl;
+    // std::cout<<cartesian_space_start->values[0]<<"  "<<cartesian_space_start->values[1]<<"  "<<cartesian_space_start->values[2]<<"  "<<cartesian_space_start->values[3]<<"  "<<cartesian_space_start->values[4]<<"  "<<cartesian_space_start->values[5]<<std::endl;
+    // std::cout<<cartesian_space_goal->values[0]<<"  "<<cartesian_space_goal->values[1]<<"  "<<cartesian_space_goal->values[2]<<"  "<<cartesian_space_goal->values[3]<<"  "<<cartesian_space_goal->values[4]<<"  "<<cartesian_space_goal->values[5]<<std::endl;
+    // std::cout<<"Low = "<<std::endl;
+    // for(int i = 0; i< cartesian_space_bounds.low.size(); i++)
+    // {
+    //     std::cout<<cartesian_space_bounds.low.at(i)<<" ";
+    // }
+    // std::cout<<"\nHigh = "<<std::endl;
+    // for(int i = 0; i< cartesian_space_bounds.high.size(); i++)
+    // {
+    //     std::cout<<cartesian_space_bounds.high.at(i)<<" ";        
+    // }
+    // std::cout<<std::endl;
     cartesian_space->as<ompl::base::RealVectorStateSpace>()->setBounds(cartesian_space_bounds);
     ompl::base::SpaceInformationPtr  cartesian_space_Space_Information_ptr (new ompl::base::SpaceInformation(cartesian_space));
 
