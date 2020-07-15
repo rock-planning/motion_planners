@@ -168,20 +168,18 @@ bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& traject
 {
     if(trajectory.empty())
         return false;
-    //std::cout<<"update traj"<<std::endl;
+
     for (int d=0; d < stomp_config_.num_dimensions_; ++d)
     {
-        optimization_task_->initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) = trajectory.elements.at(d).front().position * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);	
-        optimization_task_->initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) = trajectory.elements.at(d).back().position  * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
-
+        optimization_task_->initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) = trajectory.elements.at(d).front().position * 
+                                                                                      base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);	
+            optimization_task_->initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) = trajectory.elements.at(d).back().position  * 
+                                                                                         base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
 
         for (int i=0; i < stomp_config_.num_time_steps_; i++){
-            optimization_task_->initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = trajectory.elements.at(d).at(i+1).position;	
-         //std::cout<<   trajectory.elements.at(d).at(i).position<<"  ";
+            optimization_task_->initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = trajectory.elements.at(d).at(i+1).position;
         }
-        //std::cout<<std::endl;
-    } 
-//std::cout<<"---------------"<<std::endl;
+    }
 
     optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
     optimization_task_->updatePolicy();   

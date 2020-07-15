@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <math.h>
 #include <base/samples/Joints.hpp>
 #include <base/JointsTrajectory.hpp>
 #include <collision_detection/CollisionFactory.hpp>
@@ -47,7 +48,7 @@ class MotionPlanners
         bool assignPlanningRequest( const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
                                     PlannerStatus &planner_status);
 
-        const base::samples::Joints &getGoalJointAngles();
+        inline const base::samples::Joints &getGoalJointAngles(){return goal_joint_status_;};
 
         bool usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
@@ -102,6 +103,8 @@ class MotionPlanners
         void createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model);
         
         std::vector <std::pair<std::string,std::string> > assignDisableCollisionObject(const CollisionInformation &disabled_collision_pair);
+
+        bool checkNaN(base::samples::Joints joint_value);
 };
 
 };

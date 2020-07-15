@@ -45,13 +45,7 @@ bool OmplPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajecto
 
 bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
 {
-
-    if(start_joint_values_.size() != number_of_dimensions_ )
-    {
-        planner_status.statuscode = PlannerStatus::START_JOINTANGLES_NOT_AVAILABLE;
-        return false;
-    }
-    
+   
     // now we assign constraint if available
     if(constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT)
     {
@@ -69,22 +63,14 @@ bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
     }
     else
     {
-
         for(std::vector< std::pair<std::string, urdf::Joint> >::iterator it = planning_group_joints_.begin(); it != planning_group_joints_.end(); it++ )
         {
             lower_limits_[it->first]       = it->second.limits->lower;
             upper_limits_[it->first]       = it->second.limits->upper;
         }
-
-        if( goal_joint_values_.size() != number_of_dimensions_)
-        {
-            planner_status.statuscode = PlannerStatus::GOAL_JOINTANGLES_NOT_AVAILABLE;
-            return false;
-        }
     }
     
-    return true;
-    
+    return true;    
 }
 
 bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status)

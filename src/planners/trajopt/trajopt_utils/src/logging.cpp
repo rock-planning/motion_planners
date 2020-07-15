@@ -14,7 +14,7 @@ int LoggingInit() {
   char* lvlc = getenv("TRAJOPT_LOG_THRESH");
   string lvlstr;
   if (lvlc == NULL) {
-    printf("You can set logging level with TRAJOPT_LOG_THRESH. Valid values: %s. Defaulting to INFO\n", VALID_THRESH_VALUES);
+    //printf("You can set logging level with TRAJOPT_LOG_THRESH. Valid values: %s. Defaulting to INFO\n", VALID_THRESH_VALUES);
     lvlstr = "INFO";
   }
   else lvlstr = string(lvlc);

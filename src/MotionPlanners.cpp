@@ -31,7 +31,6 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
         return false;
     }
 
-
     // initialise robot model    
     robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config));
     robot_model_->setRobotCollisionDetector(robot_collision_detector);
@@ -68,9 +67,15 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
 }
 
 bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status )
-{
-    // check whether the start state is in collision
+{    
+    // make sure incoming data doesn't have any NaN in it
+    if(!checkNaN(current_robot_status))
+    {
+        planner_status.statuscode = PlannerStatus::START_JOINTANGLES_NOT_AVAILABLE;
+        return false;
+    }
 
+    // check whether the start state is in collision
     robot_model_->updateJointGroup(current_robot_status);
 
     double collision_cost = 0.0;
@@ -107,7 +112,14 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
 }
 
 bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status )
-{
+{    
+    // make sure incoming data doesn't have any NaN in it
+    if(!checkNaN(goal))
+    {
+        planner_status.statuscode = PlannerStatus::GOAL_JOINTANGLES_NOT_AVAILABLE;
+        return false;
+    }
+
     // check whether the goal state is in collision        
     robot_model_->updateJointGroup(goal);
     double collision_cost = 0.0;
@@ -208,7 +220,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                     try
                     {
                         goal_joint_status_.names.at ( i )   = planning_group_joints_.at ( i ).first;
-                        goal_joint_status_.elements.at ( i )    = it->getElementByName ( planning_group_joints_.at ( i ).first );                        
+                        goal_joint_status_.elements.at ( i )   = it->getElementByName ( planning_group_joints_.at ( i ).first );                        
                     }
                     catch ( base::samples::Joints::InvalidName e )
                     {   //Only catch exception to write more explicit error msgs
@@ -231,7 +243,6 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
                                             PlannerStatus &planner_status)
 {
-
     if (checkStartState(start_jointvalues, planner_status))
     {
         // assign the goal joint values from the target group state
@@ -259,7 +270,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                 return false;
             }
         }
-        for(int i = 0; i<goal_joint_status_.size(); ++i)
+        for(size_t i = 0; i< goal_joint_status_.size(); ++i)
         {
             // set new goal positions so that are only rotations with a value below of PI
             if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position > M_PI) {
@@ -283,7 +294,6 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_jointvalues, const ConstraintPlanning &constrainted_target,
                                             PlannerStatus &planner_status)
 {
-std::cout<<"im constrinaed planneing1"<<std::endl;
     if(constrainted_target.use_constraint == motion_planners::JOINTS_CONSTRAINT)
     {
         if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_joints_value, planner_status) )
@@ -304,11 +314,6 @@ std::cout<<"im constrinaed planneing1"<<std::endl;
     constrainted_target_ = constrainted_target;    
     return true;
 
-}
-
-const base::samples::Joints &MotionPlanners::getGoalJointAngles()
-{
-    return goal_joint_status_;
 }
 
 bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object)
@@ -521,4 +526,14 @@ std::vector <std::pair<std::string,std::string> > MotionPlanners::assignDisableC
         collision_pair.push_back(name_pair);
     }
     return collision_pair;
+}
+
+bool MotionPlanners::checkNaN(base::samples::Joints joint_value)
+{
+    for(size_t i = 0; i < joint_value.elements.size(); i++)
+    {
+        if(std::isnan(joint_value.elements.at(i).position))
+            return false;
+    }
+    return true;
 }
