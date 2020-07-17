@@ -37,13 +37,18 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/includ
                     ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} 
                     ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
 
-link_directories(${KDL_PARSER_LIBRARY_DIRS})
+link_directories(${KDL_PARSER_LIBRARY_DIRS} 
+                 ${ROBOT_MODEL_LIBRARY_DIRS} 
+                 ${OROCOS_KDL_LIBRARY_DIRS} 
+                 ${COLLISION_DETECTION_LIBRARY_DIRS}  
+                 ${KINEMATICS_LIBRARY_DIRS}  
+                 ${YAML_LIBRARY_DIRS})
 
 
 add_library(abstract_planner SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/abstract/AbstractPlanner.cpp
 )
-target_link_libraries(abstract_planner robot_model)
+target_link_libraries(abstract_planner ${ROBOT_MODEL_LIBRARIES})
 
 
 #store wrapper's library name
