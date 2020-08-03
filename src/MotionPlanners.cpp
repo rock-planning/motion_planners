@@ -236,6 +236,11 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                 }
             }
         }
+        else
+        {
+            planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
+        }
+        
     }
     return false;
 }
