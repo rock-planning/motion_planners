@@ -60,7 +60,8 @@ add_library(motion_planners SHARED
 target_link_libraries(motion_planners ${MOTIONPLANNER_DEP_LIBS} planner_factory)
 
 set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -I${PLANNERS_PATH}/include;${STOMP_PATH}/include;${TRAJOPT_INCLUDE_HEADER}")
-set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}")
+#set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}")
+set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} -lboost_system -lboost_filesystem -lboost_program_options")
 set(PROJECT_DESCRIPTION "A libray which holds information on robot states")
 # now we add all the required libraries in PKGCONFIG_REQUIRES macro
 list(APPEND PKGCONFIG_REQUIRES base-types)
