@@ -1,7 +1,7 @@
 #include <vector>
 #include <string>
 
-#include <MotionPlanners.hpp>
+#include <motion_planners/MotionPlanners.hpp>
 
 
 using namespace motion_planners;

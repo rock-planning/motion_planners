@@ -1,7 +1,7 @@
 #ifndef PLANNERFACTORY_HPP_
 #define PLANNERFACTORY_HPP_
 
-#include <Config.hpp>
+#include <motion_planners/Config.hpp>
 #include <abstract/AbstractPlanner.hpp>
 #include <wrapper/stomp/StompPlanner.hpp>
 #include <wrapper/trajopt/TrajoptPlanner.hpp>

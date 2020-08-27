@@ -11,7 +11,7 @@
 #include <robot_model/RobotModel.hpp>
 #include "PlannerFactory.hpp"
 #include "abstract/AbstractPlanner.hpp"
-#include "Config.hpp"
+#include "motion_planners/Config.hpp"
 
 
 namespace motion_planners
