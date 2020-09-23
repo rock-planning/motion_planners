@@ -4,12 +4,10 @@ namespace motion_planners
 {
 
 OmplPlanner::OmplPlanner()
-{
-}
+{}
 
 OmplPlanner::~OmplPlanner()
-{
-}
+{}
 
 bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path)
 {
@@ -29,7 +27,6 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& ro
     ompl_config_ = handle_ompl_config::getOmplConfig(ompl_config_node);    
 
     number_of_dimensions_= planning_group_joints_.size();
-
     LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised";
     return true; 
 }
@@ -75,7 +72,6 @@ bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
 
 bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
-
     if(!setUpPlanningTaskInJointSpace(planner_status))
     {
         return false;
@@ -94,15 +90,10 @@ bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, Planne
     for(std::size_t i = 0; i< number_of_dimensions_; i++ )
     {
         joint_name = planning_group_joints_.at(i).first;
-
         joint_space_bounds.setLow(i, lower_limits_[joint_name] );
-
         joint_space_bounds.setHigh(i, upper_limits_[joint_name] );
-
         joint_space_start->values[i]= start_joint_values_[joint_name].position;
-
         joint_space_goal->values[i]= goal_joint_values_[joint_name].position;
-
 
         LOG_DEBUG_S<<" joint_name ["<<i+1<<"] = " <<joint_name;
         LOG_DEBUG_S<< "joint_space_bounds.low.at(i) " << joint_space_bounds.low.at(i);
