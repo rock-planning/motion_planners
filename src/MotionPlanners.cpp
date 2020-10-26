@@ -305,6 +305,11 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
             return false;
 
     }
+    else if((constrainted_target.use_constraint == motion_planners::KLC_CONSTRAINT))
+    {
+        if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_pose, planner_status) )
+            return false;
+    }
     else if((constrainted_target.use_constraint != motion_planners::NO_CONSTRAINT))
     {
         if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_pose, planner_status) )

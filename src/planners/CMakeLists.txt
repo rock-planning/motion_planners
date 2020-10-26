@@ -12,13 +12,14 @@ INCLUDE(FindPkgConfig)
 # get basic library
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
 pkg_check_modules(KDL_PARSER REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
-pkg_check_modules(YAML REQUIRED yaml-cpp)
+#pkg_check_modules(YAML REQUIRED yaml-cpp)  # This is not working
 
 set (DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
               ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOTMODEL_LIBRARIES}
@@ -34,16 +35,14 @@ set (PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 #set the header and library path
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} 
-                    ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} ${YAML_INCLUDE_DIRS} 
+                    ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS} 
                     ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} ${KINEMATICS_INCLUDE_DIRS})
 
 link_directories(${KDL_PARSER_LIBRARY_DIRS} 
                  ${ROBOT_MODEL_LIBRARY_DIRS} 
                  ${OROCOS_KDL_LIBRARY_DIRS} 
                  ${COLLISION_DETECTION_LIBRARY_DIRS}  
-                 ${KINEMATICS_LIBRARY_DIRS}  
-                 ${YAML_LIBRARY_DIRS})
-
+                 ${KINEMATICS_LIBRARY_DIRS})
 
 add_library(abstract_planner SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/abstract/AbstractPlanner.cpp

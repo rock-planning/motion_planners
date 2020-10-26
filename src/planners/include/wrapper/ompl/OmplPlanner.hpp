@@ -53,6 +53,12 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         std::map <std::string, double> upper_limits_;
         base::samples::Joints start_joint_values_, goal_joint_values_;
         base::samples::RigidBodyState start_pose_, goal_pose_;
+        // kinematics loop closure
+        base::samples::RigidBodyState active_chain_pose_, passive_chain_pose_;
+        base::samples::RigidBodyState klc_offset_pose_;
+        //base::Pose klc_pose_;
+        std::vector<std::string> passive_chain_names_;
+        base::JointsTrajectory passive_chain_solution_;
         ConstraintPlanning constraints_;
         double collision_cost_;
 
@@ -68,6 +74,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
 
         std::vector <std::map<std::string , double > >  path_joint_values_;
         std::vector <std::map<std::string , double > >  cartesian_path_;
+        std::vector <std::string> orientation_constraint_names_ , position_constraint_names_;
 
         bool setUpPlanningTaskInJointSpace(PlannerStatus &planner_status);
         bool setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_status);	
@@ -85,10 +92,17 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status );
         bool solveTaskInCartesianSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status);
         bool solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status);
-        bool cartesianSpaceStateValidityChecker(const ompl::base::State *state);    
+        bool cartesianSpaceStateValidityChecker(const ompl::base::State *state);  
+        bool kinematicLoopClosureValidChecker(const ompl::base::State *state);  
 //         void setCartesianConstraints(CartesianContraints constraints);
         void simplifySolution(const ompl::base::ProblemDefinitionPtr &problem, ompl::geometric::PathSimplifier &path_simplifier, 
                               unsigned int step_size = 1, double duration = 0.0);
+        bool setLimitsFromConstraints( const std::vector<std::string> &value_name, const ConstraintValues &constraint);
+
+        bool kinematicLoopClosureProjection(const base::samples::Joints &joint_values, 
+                                            std::vector<base::commands::Joints> &projected_state);
+
+        void setAffine(const base::Vector3d &position, const base::Quaterniond &orientation, Eigen::Affine3d &aff);
 
 };
 }// end namespace motion_planners

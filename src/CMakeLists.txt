@@ -10,6 +10,7 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 INCLUDE(FindPkgConfig)
 
 find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 #find_package(orocos_kdl REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 pkg_check_modules(BASE_TYPES REQUIRED base-types)
@@ -24,7 +25,6 @@ pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 
-
 get_directory_property(PLANNERS_PATH DIRECTORY planners DEFINITION PLANNERS_DIR_PATH)
 get_directory_property(STOMP_PATH DIRECTORY planners DEFINITION STOMP_PATH)
 get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY planners DEFINITION TRAJOPT_INCLUDE_HEADER)
@@ -33,7 +33,7 @@ get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY planners DEFINITION TRAJ
 get_directory_property(WRAPPERS_LINK_DIR DIRECTORY planners DEFINITION WRAPPERS_LINK_DIR)
 
 set(MOTIONPLANNER_LIB_INCLUDES  ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIR} ${BASE_TYPES_INCLUDE_DIRS} 
-                                ${BASE_LOGGING_INCLUDE_DIRS} ${OROCOS_PARSER_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} 
+                                ${BASE_LOGGING_INCLUDE_DIRS} ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} 
                                 ${URDF_INCLUDE_DIRS} ${URDFHEADER_INCLUDE_DIRS} ${SRDF_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} 
                                 ${KINEMATICS_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} 
                                 ${PLANNERS_PATH}/include ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
@@ -61,8 +61,8 @@ target_link_libraries(motion_planners ${MOTIONPLANNER_DEP_LIBS} planner_factory)
 
 set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -I${PLANNERS_PATH}/include;${STOMP_PATH}/include;${TRAJOPT_INCLUDE_HEADER}")
 #set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}")
-set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} -lboost_system -lboost_filesystem -lboost_program_options")
-set(PROJECT_DESCRIPTION "A libray which holds information on robot states")
+set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} -lboost_system -lboost_filesystem -lboost_program_options -lyaml-cpp")
+set(PROJECT_DESCRIPTION "A framework for motion planning.")
 # now we add all the required libraries in PKGCONFIG_REQUIRES macro
 list(APPEND PKGCONFIG_REQUIRES base-types)
 list(APPEND PKGCONFIG_REQUIRES base-logging)

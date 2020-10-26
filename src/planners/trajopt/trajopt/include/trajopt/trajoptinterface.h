@@ -27,7 +27,7 @@ struct Collision {
   CastCollisionType cctype;
   Collision(const std::string linkA, std::string linkB, const Vector3d& ptA, const Vector3d& ptB, const Vector3d& normalB2A, double distance, float weight=1, float time=0) :
     linkA(linkA), linkB(linkB), ptA(ptA), ptB(ptB), normalB2A(normalB2A), distance(distance), weight(weight), time(0), cctype(CCType_None) {}
-  Collision(): time(0), weight(1), cctype(CCType_None) {}
+  Collision(): weight(1), time(0), cctype(CCType_None) {}
 };
 TRAJOPT_API std::ostream& operator<<(std::ostream&, const Collision&);
 
