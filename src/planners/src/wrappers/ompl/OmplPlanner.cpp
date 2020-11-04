@@ -4,7 +4,10 @@ namespace motion_planners
 {
 
 OmplPlanner::OmplPlanner()
-{}
+{
+    klc_offset_pose_.setIdentity();
+    passive_active_offset_.setIdentity();
+}
 
 OmplPlanner::~OmplPlanner()
 {}
@@ -28,6 +31,13 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& ro
     // Joint and Cartesian constraint names
     orientation_constraint_names_   = {"roll", "pitch", "yaw" };
     position_constraint_names_      = {"x", "y", "z" };
+
+    // if only one kinematic solver is available in the robot model, set it as an active chain kinematic solver
+    if(robot_model_->robot_kinematics_map_.size() == 1)
+    {
+        if(!robot_model_->getKinematicsSolver(robot_model_->robot_kinematics_map_.begin()->first, active_chain_kin_solver_))
+        return false;
+    }
 
     LOG_DEBUG_S<<"[OmplPlanner]: OMPL planner initialised";
     return true; 
@@ -105,17 +115,6 @@ bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, Planne
 
     if(constraints_.use_constraint == motion_planners::KLC_CONSTRAINT)
     {
-        // make sure the kinematic chain is same as passive chain
-        std::string base_name= robot_model_->robot_kinematics_->getConfigBaseName();
-        std::string tip_name= robot_model_->robot_kinematics_->getConfigTipName();
-
-        if( (constraints_.klc_constraint.passive_chain.base_link.compare(base_name) != 0) || 
-            (constraints_.klc_constraint.passive_chain.tip_link.compare(tip_name) != 0))
-        {
-            LOG_FATAL_S<<"[OmplPlanner]: In the kinematic loop closure (KLC) planning, the passive chain's source"<<  
-                                         " and target frame names should be same as kinematic config base and tip names."<< 
-                                         " In order to project the constraint, IK solver is used for the passive chain.";
-        }
         // set up the state validity checker
         joint_space_Space_Information_ptr->setStateValidityChecker(  boost::bind( &OmplPlanner::kinematicLoopClosureValidChecker,this, _1) );
     }
@@ -230,7 +229,7 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
                 std::vector<base::commands::Joints> ik_solution;
                 kinematics_library::KinematicsStatus solver_status;
 
-                robot_model_->robot_kinematics_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
+                active_chain_kin_solver_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
                 
                 if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
                     return false;
@@ -297,12 +296,10 @@ bool OmplPlanner::setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_statu
     // assigning start and goal pose
     kinematics_library::KinematicsStatus solver_status;
     
-    robot_model_->robot_kinematics_->solveFK(start_joint_values_, start_pose_, solver_status);
-    if(solver_status.statuscode != kinematics_library::KinematicsStatus::FK_FOUND)
+    if(!active_chain_kin_solver_->solveFK(start_joint_values_, start_pose_, solver_status))    
         return false;
     
-    robot_model_->robot_kinematics_->solveFK(goal_joint_values_, goal_pose_, solver_status);
-    if(solver_status.statuscode != kinematics_library::KinematicsStatus::FK_FOUND)
+    if(!active_chain_kin_solver_->solveFK(goal_joint_values_, goal_pose_, solver_status))    
         return false;
 
     return true;
@@ -333,44 +330,18 @@ bool OmplPlanner::jointSpaceStateValidChecker(const ompl::base::State *state)
 bool OmplPlanner::kinematicLoopClosureProjection(   const base::samples::Joints &joint_values, 
                                                     std::vector<base::commands::Joints> &projected_state)
 {    
+    // std::cout<<"kinematicLoopClosureProjection"<<std::endl;
     projected_state.clear();
-
-    // do forward kinematic for the active chain
-    kinematics_library::KinematicsStatus solver_status;    
-    active_chain_pose_ = robot_model_->robot_kinematics_->solveFK(joint_values, active_chain_pose_, solver_status);
-    if(solver_status.statuscode != kinematics_library::KinematicsStatus::FK_FOUND)
-        return false;
     
-    // calculate the offset
-    // rTp = rTa x aTv x vTp
-    // rTp = Transformation of root frame to passive chain end-eff
-    // rTa = Transformation of root frame to active chain end-eff
-    // aTv = Transformation of active chain end-eff frame to virtual frame (inverse of KLCConstraint::active_chain_offset_pose)
-    // vTp = Transformation of virtual frame to passiveactive chain end-eff frame (KLCConstraint::passive_chain_offset_pose)
-    Eigen::Affine3d  rTp, rTa, vTa, vTp;
-    setAffine(constraints_.klc_constraint.active_chain_offset_pose.position, constraints_.klc_constraint.active_chain_offset_pose.orientation, vTa);
-    setAffine(constraints_.klc_constraint.passive_chain_offset_pose.position, constraints_.klc_constraint.passive_chain_offset_pose.orientation, vTp);
-    setAffine(active_chain_pose_.position, active_chain_pose_.orientation, rTa);
-    
-    rTp = rTa * vTa.inverse() * vTp;
-
-    passive_chain_pose_.setTransform(rTp);
-    passive_chain_pose_.sourceFrame = constraints_.klc_constraint.passive_chain.base_link;
-    passive_chain_pose_.targetFrame = constraints_.klc_constraint.passive_chain.tip_link;
-    
-
-        
-    // now we do loop closure part
-    robot_model_->robot_kinematics_->solveIK(passive_chain_pose_, start_joint_values_, projected_state, solver_status);
-
-    if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
+    PlannerStatus planner_status;
+    if(!calculatePassiveChainIKSoln( joint_values, passive_chain_projected_state_.back(), projected_state, planner_status))
         return false;
 
     // now update the active chain
     robot_model_->updateJointGroup(joint_values);
     // now update the passiveactive chain
     // TODO: Currently using the optimal ik solution, maybe need to go through all the solutions for CC.
-    robot_model_->updateJointGroup(projected_state[0]);  
+    robot_model_->updateJointGroup(projected_state[0]);
     
     // checking for collision
     if(!robot_model_->isStateValid(collision_cost_))
@@ -379,15 +350,92 @@ bool OmplPlanner::kinematicLoopClosureProjection(   const base::samples::Joints 
     return true;
 }
 
-void OmplPlanner::setAffine(const base::Vector3d &position, const base::Quaterniond &orientation, Eigen::Affine3d &aff)
+bool OmplPlanner::calculatePassiveChainIKSoln(  const base::samples::Joints &active_chain_joints, const base::samples::Joints &passive_chain_joints, 
+                                                std::vector<base::commands::Joints> &passive_chain_iksoln, PlannerStatus &planner_status)
 {
-    aff.setIdentity();
-    aff.rotate(orientation);
-    aff.translation() = position;
+    // std::cout<<"calculatePassiveChainIKSoln"<<std::endl;
+
+    base::samples::RigidBodyState active_chain_pose, passive_chain_pose;
+    // do forward kinematic(FK) for the active chain    
+    if(!active_chain_kin_solver_->solveFK(active_chain_joints, active_chain_pose, planner_status.kinematic_status))        
+        return false;
+    // calculate the passive chain pose using the offset and active chain
+    Eigen::Affine3d  rTa, rTp;    
+    rTa = active_chain_pose.getTransform();
+    rTp = passive_active_offset_ * rTa * klc_offset_pose_;
+    // do IK for the passive pose
+    passive_chain_pose.setTransform(rTp);
+    passive_chain_pose.sourceFrame = passive_chain_pose_.sourceFrame;
+    passive_chain_pose.targetFrame = passive_chain_pose_.targetFrame;
+    std::vector<base::commands::Joints> ik_solution;
+
+
+    // std::cout<<"Frame = "<<passive_chain_pose_.sourceFrame<<"  "<<passive_chain_pose_.targetFrame<<std::endl;
+    // std::cout<<"Frame = "<<active_chain_pose.sourceFrame<<"  "<<active_chain_pose.targetFrame<<std::endl;
+
+    // std::cout<<"calculatePassiveChainIKSoln Active chain start Affine \n"<<rTa.translation()<<std::endl;
+    // std::cout<<"calculatePassiveChainIKSoln Passive chain start Affine \n"<<rTp.translation()<<std::endl;
+
+    // std::cout<<"KLC offset\n"<<klc_offset_pose_.translation()<<std::endl;
+
+    // std::cout<<"calculatePassiveChainIKSoln Chain pose/n"<<active_chain_pose.position<<std::endl; 
+    // std::cout<<"calculatePassiveChainIKSoln Passive pose/n"<<passive_chain_pose.position<<std::endl;
+
+    if(!passive_chain_kin_solver_->solveIK(passive_chain_pose, passive_chain_joints, passive_chain_iksoln, planner_status.kinematic_status))
+    {
+        return false;
+    }
+
+    // std::cout<<"-------------- calculatePassiveChainIKSoln Joint value -------------"<<std::endl;
+    // for(int i = 0; i<active_chain_joints.elements.size();i++ )
+    //     std::cout<<active_chain_joints.names.at(i)<<"  ="<<active_chain_joints.elements.at(i).position<<std::endl;
+    // for(int i = 0; i<passive_chain_iksoln[0].elements.size();i++ )
+    //     std::cout<<passive_chain_iksoln[0].names.at(i)<<"  ="<<passive_chain_iksoln[0].elements.at(i).position<<std::endl;
+    // std::cout<<"---------------------------"<<std::endl; 
+
+    return true;
+}
+
+bool OmplPlanner::checkPassiveChainCollision(PlannerStatus &planner_status)
+{
+    // get the joint angles for the passive chain
+    base::samples::Joints passive_chain_joints;        
+    if(robot_model_->getPlanningGroupJointInformation(constraints_.klc_constraint.passive_chain_planning_group, 
+                                                        passive_chain_joints))
+    {
+        LOG_ERROR_S<<"[OmplPlanner]: Cannot find planning group "<<constraints_.klc_constraint.passive_chain_planning_group.c_str();
+    }
+
+    std::vector<base::commands::Joints> passive_chain_iksoln;
+    if(!calculatePassiveChainIKSoln( goal_joint_values_, passive_chain_joints, passive_chain_iksoln, planner_status))
+        return false;
+
+
+
+    // std::cout<<"IK sol"<<std::endl;
+    // for(int i = 0; i<passive_chain_iksoln[0].elements.size();i++ )
+    //     std::cout<<passive_chain_iksoln[0].names.at(i)<<"  ="<<passive_chain_iksoln[0].elements.at(i).position<<std::endl;
+    // std::cout<<"------------------------"<<std::endl;
+
+    robot_model_->updateJointGroup(passive_chain_iksoln[0]);
+    if(!robot_model_->isStateValid(collision_cost_))
+    {
+    //     std::vector< std::pair<std::string, std::string> > collision_object_names_;
+    //             collision_object_names_ = robot_model_->getCollidedObjectsNames();
+    //           for(auto it = collision_object_names_.begin(); it !=collision_object_names_.end(); ++it)
+    // {
+    //     std::cout<<it->first<<"  "<<it->second<<std::endl;
+    // }
+        planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;
+        return false;
+    }
+
+    return true;
 }
 
 bool OmplPlanner::kinematicLoopClosureValidChecker(const ompl::base::State *state)
 {
+    // std::cout<<"kinematicLoopClosureValidChecker"<<std::endl;
     ompl::base::RealVectorStateSpace::StateType* joint_values_to_be_checked = (ompl::base::RealVectorStateSpace::StateType*)state ;
     // convert the ompl state to base samples joint
     base::samples::Joints joint_values;
@@ -400,6 +448,7 @@ bool OmplPlanner::kinematicLoopClosureValidChecker(const ompl::base::State *stat
 
     // project the passive chain value in active chain manifold.
     std::vector<base::commands::Joints> ik_solution;
+
     if(!kinematicLoopClosureProjection( joint_values, ik_solution))
         return false;    
 
@@ -453,7 +502,7 @@ bool OmplPlanner::cartesianSpaceStateValidityChecker(const ompl::base::State *st
     std::vector<base::commands::Joints> ik_solution;
     kinematics_library::KinematicsStatus solver_status;
 
-    robot_model_->robot_kinematics_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
+    active_chain_kin_solver_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
 
     if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
         return false;
@@ -581,7 +630,15 @@ bool OmplPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner
     }
     else if(constraints_.use_constraint == motion_planners::KLC_CONSTRAINT)
     {
-        //klc_offset_pose_ = 
+        passive_chain_projected_state_.clear();
+
+        // calculate the KLC offset pose
+        if(!calculateKLCOffset())
+            return false;
+        // check collision for passive chain goal pose
+        if(!checkPassiveChainCollision(planner_status))
+            return false;
+        
         return solveTaskInJointSpace(solution, planner_status);
     }
     else
@@ -589,6 +646,79 @@ bool OmplPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner
         return solveTaskInCartesianSpace(solution, planner_status);
     }
 }
+
+bool OmplPlanner::calculateKLCOffset()
+{
+    // calculate the offset
+    // rTp = rTa x aTp
+    // aTp = aTr x rTp
+    // rTp = Transformation of root frame to passive chain end-eff
+    // rTa = Transformation of root frame to active chain end-eff
+    // aTp = Offset from active chain end-eff to passive chain end-eff. This offset is the constraint
+
+    // get the active and passive chain kinematic solver
+    if(!robot_model_->getKinematicsSolver(constraints_.klc_constraint.active_chain_kinematic_name, active_chain_kin_solver_))    
+        return false;
+    if(!robot_model_->getKinematicsSolver(constraints_.klc_constraint.passive_chain_kinematic_name, passive_chain_kin_solver_))    
+        return false;
+
+    // do forward kinematic(FK) for the active chain
+    kinematics_library::KinematicsStatus solver_status;    
+    if(!active_chain_kin_solver_->solveFK(start_joint_values_, active_chain_pose_, solver_status))        
+        return false;
+
+    //std::cout<<"Active chain start pose \n"<<active_chain_pose_.position<<std::endl;
+
+    // get the joint angles for the passive chain and do the FK.
+    base::samples::Joints passive_chain_joints;        
+    if(!robot_model_->getPlanningGroupJointInformation(constraints_.klc_constraint.passive_chain_planning_group, 
+                                                        passive_chain_joints))
+    {
+        LOG_ERROR_S<<"[OmplPlanner]: Cannot find planning group "<<constraints_.klc_constraint.passive_chain_planning_group.c_str();
+    }
+
+    // std::cout<<"-------------- calculateKLCOffset Joint value -------------"<<std::endl;
+    // for(int i = 0; i<start_joint_values_.elements.size();i++ )
+    //     std::cout<<start_joint_values_.names.at(i)<<"  ="<<start_joint_values_.elements.at(i).position<<std::endl;
+    // for(int i = 0; i<passive_chain_joints.elements.size();i++ )
+    //     std::cout<<passive_chain_joints.names.at(i)<<"  ="<<passive_chain_joints.elements.at(i).position<<std::endl;
+    // std::cout<<"---------------------------"<<std::endl;
+
+    // do forward kinematic(FK) for the passive chain      
+    if(!passive_chain_kin_solver_->solveFK(passive_chain_joints, passive_chain_pose_, solver_status)){std::cout<<"kkdddkk"<<std::endl;
+        return false;    }
+
+    //std::cout<<"Passive chain start pose \n"<<passive_chain_pose_.position<<std::endl;
+
+    // get the offset between the passive to chain base frame    
+    passive_active_offset_ = passive_chain_kin_solver_->transformPose( passive_chain_pose_.sourceFrame, active_chain_pose_.sourceFrame);
+
+    //std::cout<<passive_chain_pose_.sourceFrame<<"  "<<active_chain_pose_.sourceFrame<<std::endl;
+
+    Eigen::Affine3d  rTp, rTa;
+    rTa = active_chain_pose_.getTransform();
+    rTp = passive_chain_pose_.getTransform();
+    // Offset from active chain end-eff to passive chain end-eff. This offset is the constraint
+    klc_offset_pose_ = (passive_active_offset_*rTa).inverse() * rTp;
+
+
+
+    //assign the current state
+    passive_chain_projected_state_.push_back(passive_chain_joints);
+   
+
+    // std::cout<<"Active chain start Affine \n"<<rTa.translation()<<std::endl;
+    // std::cout<<"Passive chain start Affine \n"<<rTp.translation()<<std::endl;
+
+    // std::cout<<"passive_active_offset_ offset\n"<<passive_active_offset_.translation()<<std::endl;
+    // std::cout<<"KLC offset\n"<<klc_offset_pose_.translation()<<std::endl;
+    // std::cout<<"KLC offset check \n"<<(passive_active_offset_*rTa*klc_offset_pose_).translation()<<std::endl;
+    // std::cout<<"kkkk"<<std::endl;
+
+    return true;
+}
+
+
 
 void OmplPlanner::setPlannerStatus(const ompl::base::PlannerStatus::StatusType &ompl_status, motion_planners::PlannerStatus &planner_status)
 {

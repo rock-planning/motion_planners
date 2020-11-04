@@ -70,7 +70,7 @@ class MotionPlanners
 
         AbstractPlannerPtr planner_;
 
-    private:
+    protected:
 
         std::shared_ptr<RobotModel> robot_model_;
 
@@ -79,8 +79,6 @@ class MotionPlanners
         std::vector< std::pair<std::string, std::string> > collision_object_names_;
 
         kinematics_library::KinematicsFactory kinematics_factory_;
-
-        Config config_;
 
         std::vector< std::pair<std::string,urdf::Joint> > planning_group_joints_;
 
@@ -105,6 +103,15 @@ class MotionPlanners
         std::vector <std::pair<std::string,std::string> > assignDisableCollisionObject(const CollisionInformation &disabled_collision_pair);
 
         bool checkNaN(base::samples::Joints joint_value);
+
+        bool assignKinematicsToRobotModel(const kinematics_library::KinematicsConfig &kinematics_config, 
+                                          kinematics_library::AbstractKinematicPtr &robot_kinematics,
+                                          PlannerStatus &planner_status);
+
+    private:
+        Config config_;
+
+        kinematics_library::AbstractKinematicPtr kin_solver_;
 };
 
 };

@@ -6,7 +6,6 @@
 #include <base/samples/Joints.hpp>
 #include <kinematics_library/KinematicsConfig.hpp>
 
-
 namespace motion_planners
 {
 
@@ -33,10 +32,13 @@ struct KLCLink
 
 struct KLCConstraint
 {
-    KLCLink active_chain;  
-    KLCLink passive_chain;
-    base::Pose active_chain_offset_pose;
-    base::Pose passive_chain_offset_pose;
+    // we plan for active chain and project the passive chain in active chain manifold.
+    std::string active_chain_planning_group;
+    std::string active_chain_kinematic_name;
+    std::string passive_chain_planning_group;
+    std::string passive_chain_kinematic_name;
+    //base::Pose active_chain_offset_pose;
+    //base::Pose passive_chain_offset_pose;
 };
 
 struct ConstraintPlanning
@@ -57,6 +59,14 @@ struct ConstraintPlanning
     // goal in joint space
     base::samples::Joints target_joints_value;
     
+};
+
+struct KLCConfig
+{
+    // Kinematic Loop Closure constraint
+    kinematics_library::KinematicsConfig passive_chain_kin_config;   // passive arm
+    // Kinematic Loop Closure constraint
+    KLCConstraint klc_constraint;    
 };
 
 struct PlannerStatus

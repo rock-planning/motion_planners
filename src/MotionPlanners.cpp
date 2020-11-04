@@ -18,43 +18,41 @@ MotionPlanners::~MotionPlanners()
 
 bool MotionPlanners::initialize(PlannerStatus &planner_status)
 {
+    // create robotmodel
+    robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config));
+
     // CAUTION: Don't use different collision library for robot and world.
     // IN FCL wrapper the base pointer is downcasted.
     collision_detection::AbstractCollisionPtr robot_collision_detector = collision_factory_.getCollisionDetector( config_.env_config.collision_detection_config );
-    collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector( config_.env_config.collision_detection_config );
-    // get the kinematics solver
-    kinematics_library::AbstractKinematicPtr robot_kinematics =  kinematics_factory_.getKinematicsSolver(config_.planner_config.kinematics_config, 
-                                                                                                         planner_status.kinematic_status);
-    if(robot_kinematics==NULL)
-    {
-        planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
-        return false;
-    }
-
-    // initialise robot model    
-    robot_model_.reset(new RobotModel(config_.planner_config.robot_model_config));
+    collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector( config_.env_config.collision_detection_config );    
+    // add the collision detector to the robot model
     robot_model_->setRobotCollisionDetector(robot_collision_detector);
     robot_model_->setWorldCollisionDetector(world_collision_detector); 
-    robot_model_->setKinematicsSolver(robot_kinematics);
+  
+    
+    // get the kinematics solver
+    if(!assignKinematicsToRobotModel(config_.planner_config.kinematics_config, kin_solver_, planner_status))
+        return false;
+
+    // initialise robot model    
     if(!robot_model_->initialization())
     {
         planner_status.statuscode = PlannerStatus::ROBOTMODEL_INITIALISATION_FAILED;
         return false;
     }
 
+    
+    // disable any collision with the environment
     robot_model_->setDisabledEnvironmentCollision(assignDisableCollisionObject(config_.env_config.disabled_collision_pair));
 
+    // planner
     PlannerFactory planner_factory;
-
     planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
-
     if(!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config))
     {
         planner_status.statuscode = PlannerStatus::PLANNER_INITIALISATION_FAILED;
         return false;
     }
-
-
     planning_group_joints_.clear();
     robot_model_->getPlanningGroupJointInformation(config_.planner_config.robot_model_config.planning_group_name, 
                                                    planning_group_joints_);
@@ -65,6 +63,24 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
 
     return true;
 }
+
+bool MotionPlanners::assignKinematicsToRobotModel(  const kinematics_library::KinematicsConfig &kinematics_config, 
+                                                    kinematics_library::AbstractKinematicPtr &robot_kinematics,
+                                                    PlannerStatus &planner_status)
+{
+
+    robot_kinematics = kinematics_factory_.getKinematicsSolver(kinematics_config, planner_status.kinematic_status);
+    if(robot_kinematics==NULL)
+    {
+        planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
+        return false;
+    }
+    // add the kinematic solver to the robot model
+    robot_model_->setKinematicsSolver(kinematics_config.config_name, robot_kinematics);
+
+    return true;
+}
+
 
 bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status )
 {    
@@ -208,7 +224,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
         goal_joint_status_.clear();
         goal_joint_status_.resize ( planning_group_joints_.size() );
 
-        robot_model_->robot_kinematics_->solveIK ( goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status );
+        kin_solver_->solveIK ( goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status );
 
         if ( planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND ) 
         {
@@ -305,11 +321,11 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
             return false;
 
     }
-    else if((constrainted_target.use_constraint == motion_planners::KLC_CONSTRAINT))
-    {
-        if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_pose, planner_status) )
-            return false;
-    }
+    // else if((constrainted_target.use_constraint == motion_planners::KLC_CONSTRAINT))
+    // {
+    //     if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_pose, planner_status) )        
+    //         return false;
+    // }
     else if((constrainted_target.use_constraint != motion_planners::NO_CONSTRAINT))
     {
         if(!assignPlanningRequest( start_jointvalues, constrainted_target.target_pose, planner_status) )
@@ -489,7 +505,6 @@ bool MotionPlanners::solve ( base::JointsTrajectory &solution, PlannerStatus &pl
     time_taken = elapsed.count();
 
     return res;
-
 }
 
 void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model)

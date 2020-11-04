@@ -8,7 +8,6 @@
 #include <collision_detection/CollisionConfig.hpp>
 #include <robot_model/RobotModelConfig.hpp>
 
-
 namespace motion_planners
 {
 
@@ -32,7 +31,6 @@ struct CollisionInformation
 {
     std::vector<CollisionLinkName> collision_link_names;
 };
-
 
 struct ModelObject
 {
@@ -62,16 +60,22 @@ enum PlannerLibrary
     STOMP, OMPL, TRAJOPT
 };
 
-
 struct PlannerConfig
 {
-    kinematics_library::KinematicsConfig kinematics_config; 
+    kinematics_library::KinematicsConfig kinematics_config;
     robot_model::RobotModelConfig robot_model_config;
     std::string planner_specific_config;
-//     double distance;
     enum PlannerLibrary planner;
 };
 
+struct DualArmPlannerConfig
+{    
+    kinematics_library::KinematicsConfig active_chain_kin_config;    // active arm 
+    kinematics_library::KinematicsConfig passive_chain_kin_config;   // passive arm
+    robot_model::RobotModelConfig robot_model_config;
+    std::string planner_specific_config;
+    enum PlannerLibrary planner;
+};
 
 struct EnvironmentConfig
 {
@@ -89,6 +93,8 @@ struct Config
     PlannerConfig planner_config;
     EnvironmentConfig env_config;
 };
+
+
 
 }// end motion_planners
 #endif // PLANNERSTATUS_HPP

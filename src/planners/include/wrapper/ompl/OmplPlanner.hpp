@@ -55,7 +55,9 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         base::samples::RigidBodyState start_pose_, goal_pose_;
         // kinematics loop closure
         base::samples::RigidBodyState active_chain_pose_, passive_chain_pose_;
-        base::samples::RigidBodyState klc_offset_pose_;
+        Eigen::Affine3d klc_offset_pose_, passive_active_offset_;
+        kinematics_library::AbstractKinematicPtr active_chain_kin_solver_, passive_chain_kin_solver_;
+        std::vector<base::commands::Joints> passive_chain_projected_state_;
         //base::Pose klc_pose_;
         std::vector<std::string> passive_chain_names_;
         base::JointsTrajectory passive_chain_solution_;
@@ -102,7 +104,14 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool kinematicLoopClosureProjection(const base::samples::Joints &joint_values, 
                                             std::vector<base::commands::Joints> &projected_state);
 
-        void setAffine(const base::Vector3d &position, const base::Quaterniond &orientation, Eigen::Affine3d &aff);
+        bool calculateKLCOffset();
+
+        bool checkPassiveChainCollision(PlannerStatus &planner_status);
+
+        bool calculatePassiveChainIKSoln(const base::samples::Joints &active_chain_joints, const base::samples::Joints &passive_chain_joints, 
+                                         std::vector<base::commands::Joints> &passive_chain_iksoln, PlannerStatus &planner_status);
+        
+
 
 };
 }// end namespace motion_planners
