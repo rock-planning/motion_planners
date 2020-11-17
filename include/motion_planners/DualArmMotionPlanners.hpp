@@ -15,7 +15,7 @@ public:
 
     bool assignDualArmPlanningRequest( const base::samples::Joints &start_jointvalues, 
                                        const base::samples::Joints &target_jointvalues, PlannerStatus &planner_status);
-
+                                       
 private:
     kinematics_library::AbstractKinematicPtr active_chain_kin_solver_, passive_chain_kin_solver_;
     KLCConfig klc_config_;

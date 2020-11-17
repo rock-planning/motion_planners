@@ -45,8 +45,8 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
         void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;};
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
-        base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();};
-        size_t getNumOfIterationsUsed(){return 0;}
+        base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();}
+        size_t getNumOfIterationsUsed(){return 0;}        
     private:
 
         std::map <std::string, double> lower_limits_;
@@ -59,7 +59,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         kinematics_library::AbstractKinematicPtr active_chain_kin_solver_, passive_chain_kin_solver_;
         std::vector<base::commands::Joints> passive_chain_projected_state_;
         //base::Pose klc_pose_;
-        std::vector<std::string> passive_chain_names_;
+        //std::vector<std::string> passive_chain_names_;
         base::JointsTrajectory passive_chain_solution_;
         ConstraintPlanning constraints_;
         double collision_cost_;
@@ -111,7 +111,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool calculatePassiveChainIKSoln(const base::samples::Joints &active_chain_joints, const base::samples::Joints &passive_chain_joints, 
                                          std::vector<base::commands::Joints> &passive_chain_iksoln, PlannerStatus &planner_status);
         
-
+        void convertOmplStateToBaseJoints(const ompl::base::State *state, base::samples::Joints &joint_values);
 
 };
 }// end namespace motion_planners
