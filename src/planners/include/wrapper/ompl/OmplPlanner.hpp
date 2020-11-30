@@ -55,11 +55,9 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         base::samples::RigidBodyState start_pose_, goal_pose_;
         // kinematics loop closure
         base::samples::RigidBodyState active_chain_pose_, passive_chain_pose_;
-        Eigen::Affine3d klc_offset_pose_, passive_active_offset_;
+        Eigen::Affine3d klc_offset_pose_, passive_active_offset_;        
         kinematics_library::AbstractKinematicPtr active_chain_kin_solver_, passive_chain_kin_solver_;
         std::vector<base::commands::Joints> passive_chain_projected_state_;
-        //base::Pose klc_pose_;
-        //std::vector<std::string> passive_chain_names_;
         base::JointsTrajectory passive_chain_solution_;
         ConstraintPlanning constraints_;
         double collision_cost_;
@@ -112,7 +110,6 @@ class OmplPlanner: public motion_planners::AbstractPlanner
                                          std::vector<base::commands::Joints> &passive_chain_iksoln, PlannerStatus &planner_status);
         
         void convertOmplStateToBaseJoints(const ompl::base::State *state, base::samples::Joints &joint_values);
-
 };
 }// end namespace motion_planners
 #endif // OMPLPLANNER_HPP

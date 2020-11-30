@@ -199,30 +199,30 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
         LOG_DEBUG_S<<"[OmplPlanner]: Found solution with size "<<solution_path_ptr_->getStates().size();
         std::cout<<"Solution found before simplifying with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
         
-
         ompl::geometric::PathSimplifier path_simplifier(space_information);
-        //simplify the solution
-        //simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
+        if(constraints_.use_constraint != motion_planners::KLC_CONSTRAINT )
+        {            
+            //simplify the solution
+            simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
+            
+            // Single arm planner
+            solution.resize(planning_group_joints_.size(), solution_path_ptr_->getStates().size());
+            for(size_t i = 0; i < planning_group_joints_.size(); ++i)
+                solution.names.at(i) = planning_group_joints_.at(i).first;
+        }
+        else
+        {        
+            // dual arm planner
+            int dual_arm_sol_size = planning_group_joints_.size()+ passive_chain_solution_.names.size();
+            solution.resize(dual_arm_sol_size, solution_path_ptr_->getStates().size());
 
-        // TODO
-        // Single arm planner
-        //solution.resize(planning_group_joints_.size(), solution_path_ptr_->getStates().size());
-        //for(size_t i = 0; i < planning_group_joints_.size(); ++i)
-        //    solution.names.at(i) = planning_group_joints_.at(i).first;
+            for(size_t i = 0; i < planning_group_joints_.size(); ++i)
+                solution.names.at(i) = planning_group_joints_.at(i).first;
 
-        // dual arm planner
-        int dual_arm_sol_size = planning_group_joints_.size()+ passive_chain_solution_.names.size();
-        solution.resize(dual_arm_sol_size, solution_path_ptr_->getStates().size());
-
-        for(size_t i = 0; i < planning_group_joints_.size(); ++i)
-            solution.names.at(i) = planning_group_joints_.at(i).first;
-
-        for(size_t i = planning_group_joints_.size(); i < dual_arm_sol_size; ++i)
-            solution.names.at(i) = passive_chain_solution_.names.at(i-planning_group_joints_.size());
-
-        std::cout<<"Solution "<<solution.names.size()<<"  "<<solution.getTimeSteps()<<"  "<<solution.getNumberOfJoints()<<std::endl;
-        ///////////////////////////////////////////////////////////////
-        
+            for(size_t i = planning_group_joints_.size(); i < dual_arm_sol_size; ++i)
+                solution.names.at(i) = passive_chain_solution_.names.at(i-planning_group_joints_.size());
+        }
+                
         for(std::size_t i = 0; i < solution_path_ptr_->getStates().size(); i++)
         {
             ompl::base::RealVectorStateSpace::StateType* x=(ompl::base::RealVectorStateSpace::StateType*) solution_path_ptr_->getState(i);           
@@ -233,9 +233,6 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
                     solution.elements.at(j).at(i).position = x->values[j];
                 // we need to go through the simplified soln and get the passive joint
                 // No need to check the collision as it was checked while simplifying the solution
-
-
-
                 if(constraints_.use_constraint == motion_planners::KLC_CONSTRAINT)
                 {
                     // convert the ompl state to base joint type
@@ -251,29 +248,10 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
                         return false;
                     }  
                     // store the passive chain solution
-                    // for(std::size_t ii = 0; ii < passive_chain_iksoln[0].names.size(); ii++)
-                    // {
-                    //     passive_chain_solution_.elements[i].push_back(base::JointState::Position( passive_chain_iksoln[0].elements[ii].position));       
-                    // } 
-                    // std::cout<<"Before apssive Solution "<<solution.elements.size()<<std::endl;
                     for(std::size_t ii = 0; ii < passive_chain_iksoln[0].names.size(); ii++)
                     {
-                        solution.elements.at(planning_group_joints_.size()+ii).at(i).position = passive_chain_iksoln[0].elements[ii].position;
-                        //passive_chain_solution_.elements[i].push_back(base::JointState::Position( passive_chain_iksoln[0].elements[i].position));       
+                        solution.elements.at(planning_group_joints_.size()+ii).at(i).position = passive_chain_iksoln[0].elements[ii].position;                        
                     }
-
-                    // kinematics_library::KinematicsStatus kinematics_status;
-                    // base::samples::RigidBodyState fk_act, fk_pas;   
-                    // if(!active_chain_kin_solver_->solveFK(active_joint_values, fk_act, kinematics_status))        
-                    // return false;
-                                        
-                    // if(!passive_chain_kin_solver_->solveFK(passive_chain_iksoln[0], fk_pas, kinematics_status))        
-                    // return false;
-
-                    // Eigen::Affine3d off = (passive_active_offset_*fk_act).inverse()  * fk_pas;
-                    // std::cout<<"cal off \n"<<off.translation()<<"\n"<<off.rotation()<<std::endl;
-                    // std::cout<<"act off \n"<<klc_offset_pose_.translation()<<"\n"<<klc_offset_pose_.rotation()<<std::endl;
-                    
                 }
             }
             else
@@ -300,9 +278,7 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
                 for(size_t j = 0; j < planning_group_joints_.size(); j++)
                     solution.elements.at(j).at(i).position = ik_solution[0].elements.at(j).position;                   
             }   
-        }
-        std::cout<<"Solution found after simplifying with size = "<<solution_path_ptr_->getStates().size()<<std::endl;
-        std::cout<<"Passive chain "<<passive_chain_solution_.size()<<"  "<<passive_chain_solution_.elements[0].size()<<std::endl;
+        }        
         planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
     }
     else
@@ -420,7 +396,6 @@ bool OmplPlanner::kinematicLoopClosureProjection(   const base::samples::Joints 
 bool OmplPlanner::calculatePassiveChainIKSoln(  const base::samples::Joints &active_chain_joints, const base::samples::Joints &passive_chain_joints, 
                                                 std::vector<base::commands::Joints> &passive_chain_iksoln, PlannerStatus &planner_status)
 {
-    // std::cout<<"calculatePassiveChainIKSoln"<<std::endl;
 
     base::samples::RigidBodyState active_chain_pose, passive_chain_pose;
      
@@ -433,45 +408,15 @@ bool OmplPlanner::calculatePassiveChainIKSoln(  const base::samples::Joints &act
     rTp = passive_active_offset_ * rTa * klc_offset_pose_;
     // do IK for the passive pose
     passive_chain_pose.setTransform(rTp);
+ 
     passive_chain_pose.sourceFrame = passive_chain_pose_.sourceFrame;
     passive_chain_pose.targetFrame = passive_chain_pose_.targetFrame;
     std::vector<base::commands::Joints> ik_solution;
-
-
-    //  std::cout<<"Frame = "<<passive_chain_pose_.sourceFrame<<"  "<<passive_chain_pose_.targetFrame<<std::endl;
-    //  std::cout<<"Frame = "<<active_chain_pose.sourceFrame<<"  "<<active_chain_pose.targetFrame<<std::endl;
-
-    //  std::cout<<"calculatePassiveChainIKSoln Active chain start Affine \n"<<rTa.translation()<<std::endl;
-    //  std::cout<<"calculatePassiveChainIKSoln Passive chain start Affine \n"<<rTp.translation()<<std::endl;
-
-    //  std::cout<<"KLC offset\n"<<klc_offset_pose_.translation()<<std::endl;
-
-    //  std::cout<<"calculatePassiveChainIKSoln Chain pose/n"<<active_chain_pose.position<<std::endl; 
-    //  std::cout<<"calculatePassiveChainIKSoln Passive pose/n"<<passive_chain_pose.position<<std::endl;
 
     if(!passive_chain_kin_solver_->solveIK(passive_chain_pose, passive_chain_joints, passive_chain_iksoln, planner_status.kinematic_status))
     {
         return false;
     }
-
-    //      std::cout<<"Frame = "<<passive_chain_pose_.sourceFrame<<"  "<<passive_chain_pose_.targetFrame<<std::endl;
-    //  std::cout<<"Frame = "<<active_chain_pose.sourceFrame<<"  "<<active_chain_pose.targetFrame<<std::endl;
-
-    //  std::cout<<"calculatePassiveChainIKSoln Active chain start Affine \n"<<rTa.translation()<<std::endl;
-    //  std::cout<<"calculatePassiveChainIKSoln Passive chain start Affine \n"<<rTp.translation()<<std::endl;
-
-    //  std::cout<<"KLC offset\n"<<klc_offset_pose_.translation()<<std::endl;
-
-    //  std::cout<<"calculatePassiveChainIKSoln Chain pose/n"<<active_chain_pose.position<<std::endl; 
-    //  std::cout<<"calculatePassiveChainIKSoln Passive pose/n"<<passive_chain_pose.position<<std::endl;
-
-
-    // std::cout<<"-------------- calculatePassiveChainIKSoln Joint value -------------"<<std::endl;
-    // for(int i = 0; i<active_chain_joints.elements.size();i++ )
-    //     std::cout<<active_chain_joints.names.at(i)<<"  ="<<active_chain_joints.elements.at(i).position<<std::endl;
-    // for(int i = 0; i<passive_chain_iksoln[0].elements.size();i++ )
-    //     std::cout<<passive_chain_iksoln[0].names.at(i)<<"  ="<<passive_chain_iksoln[0].elements.at(i).position<<std::endl;
-    // std::cout<<"---------------------------"<<std::endl; 
 
     return true;
 }
@@ -494,20 +439,9 @@ bool OmplPlanner::checkPassiveChainCollision(PlannerStatus &planner_status)
         return false;
     }
 
-
-    // std::cout<<"IK sol"<<std::endl;
-    // for(int i = 0; i<passive_chain_iksoln[0].elements.size();i++ )
-    //     std::cout<<passive_chain_iksoln[0].names.at(i)<<"  ="<<passive_chain_iksoln[0].elements.at(i).position<<std::endl;
-
     robot_model_->updateJointGroup(passive_chain_iksoln[0]);
     if(!robot_model_->isStateValid(collision_cost_))
     {
-    //     std::vector< std::pair<std::string, std::string> > collision_object_names_;
-    //             collision_object_names_ = robot_model_->getCollidedObjectsNames();
-    //           for(auto it = collision_object_names_.begin(); it !=collision_object_names_.end(); ++it)
-    // {
-    //     std::cout<<it->first<<"  "<<it->second<<std::endl;
-    // }
         planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;
         return false;
     }
@@ -638,20 +572,7 @@ bool OmplPlanner::solveTaskInCartesianSpace(base::JointsTrajectory &solution, Pl
     cartesian_space_bounds.setHigh(5 , upper_limits_["yaw"] );
     cartesian_space_start->values[5] = start_pose_.getYaw();
     cartesian_space_goal->values[5] = goal_pose_.getYaw();
-    
-    // std::cout<<cartesian_space_start->values[0]<<"  "<<cartesian_space_start->values[1]<<"  "<<cartesian_space_start->values[2]<<"  "<<cartesian_space_start->values[3]<<"  "<<cartesian_space_start->values[4]<<"  "<<cartesian_space_start->values[5]<<std::endl;
-    // std::cout<<cartesian_space_goal->values[0]<<"  "<<cartesian_space_goal->values[1]<<"  "<<cartesian_space_goal->values[2]<<"  "<<cartesian_space_goal->values[3]<<"  "<<cartesian_space_goal->values[4]<<"  "<<cartesian_space_goal->values[5]<<std::endl;
-    // std::cout<<"Low = "<<std::endl;
-    // for(int i = 0; i< cartesian_space_bounds.low.size(); i++)
-    // {
-    //     std::cout<<cartesian_space_bounds.low.at(i)<<" ";
-    // }
-    // std::cout<<"\nHigh = "<<std::endl;
-    // for(int i = 0; i< cartesian_space_bounds.high.size(); i++)
-    // {
-    //     std::cout<<cartesian_space_bounds.high.at(i)<<" ";        
-    // }
-    // std::cout<<std::endl;
+ 
     cartesian_space->as<ompl::base::RealVectorStateSpace>()->setBounds(cartesian_space_bounds);
     ompl::base::SpaceInformationPtr  cartesian_space_Space_Information_ptr (new ompl::base::SpaceInformation(cartesian_space));
 
@@ -691,9 +612,9 @@ void OmplPlanner::simplifySolution(const ompl::base::ProblemDefinitionPtr &probl
             else
             {
                 path_simplifier.simplify(static_cast<ompl::geometric::PathGeometric &>(*p), duration);
-                std::cout<<"Finisihed simlfying"<<std::endl;
+                LOG_INFO("[OmplPlanner]: Finished simplifying");
                 path_simplifier.smoothBSpline(static_cast<ompl::geometric::PathGeometric &>(*p), step_size);
-                std::cout<<"Finisihed smoothing"<<std::endl;
+                LOG_INFO("[OmplPlanner]: Finished smoothing");
             }
 
             double simplify_time = ompl::time::seconds(ompl::time::now() - start);
@@ -754,8 +675,6 @@ bool OmplPlanner::calculateKLCOffset()
     if(!active_chain_kin_solver_->solveFK(start_joint_values_, active_chain_pose_, solver_status))        
         return false;
 
-    //std::cout<<"Active chain start pose \n"<<active_chain_pose_.position<<std::endl;
-
     // get the joint angles for the passive chain and do the FK.
     base::samples::Joints passive_chain_joints;        
     if(!robot_model_->getPlanningGroupJointInformation(constraints_.klc_constraint.passive_chain_planning_group, 
@@ -769,24 +688,14 @@ bool OmplPlanner::calculateKLCOffset()
     passive_chain_solution_.resize(passive_chain_joints.size());
     passive_chain_solution_.names = passive_chain_joints.names;
 
-    //  std::cout<<"-------------- calculateKLCOffset Joint value -------------"<<std::endl;
-    //  for(int i = 0; i<start_joint_values_.elements.size();i++ )
-    //      std::cout<<start_joint_values_.names.at(i)<<"  ="<<start_joint_values_.elements.at(i).position<<std::endl;
-    // for(int i = 0; i<passive_chain_joints.elements.size();i++ )
-    //     std::cout<<passive_chain_joints.names.at(i)<<"  ="<<passive_chain_joints.elements.at(i).position<<std::endl;
-    // std::cout<<"---------------------------"<<std::endl;
-
     // do forward kinematic(FK) for the passive chain      
     if(!passive_chain_kin_solver_->solveFK(passive_chain_joints, passive_chain_pose_, solver_status))
-    {std::cout<<"kkdddkk"<<std::endl;
-        return false;    }
+    {
+        return false;    
+    }
 
-    //std::cout<<"Passive chain start pose \n"<<passive_chain_pose_.position<<std::endl;
-
-    // get the offset between the passive to chain base frame    
+    // get the offset between the passive to chain base frame
     passive_active_offset_ = passive_chain_kin_solver_->transformPose( passive_chain_pose_.sourceFrame, active_chain_pose_.sourceFrame);
-
-    //std::cout<<passive_chain_pose_.sourceFrame<<"  "<<active_chain_pose_.sourceFrame<<std::endl;
 
     Eigen::Affine3d  rTp, rTa;
     rTa = active_chain_pose_.getTransform();
@@ -794,24 +703,17 @@ bool OmplPlanner::calculateKLCOffset()
     // Offset from active chain end-eff to passive chain end-eff. This offset is the constraint    
     klc_offset_pose_ = (passive_active_offset_*rTa).inverse()  * rTp;
 
-
-
     //assign the current state
     passive_chain_projected_state_.push_back(passive_chain_joints);
-   
 
-      std::cout<<"Active chain start Affine \n"<<rTa.translation()<<std::endl;
-      std::cout<<"Passive chain start Affine \n"<<rTp.translation()<<std::endl;
-
+    // std::cout<<"Active chain start Affine \n"<<rTa.translation()<<std::endl;
+    // std::cout<<"Passive chain start Affine \n"<<rTp.translation()<<std::endl;
     //  std::cout<<"passive_active_offset_ offset\n"<<passive_active_offset_.translation()<<std::endl;
     //  std::cout<<"KLC offset\n"<<klc_offset_pose_.translation()<<std::endl;
-    //  std::cout<<"KLC offset check \n"<<(passive_active_offset_*rTa*klc_offset_pose_).translation()<<std::endl;
-    // std::cout<<"kkkk"<<std::endl;
+    //  std::cout<<"KLC offset\n"<<klc_offset_pose_.rotation()<<std::endl;
 
     return true;
 }
-
-
 
 void OmplPlanner::setPlannerStatus(const ompl::base::PlannerStatus::StatusType &ompl_status, motion_planners::PlannerStatus &planner_status)
 {
@@ -838,6 +740,5 @@ void OmplPlanner::setPlannerStatus(const ompl::base::PlannerStatus::StatusType &
         }
     }
 }
-
 
 }// end namespace motion_planners

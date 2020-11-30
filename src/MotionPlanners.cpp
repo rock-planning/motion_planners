@@ -3,9 +3,7 @@
 
 #include <motion_planners/MotionPlanners.hpp>
 
-
 using namespace motion_planners;
-
 
 MotionPlanners::MotionPlanners(Config config)
 {
@@ -14,7 +12,6 @@ MotionPlanners::MotionPlanners(Config config)
 
 MotionPlanners::~MotionPlanners()
 {}
-
 
 bool MotionPlanners::initialize(PlannerStatus &planner_status)
 {
@@ -27,8 +24,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     collision_detection::AbstractCollisionPtr world_collision_detector = collision_factory_.getCollisionDetector( config_.env_config.collision_detection_config );    
     // add the collision detector to the robot model
     robot_model_->setRobotCollisionDetector(robot_collision_detector);
-    robot_model_->setWorldCollisionDetector(world_collision_detector); 
-  
+    robot_model_->setWorldCollisionDetector(world_collision_detector);  
     
     // get the kinematics solver
     if(!assignKinematicsToRobotModel(config_.planner_config.kinematics_config, kin_solver_, planner_status))
@@ -40,7 +36,6 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
         planner_status.statuscode = PlannerStatus::ROBOTMODEL_INITIALISATION_FAILED;
         return false;
     }
-
     
     // disable any collision with the environment
     robot_model_->setDisabledEnvironmentCollision(assignDisableCollisionObject(config_.env_config.disabled_collision_pair));
@@ -77,7 +72,7 @@ bool MotionPlanners::assignKinematicsToRobotModel(  const kinematics_library::Ki
     }
     // add the kinematic solver to the robot model
     robot_model_->setKinematicsSolver(kinematics_config.config_name, robot_kinematics);
-
+    
     return true;
 }
 
