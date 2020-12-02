@@ -6,5 +6,5 @@ find_package(Rock)
 
 add_subdirectory(src/planners)
 
-rock_init(motion_planners 0.1)
+rock_init(motion_planners 0.2)
 rock_standard_layout()

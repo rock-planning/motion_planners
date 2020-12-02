@@ -1,6 +1,6 @@
 project(motion_planners)
 
-set(MOTION_PLANNERS 0.1)
+set(MOTION_PLANNERS 0.2)
 set(TARGET_NAME ${PROJECT_NAME})
 
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
