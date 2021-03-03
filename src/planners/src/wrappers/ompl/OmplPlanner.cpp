@@ -7,6 +7,7 @@ OmplPlanner::OmplPlanner()
 {
     klc_offset_pose_.setIdentity();
     passive_active_offset_.setIdentity();
+    planning_group_joints_size_ = 0;
 }
 
 OmplPlanner::~OmplPlanner()
@@ -28,6 +29,7 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& ro
     ompl_config_ = handle_ompl_config::getOmplConfig(ompl_config_node);    
 
     number_of_dimensions_= planning_group_joints_.size();
+    planning_group_joints_size_ = planning_group_joints_.size();
     // Joint and Cartesian constraint names
     orientation_constraint_names_   = {"roll", "pitch", "yaw" };
     position_constraint_names_      = {"x", "y", "z" };
@@ -47,14 +49,14 @@ void OmplPlanner::setStartGoalTrajectory(const base::samples::Joints &start, con
 {    
     start_joint_values_ = start;
     goal_joint_values_ = goal;
-    std::cout<<"Start = \n";
+
+    LOG_INFO("[OmplPlanner]: Start joint angles ");    
     for(int i =0; i < start_joint_values_.size(); i++)
-        std::cout<<start_joint_values_.names[i]<<" = "<<start_joint_values_.elements[i].position<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<"Goal = \n";
+        LOG_INFO("[OmplPlanner]: Joint name: %s = %f ",start_joint_values_.names[i].c_str(), start_joint_values_.elements[i].position); 
+
+    LOG_INFO("[OmplPlanner]: Goal joint angles ");
     for(int i =0; i < goal_joint_values_.size(); i++)
-        std::cout<<goal_joint_values_.names[i]<<" = "<<goal_joint_values_.elements[i].position<<std::endl;
-    std::cout<<std::endl;
+        LOG_INFO("[OmplPlanner]: Joint name: %s = %f ",goal_joint_values_.names[i].c_str(), goal_joint_values_.elements[i].position); 
     
 }
 
@@ -206,21 +208,21 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
             simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
             
             // Single arm planner
-            solution.resize(planning_group_joints_.size(), solution_path_ptr_->getStates().size());
-            for(size_t i = 0; i < planning_group_joints_.size(); ++i)
+            solution.resize(planning_group_joints_size_, solution_path_ptr_->getStates().size());
+            for(size_t i = 0; i < planning_group_joints_size_; ++i)
                 solution.names.at(i) = planning_group_joints_.at(i).first;
         }
         else
         {        
             // dual arm planner
-            int dual_arm_sol_size = planning_group_joints_.size()+ passive_chain_solution_.names.size();
+            int dual_arm_sol_size = planning_group_joints_size_+ passive_chain_solution_.names.size();
             solution.resize(dual_arm_sol_size, solution_path_ptr_->getStates().size());
 
-            for(size_t i = 0; i < planning_group_joints_.size(); ++i)
+            for(size_t i = 0; i < planning_group_joints_size_; ++i)
                 solution.names.at(i) = planning_group_joints_.at(i).first;
 
-            for(size_t i = planning_group_joints_.size(); i < dual_arm_sol_size; ++i)
-                solution.names.at(i) = passive_chain_solution_.names.at(i-planning_group_joints_.size());
+            for(size_t i = planning_group_joints_size_; i < dual_arm_sol_size; ++i)
+                solution.names.at(i) = passive_chain_solution_.names.at(i-planning_group_joints_size_);
         }
                 
         for(std::size_t i = 0; i < solution_path_ptr_->getStates().size(); i++)
@@ -229,7 +231,7 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
             
             if(constraints_.use_constraint != motion_planners::POSE_CONSTRAINT)
             {   
-                for(size_t j = 0; j < number_of_dimensions_; j++)
+                for(size_t j = 0; j < planning_group_joints_size_; j++)
                     solution.elements.at(j).at(i).position = x->values[j];
                 // we need to go through the simplified soln and get the passive joint
                 // No need to check the collision as it was checked while simplifying the solution
@@ -250,7 +252,7 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
                     // store the passive chain solution
                     for(std::size_t ii = 0; ii < passive_chain_iksoln[0].names.size(); ii++)
                     {
-                        solution.elements.at(planning_group_joints_.size()+ii).at(i).position = passive_chain_iksoln[0].elements[ii].position;                        
+                        solution.elements.at(planning_group_joints_size_+ii).at(i).position = passive_chain_iksoln[0].elements[ii].position;                        
                     }
                 }
             }
@@ -275,7 +277,7 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
                 if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
                     return false;
                 
-                for(size_t j = 0; j < planning_group_joints_.size(); j++)
+                for(size_t j = 0; j < planning_group_joints_size_; j++)
                     solution.elements.at(j).at(i).position = ik_solution[0].elements.at(j).position;                   
             }   
         }        

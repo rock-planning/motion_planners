@@ -53,6 +53,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         std::map <std::string, double> upper_limits_;
         base::samples::Joints start_joint_values_, goal_joint_values_;
         base::samples::RigidBodyState start_pose_, goal_pose_;
+        std::size_t planning_group_joints_size_;
         // kinematics loop closure
         base::samples::RigidBodyState active_chain_pose_, passive_chain_pose_;
         Eigen::Affine3d klc_offset_pose_, passive_active_offset_;        
