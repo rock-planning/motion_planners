@@ -229,7 +229,10 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
         {
             ompl::base::RealVectorStateSpace::StateType* x=(ompl::base::RealVectorStateSpace::StateType*) solution_path_ptr_->getState(i);           
             
-            if(constraints_.use_constraint != motion_planners::POSE_CONSTRAINT)
+            if( (constraints_.use_constraint != motion_planners::POSE_CONSTRAINT)&&
+                (constraints_.use_constraint != motion_planners::POSITION_CONSTRAINT) &&
+                (constraints_.use_constraint != motion_planners::ORIENTATION_CONSTRAINT) )
+
             {   
                 for(size_t j = 0; j < planning_group_joints_size_; j++)
                     solution.elements.at(j).at(i).position = x->values[j];
