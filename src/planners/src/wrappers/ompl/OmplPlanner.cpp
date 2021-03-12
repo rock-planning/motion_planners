@@ -28,7 +28,9 @@ bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& ro
     const YAML::Node& ompl_config_node = input_config["ompl_config"];
     ompl_config_ = handle_ompl_config::getOmplConfig(ompl_config_node);    
 
-    number_of_dimensions_= planning_group_joints_.size();
+    // planninng DOF in cartesian space
+    number_of_dimensions_ = 6;     // 6 dof - 3 Position + 3 orientation
+    // planning DOF in joint space
     planning_group_joints_size_ = planning_group_joints_.size();
     // Joint and Cartesian constraint names
     orientation_constraint_names_   = {"roll", "pitch", "yaw" };
@@ -65,17 +67,17 @@ bool OmplPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajecto
 
 bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
 {
-   
+
     // now we assign constraint if available
     if(constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT)
     {
-        if( (constraints_.joint_constraint.value.size() != number_of_dimensions_) ||  
-            (constraints_.joint_constraint.tolerance.size() != number_of_dimensions_))
+        if( (constraints_.joint_constraint.value.size() != planning_group_joints_size_) ||  
+            (constraints_.joint_constraint.tolerance.size() != planning_group_joints_size_))
         {
             planner_status.statuscode = PlannerStatus::JOINT_CONSTRAINT_SIZE_ERROR;
             return false;
         }
-        for(size_t i = 0; i < number_of_dimensions_; i++)
+        for(size_t i = 0; i < planning_group_joints_size_; i++)
         {
             lower_limits_[planning_group_joints_.at(i).first] = constraints_.joint_constraint.value(i) - constraints_.joint_constraint.tolerance(i);
             upper_limits_[planning_group_joints_.at(i).first] = constraints_.joint_constraint.value(i) + constraints_.joint_constraint.tolerance(i);
@@ -99,15 +101,15 @@ bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, Planne
         return false;
     }
     
-    ompl::base::StateSpacePtr joint_space(new ompl::base::RealVectorStateSpace(number_of_dimensions_));
-    ompl::base::RealVectorBounds joint_space_bounds(number_of_dimensions_);
+    ompl::base::StateSpacePtr joint_space(new ompl::base::RealVectorStateSpace(planning_group_joints_size_));
+    ompl::base::RealVectorBounds joint_space_bounds(planning_group_joints_size_);
 
     ompl::base::ScopedState<ompl::base::RealVectorStateSpace> joint_space_start(joint_space);
     ompl::base::ScopedState<ompl::base::RealVectorStateSpace> joint_space_goal(joint_space);
 
     std::string joint_name;
     LOG_DEBUG_S<<"[OmplPlanner]: SolveTaskInJointSpace";    
-    for(std::size_t i = 0; i< number_of_dimensions_; i++ )
+    for(std::size_t i = 0; i< planning_group_joints_size_; i++ )
     {
         joint_name = planning_group_joints_.at(i).first;
         joint_space_bounds.setLow(i, lower_limits_[joint_name] );
@@ -115,10 +117,10 @@ bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, Planne
         joint_space_start->values[i]= start_joint_values_[joint_name].position;
         joint_space_goal->values[i]= goal_joint_values_[joint_name].position;
 
-        LOG_DEBUG_S <<"Joint_name ["<<i+1<<"] = " <<joint_name<<": Lower bound = " << joint_space_bounds.low.at(i)
-                    <<"Higher bound = " <<joint_space_bounds.high.at(i)
-                    <<"Start value = "  <<joint_space_start->values[i]
-                    <<"Goal value = " <<joint_space_goal->values[i];        
+        LOG_DEBUG_S <<"Joint_name ["<<i+1<<"] = " <<joint_name<<" : Lower bound = " << joint_space_bounds.low.at(i)
+                    <<" Higher bound = " <<joint_space_bounds.high.at(i)
+                    <<" Start value = "  <<joint_space_start->values[i]
+                    <<" Goal value = " <<joint_space_goal->values[i];        
     }   
 
     joint_space->as<ompl::base::RealVectorStateSpace>()->setBounds(joint_space_bounds);
@@ -314,8 +316,6 @@ bool OmplPlanner::setLimitsFromConstraints( const std::vector<std::string> &valu
 
 bool OmplPlanner::setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_status)
 {
-    // 6 dof - 3 Position + 3 orientation
-    number_of_dimensions_ = 6;
 
     double x_start,y_start,z_start,roll_start,pitch_start,yaw_start,x_goal,y_goal,z_goal,roll_goal,pitch_goal,yaw_goal;
 
