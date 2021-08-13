@@ -700,7 +700,13 @@ bool OmplPlanner::calculateKLCOffset()
     }
 
     // get the offset between the passive to chain base frame
-    passive_active_offset_ = passive_chain_kin_solver_->transformPose( passive_chain_pose_.sourceFrame, active_chain_pose_.sourceFrame);
+    if(!passive_chain_kin_solver_->transformPose(passive_chain_pose_.sourceFrame, active_chain_pose_.sourceFrame, 
+                                                start_joint_values_, passive_active_offset_ ))
+    {
+        std::cout<<" Cannot able to do the transformation from"<<passive_chain_pose_.sourceFrame.c_str()<<"  "<<
+                    active_chain_pose_.sourceFrame.c_str()<<std::endl;
+        return false;
+    }
 
     Eigen::Affine3d  rTp, rTa;
     rTa = active_chain_pose_.getTransform();
