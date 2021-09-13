@@ -221,7 +221,8 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
 
         kin_solver_->solveIK ( goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status );
 
-        if ( planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND ) 
+        if ( planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND 
+            || planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION) 
         {
 
             for(std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
