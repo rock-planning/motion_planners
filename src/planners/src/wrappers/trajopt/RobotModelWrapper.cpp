@@ -1,11 +1,11 @@
 #include "wrapper/trajopt/RobotModelWrapper.h"
 #include "urdf_model/joint.h"
 
-typedef Matrix<float, 3, 4> Matrix4f;
+typedef Eigen::Matrix<float, 3, 4> Matrix4f;
 
 
 template <typename TElem>
-ostream& operator<<(ostream& os, const std::vector<TElem>& vec) {
+std::ostream& operator<<(std::ostream& os, const std::vector<TElem>& vec) {
     typedef typename vector<TElem>::const_iterator iter_t;
     const iter_t iter_begin = vec.begin();
     const iter_t iter_end   = vec.end();
