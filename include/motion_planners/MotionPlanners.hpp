@@ -64,7 +64,7 @@ class MotionPlanners
 
         bool handleGraspObject(const motion_planners::ModelObject &known_object);
 
-        CollisionInformation getCollidedObjectsNames();
+        collision_detection::CollisionLinksName getCollidedObjectsNames();
 
         base::JointsTrajectory planner_solution_;
 
@@ -100,7 +100,7 @@ class MotionPlanners
 
         void createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model);
         
-        std::vector <std::pair<std::string,std::string> > assignDisableCollisionObject(const CollisionInformation &disabled_collision_pair);
+        std::vector <std::pair<std::string,std::string> > assignDisableCollisionObject(const collision_detection::CollisionLinksName &disabled_collision_pair);
 
         bool checkNaN(base::samples::Joints joint_value);
 

@@ -521,19 +521,19 @@ void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_
     }
 }
 
-CollisionInformation MotionPlanners::getCollidedObjectsNames()
+collision_detection::CollisionLinksName MotionPlanners::getCollidedObjectsNames()
 {
-    CollisionInformation collision_info;
+    collision_detection::CollisionLinksName collided_links;
     
     for(auto it = collision_object_names_.begin(); it !=collision_object_names_.end(); ++it)
     {
-        CollisionLinkName collision_names(it->first, it->second);
-        collision_info.collision_link_names.push_back(collision_names);
+        collision_detection::CollisionLinkName collision_names(it->first, it->second);
+        collided_links.collision_link_names.push_back(collision_names);
     }
-    return collision_info;
+    return collided_links;
 }
 
-std::vector <std::pair<std::string,std::string> > MotionPlanners::assignDisableCollisionObject(const CollisionInformation &disabled_collision_pair)
+std::vector <std::pair<std::string,std::string> > MotionPlanners::assignDisableCollisionObject(const collision_detection::CollisionLinksName &disabled_collision_pair)
 {
     std::vector <std::pair<std::string,std::string> > collision_pair;
     
