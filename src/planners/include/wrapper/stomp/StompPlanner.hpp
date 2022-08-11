@@ -26,6 +26,8 @@ class StompPlanner: public motion_planners::AbstractPlanner
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+
+        bool reInitializePlanner(std::map<std::string, int> parameters);
         
         base::JointsTrajectory getInitialTrajectory();
 

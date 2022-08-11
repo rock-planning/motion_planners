@@ -63,7 +63,9 @@ void OmplPlanner::setStartGoalTrajectory(const base::samples::Joints &start, con
 }
 
 bool OmplPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajectory)
-{}
+{
+	return false;
+}
 
 bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
 {

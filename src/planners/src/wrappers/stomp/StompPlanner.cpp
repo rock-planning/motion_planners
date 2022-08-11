@@ -37,6 +37,25 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
     return true;    
 }
 
+bool StompPlanner::reInitializePlanner(std::map<std::string, int> parameters)
+{
+    if(!optimization_task_)
+    {
+        LOG_DEBUG_S<<"[reInitializePlanner] The stomp planner was not initialised before. This function should be called only if the planner was initialised before";
+        return false;
+    }
+
+    assert(planning_group_joints_name_.size()==stomp_config_.num_dimensions_);
+    stomp_config_.num_time_steps_ = parameters.begin()->second;
+    optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
+    optimization_task_->stompInitialize(1,1);
+    
+    num_iterations_ = 0;
+    
+    return true;
+
+}
+
 bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
     //optimization_task_->createPolicy();

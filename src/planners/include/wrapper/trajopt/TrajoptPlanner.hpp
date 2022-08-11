@@ -33,6 +33,8 @@ class TrajoptPlanner: public motion_planners::AbstractPlanner
         void setConstraints(const ConstraintPlanning constraints){};
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+
+        bool reInitializePlanner(std::map<std::string, int> parameters){return false;}
         
         base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();}
         
