@@ -27,7 +27,7 @@ class StompPlanner: public motion_planners::AbstractPlanner
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
 
-        bool reInitializePlanner(std::map<std::string, int> parameters);
+        bool reInitializePlanner(const int &num_time_steps);
         
         base::JointsTrajectory getInitialTrajectory();
 

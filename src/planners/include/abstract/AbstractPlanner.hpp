@@ -86,7 +86,7 @@ class AbstractPlanner
 
         virtual bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string planner_specfic) = 0;
 
-        virtual bool reInitializePlanner(std::map<std::string, int> parameters) = 0;
+        virtual bool reInitializePlanner(const int &num_time_steps) = 0;
 
         virtual bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status) = 0;
 
