@@ -41,8 +41,7 @@ bool StompPlanner::reInitializePlanner(const int &num_time_steps)
 {
     if(!optimization_task_ || !robot_model_)
     {
-        LOG_DEBUG_S<<"[reInitializePlanner] The stomp planner and robot model were not initialised before. 
-                      This function should be called only if the planner was initialised before";
+        LOG_DEBUG_S<<"[reInitializePlanner] The stomp planner and robot model were not initialised before. This function should be called only if the planner was initialised before";
         return false;
     }
 
