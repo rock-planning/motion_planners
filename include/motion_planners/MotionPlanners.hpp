@@ -64,6 +64,8 @@ class MotionPlanners
 
         bool handleGraspObject(const motion_planners::ModelObject &known_object);
 
+        RobotModelPtr getRobotModel(){return robot_model_;}
+
         collision_detection::CollisionLinksName getCollidedObjectsNames();
 
         base::JointsTrajectory planner_solution_;
