@@ -60,11 +60,12 @@ add_library(motion_planners SHARED
 
 target_link_libraries(motion_planners ${MOTIONPLANNER_DEP_LIBS} planner_factory)
 
-#escape any spaces present already
-string (REPLACE " " "\\ " TRAJOPT_INCLUDE_HEADER_SPACED "${TRAJOPT_INCLUDE_HEADER}")
-#convert cmake list to space separated
-string (REPLACE ";" " " TRAJOPT_INCLUDE_HEADER_SPACED "${TRAJOPT_INCLUDE_HEADER_SPACED}")
-set(PKGCONFIG_EXTRA_CFLAGS "-I${PLANNERS_PATH}/include ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER_SPACED}")
+set(PKGCONFIG_EXTRA_CFLAGS "-I${PLANNERS_PATH}/include -I${STOMP_PATH}/include")
+foreach(include ${TRAJOPT_INCLUDE_HEADER})
+    #escape any spaces
+    string (REPLACE " " "\\ " include "${include}")
+    set(PKGCONFIG_EXTRA_CFLAGS "${PKGCONFIG_EXTRA_CFLAGS} -I${include}")
+endforeach()
 #set(PKGCONFIG_EXTRA_LIBS "${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}")
 set(PKGCONFIG_EXTRA_LIBS "-lboost_system -lboost_filesystem -lboost_program_options -lyaml-cpp")
 set(PROJECT_DESCRIPTION "A framework for motion planning.")
