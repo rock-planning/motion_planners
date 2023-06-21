@@ -36,6 +36,8 @@ class MotionPlanners
 
         bool initialize(PlannerStatus &error_status);
 
+        bool reInitializePlanner();
+
         bool assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::Joints &target_jointvalues,
                                    PlannerStatus &planner_status);
 
