@@ -34,7 +34,7 @@ class TrajoptPlanner: public motion_planners::AbstractPlanner
 
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
 
-        bool reInitializePlanner(const int &num_time_steps){return false;}
+        bool reInitializePlanner(){return false;}
         
         base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();}
         

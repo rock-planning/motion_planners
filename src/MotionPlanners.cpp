@@ -59,6 +59,17 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     return true;
 }
 
+bool MotionPlanners::reInitializePlanner()
+{
+    // Only planner specific parameters are reset. Robotmodel, kinematic models are untouched
+
+    if(!planner_->reInitializePlanner())
+        return false;
+
+    return true;
+
+}
+
 bool MotionPlanners::assignKinematicsToRobotModel(  const kinematics_library::KinematicsConfig &kinematics_config, 
                                                     kinematics_library::AbstractKinematicPtr &robot_kinematics,
                                                     PlannerStatus &planner_status)

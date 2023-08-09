@@ -37,16 +37,13 @@ bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel>& r
     return true;    
 }
 
-bool StompPlanner::reInitializePlanner(const int &num_time_steps)
+bool StompPlanner::reInitializePlanner()
 {
     if(!optimization_task_ || !robot_model_)
     {
         LOG_DEBUG_S<<"[reInitializePlanner] The stomp planner and robot model were not initialised before. This function should be called only if the planner was initialised before";
         return false;
     }
-
-    assert(planning_group_joints_name_.size()==stomp_config_.num_dimensions_);
-    stomp_config_.num_time_steps_ = num_time_steps;
     optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
     optimization_task_->stompInitialize(1,1);
     
@@ -202,6 +199,7 @@ bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& traject
 
     optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
     optimization_task_->updatePolicy();   
+    //optimization_task_->createPolicy();   
 
     return true;
 }

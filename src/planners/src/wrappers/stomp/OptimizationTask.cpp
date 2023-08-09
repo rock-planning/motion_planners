@@ -52,11 +52,14 @@ void OptimizationTask::updateTrajectory(const base::samples::Joints &start, cons
         initial_trajectory_[d].head(stomp::TRAJECTORY_PADDING) 	= 1.0 * start.elements.at(d).position * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
         initial_trajectory_[d].tail(stomp::TRAJECTORY_PADDING) 	= 1.0 * goal.elements.at(d).position  * base::VectorXd::Ones(stomp::TRAJECTORY_PADDING); 
 
+        //std::cout<<"Joint "<<d<<"  "<<start.names[d].c_str()<<  start.elements.at(d).position<<"-------------"<<goal.elements.at(d).position<<"   "<<goal.names[d].c_str()<<std::endl;
+
         increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_ - 1);
 
         for (int i=0; i < stomp_config_.num_time_steps_; i++)
             initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);		
     } 
+    //std::cout<<"  "<<std::endl;
 }
 
 bool OptimizationTask::getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy)
@@ -114,10 +117,13 @@ void OptimizationTask::createPolicy()
 
 void OptimizationTask::updatePolicy()
 {
+    // If "createPolicy()" is used i.e setting the policy to min control cost (policy_->setToMinControlCost()). We always get the same result even if you
+    //   use planned trajectory as "predicted trajectory" 
     policy_.reset(new stomp::CovariantMovementPrimitive());
     policy_->initialize(stomp_config_.num_time_steps_, stomp_config_.num_dimensions_, stomp_config_.movement_duration_, derivative_costs_, initial_trajectory_);
-    policy_->setParametersAll(initial_trajectory_);
+    ////policy_->setParametersAll(initial_trajectory_);
     policy_->updateMinControlCostParameters(initial_trajectory_);
+    //policy_->setParametersAll(initial_trajectory_);
     vel_diff_matrix_ = policy_->getDifferentiationMatrix(stomp::STOMP_VELOCITY);
     acc_diff_matrix_ = policy_->getDifferentiationMatrix(stomp::STOMP_ACCELERATION);
 
@@ -166,7 +172,7 @@ bool OptimizationTask::execute( std::vector<base::VectorXd>& parameters,
     //std::chrono::duration<double> elapsed = finish_time - start_time;
     //std::cout << "Elapsed time colli: " << elapsed.count() << " s\n";    
     //costs = collision_costs_;    
-    //std::cout<<"COST = "<<costs<<std::endl;
+    //std::cout<<"COST = "<<costs.sum()<<std::endl;
 
     return true;    
 }

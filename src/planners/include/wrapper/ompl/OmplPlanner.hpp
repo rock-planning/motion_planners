@@ -42,7 +42,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path);
         bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);		
         void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
-        bool reInitializePlanner(const int &num_time_steps){return false;}
+        bool reInitializePlanner(){return false;}
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
         void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;};
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
