@@ -52,6 +52,8 @@ class MotionPlanners
 
         inline const base::samples::Joints &getGoalJointAngles(){return goal_joint_status_;};
 
+        inline const base::samples::Joints &getStartJointAngles(){return initial_joint_status_;};
+
         bool usePredictedTrajectory( base::JointsTrajectory &solution, PlannerStatus &planner_status);
 
         void setStartAndGoal();

@@ -54,12 +54,15 @@ void OptimizationTask::updateTrajectory(const base::samples::Joints &start, cons
 
         //std::cout<<"Joint "<<d<<"  "<<start.names[d].c_str()<<  start.elements.at(d).position<<"-------------"<<goal.elements.at(d).position<<"   "<<goal.names[d].c_str()<<std::endl;
 
-        increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_ - 1);
-
+        increment = (goal.elements.at(d).position - start.elements.at(d).position)/(stomp_config_.num_time_steps_-1);    
         for (int i=0; i < stomp_config_.num_time_steps_; i++)
-            initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = start.elements.at(d).position+(i*increment);		
+        {    initial_trajectory_[d]((stomp::TRAJECTORY_PADDING)+i) = start.elements.at(d).position+(i*increment);
+            //std::cout<<initial_trajectory_[d]((stomp::TRAJECTORY_PADDING)+i)<<"  ";
+        }   	
+        //std::cout<<std::endl; 
     } 
     //std::cout<<"  "<<std::endl;
+    
 }
 
 bool OptimizationTask::getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy)

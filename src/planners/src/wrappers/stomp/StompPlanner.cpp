@@ -138,31 +138,25 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 
     int start = stomp::DIFF_RULE_LENGTH -1;
     int end = (start + stomp_config_.num_time_steps_);
-    int diff = (end -start) ;
-    //int end = (start + stomp_config_.num_time_steps_ -1);
-    //int diff = (end -start) +1;
-     
     
     solution.names.resize(planning_group_joints_name_.size());
     solution.elements.resize(planning_group_joints_name_.size());
 
     for(int d = 0; d < stomp_config_.num_dimensions_; d++)           
     {
-	solution.names.at(d) = planning_group_joints_name_.at(d);
-	
-	//solution.elements.at(d).resize(diff+2);
-	solution.elements.at(d).resize(stomp_config_.num_time_steps_+2);
-	
-	//for( int i = 0; i <= diff+1; i++)	
-	for( int i = 0; i < stomp_config_.num_time_steps_+2; i++)	
-	    solution.elements.at(d).at(i).position =  optimization_task_->policy_->parameters_all_[d](i+(start-1));
-	
+	    solution.names.at(d) = planning_group_joints_name_.at(d);
+		
+	    solution.elements.at(d).resize(stomp_config_.num_time_steps_);
+		
+        for( int i = 0; i < stomp_config_.num_time_steps_; i++)	
+            solution.elements.at(d).at(i).position =  optimization_task_->policy_->parameters_all_[d](i+(start));
+        
     }     
 
     if ((current_trajectory_totalcost < 1) && (fabs(cost_improvement) <= stomp_config_.min_cost_improvement_))
     {
-	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
-	return true;
+    	planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
+	    return true;
     }
     else
 	planner_status.statuscode = motion_planners::PlannerStatus::NO_PATH_FOUND;
@@ -174,10 +168,10 @@ bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planne
 void StompPlanner::setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal)
 {
     optimization_task_->updateTrajectory(start, goal);
-    optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
     
-    optimization_task_->createPolicy();   
+    optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
 
+    optimization_task_->createPolicy();
 }
 
 bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& trajectory)
@@ -193,12 +187,12 @@ bool StompPlanner::updateInitialTrajectory(const base::JointsTrajectory& traject
                                                                                          base::VectorXd::Ones(stomp::TRAJECTORY_PADDING);
 
         for (int i=0; i < stomp_config_.num_time_steps_; i++){
-            optimization_task_->initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = trajectory.elements.at(d).at(i+1).position;
+            optimization_task_->initial_trajectory_[d](stomp::TRAJECTORY_PADDING+i) = trajectory.elements.at(d).at(i).position;
         }
     }
 
-    optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;
-    optimization_task_->updatePolicy();   
+    optimization_task_->input_initial_trajectory_ = optimization_task_->initial_trajectory_;    
+    optimization_task_->updatePolicy();       
     //optimization_task_->createPolicy();   
 
     return true;
@@ -209,8 +203,7 @@ base::JointsTrajectory StompPlanner::getInitialTrajectory()
     int start = stomp::DIFF_RULE_LENGTH -1;
     int end = (start + stomp_config_.num_time_steps_);
     
-    base::JointsTrajectory trajectory;
-     
+    base::JointsTrajectory trajectory;     
     
     trajectory.names.resize(planning_group_joints_name_.size());
     trajectory.elements.resize(planning_group_joints_name_.size());
@@ -220,11 +213,10 @@ base::JointsTrajectory StompPlanner::getInitialTrajectory()
         trajectory.names.at(d) = planning_group_joints_name_.at(d);
         
         //trajectory.elements.at(d).resize(diff+2);
-        trajectory.elements.at(d).resize(stomp_config_.num_time_steps_+2);
+        trajectory.elements.at(d).resize(stomp_config_.num_time_steps_);
         
-        for( int i = 0; i < stomp_config_.num_time_steps_+2; i++)   
-            trajectory.elements.at(d).at(i).position =   optimization_task_->input_initial_trajectory_[d](i+(start-1));
-    
+        for( int i = 0; i < stomp_config_.num_time_steps_; i++)   
+            trajectory.elements.at(d).at(i).position =   optimization_task_->input_initial_trajectory_[d](i+(start));
     } 
     
     return trajectory;
