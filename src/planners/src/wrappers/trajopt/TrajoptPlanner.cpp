@@ -96,6 +96,10 @@ void TrajoptPlanner::setStartGoalTrajectory(const base::samples::Joints &start, 
 }
 
 bool TrajoptPlanner::updateInitialTrajectory(const base::JointsTrajectory &trajectory)
-{}
+{
+    // TODO what return value is expected here?
+    // The only place where this is called ignores the return value
+    return false;
+}
 
 }// end namespace

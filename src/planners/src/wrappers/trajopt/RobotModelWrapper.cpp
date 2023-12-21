@@ -195,7 +195,7 @@ DblMatrix RobotModelWrapper::getPositionJacobian(std::string link_name, const Ve
 
 }
 
-DblMatrix RobotModelWrapper::getRotationJacobian(std::string link_name) const {}
+//DblMatrix RobotModelWrapper::getRotationJacobian(std::string link_name) const {}
 
 DblVec RobotModelWrapper::setRandomDOFValues() {
     std::map<std::string, double> planning_groups_joints_with_random_values;

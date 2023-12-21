@@ -66,10 +66,8 @@ void FCLCollisionChecker::setDistanceTolerance(float distance)
 
 }
 
-double FCLCollisionChecker::getContactDistance()
-{
-
-}
+//double FCLCollisionChecker::getContactDistance()
+//{ }
 
 void FCLCollisionChecker::getContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions)
 {

@@ -35,7 +35,8 @@ public:
     virtual DblVec getDOFValues();
     virtual int getDOF() const;
     virtual DblMatrix getPositionJacobian(std::string link_name, const Vector3d& pt) /*const*/;
-    virtual DblMatrix getRotationJacobian(std::string link_name) const;
+    // FIXME Never used?
+    //virtual DblMatrix getRotationJacobian(std::string link_name) const;
     virtual DblVec setRandomDOFValues();
     virtual geometry::Transform getLinkTransformByName(std::string link_name);
     virtual bool checkIfLinkExists(const std::string link_name);

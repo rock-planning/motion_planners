@@ -44,7 +44,7 @@ public:
     virtual DblVec getDOFValues() = 0;
     virtual int getDOF() const = 0;
     virtual DblMatrix getPositionJacobian(const std::string link_name, const Vector3d& pt) /*const*/ = 0;
-    virtual DblMatrix getRotationJacobian(const std::string link_name) const = 0;
+//    virtual DblMatrix getRotationJacobian(const std::string link_name) const = 0;
     virtual DblVec setRandomDOFValues() = 0;
     virtual geometry::Transform getLinkTransformByName(const std::string link_name) = 0;
     virtual bool checkIfLinkExists(const std::string link_name) = 0;
@@ -62,7 +62,8 @@ public:
 
     /** contacts of distance < (arg) will be returned */
     virtual void setDistanceTolerance(float distance)  = 0;
-    virtual double getContactDistance() = 0;
+    // FIXME unused method?
+    //virtual double getContactDistance() = 0;
 
     /** Find contacts between swept-out shapes of robot links and everything in the environment, as robot goes from startjoints to endjoints */
     virtual void getContinuousCollisionInfo(const DblVec& startjoints, const DblVec& endjoints, vector<Collision>& collisions) = 0;

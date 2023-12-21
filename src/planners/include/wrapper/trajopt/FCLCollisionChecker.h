@@ -31,7 +31,8 @@ public:
 
     // CollisionChecker interface
     void setDistanceTolerance(float distance);
-    double getContactDistance();
+    // FIXME unused
+    //double getContactDistance();
     void getContinuousCollisionInfo(const DblVec &startjoints, const DblVec &endjoints, vector<Collision> &collisions);
     void getDiscreteCollisionInfo(vector<Collision> &collisions);
 private:
