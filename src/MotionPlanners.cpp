@@ -122,7 +122,7 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
                 initial_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
                 initial_joint_status_.elements.at(i) = current_jointstate;      
             }
-            catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
+            catch(base::samples::Joints::InvalidName const &e) //Only catch exception to write more explicit error msgs
             {
                 LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given start value", 
                           planning_group_joints_.at(i).first.c_str());
@@ -201,7 +201,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                 goal_joint_status_.names.at(i)      = planning_group_joints_.at(i).first;
                 goal_joint_status_.elements.at(i)   = target_jointvalues.getElementByName(planning_group_joints_.at(i).first);
             }
-            catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
+            catch(base::samples::Joints::InvalidName const &e) //Only catch exception to write more explicit error msgs
             {
                 LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value", 
                           planning_group_joints_.at(i).first.c_str());
@@ -245,7 +245,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                         goal_joint_status_.names.at ( i )   = planning_group_joints_.at ( i ).first;
                         goal_joint_status_.elements.at ( i )   = it->getElementByName ( planning_group_joints_.at ( i ).first );                        
                     }
-                    catch ( base::samples::Joints::InvalidName e )
+                    catch ( base::samples::Joints::InvalidName const &e )
                     {   //Only catch exception to write more explicit error msgs
                         LOG_ERROR ( "[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value", 
                                     planning_group_joints_.at ( i ).first.c_str() );
@@ -291,7 +291,7 @@ bool MotionPlanners::assignPlanningRequest( const base::samples::Joints &start_j
                 auto joint_it = joint_map.find((planning_group_joints_.at(i).first));
                 goal_joint_status_.elements.at(i).position = joint_it->second;
             }
-            catch(base::samples::Joints::InvalidName e) //Only catch exception to write more explicit error msgs
+            catch(base::samples::Joints::InvalidName const &e) //Only catch exception to write more explicit error msgs
             {
                 LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value", 
                 planning_group_joints_.at(i).first.c_str());
