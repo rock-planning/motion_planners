@@ -43,6 +43,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);		
         void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
         bool reInitializePlanner(){return false;}
+        bool reInitializeTimeSteps(const int &num_time_steps){return false;}
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
         void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;};
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);

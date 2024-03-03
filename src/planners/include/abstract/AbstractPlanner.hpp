@@ -88,6 +88,8 @@ class AbstractPlanner
 
         virtual bool reInitializePlanner() = 0;
 
+        virtual bool reInitializeTimeSteps(const int &num_time_steps) = 0;
+
         virtual bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status) = 0;
 
         virtual void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal) = 0;

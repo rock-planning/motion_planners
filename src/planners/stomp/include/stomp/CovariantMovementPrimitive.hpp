@@ -73,6 +73,13 @@ public:
                   const double movement_duration,
                   const std::vector<base::MatrixXd>& derivative_costs,
                   const std::vector<base::VectorXd>& initial_trajectory);
+
+    // bool reInitialize(const int num_time_steps,
+    //               const int num_dimensions,
+    //               const double movement_duration,
+    //               const std::vector<base::MatrixXd>& derivative_costs,
+    //               const std::vector<base::VectorXd>& initial_trajectory);
+
     bool setToMinControlCost();
     bool getParametersAll(std::vector<base::VectorXd>& parameters);
 

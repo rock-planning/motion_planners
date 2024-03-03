@@ -47,8 +47,17 @@ bool StompPlanner::reInitializePlanner()
     optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
     optimization_task_->stompInitialize(1,1);
     
-    num_iterations_ = 0;
-    
+    num_iterations_ = 0;    
+    return true;
+}
+
+bool StompPlanner::reInitializeTimeSteps(const int &num_time_steps)
+{
+    stomp_config_.num_time_steps_ = num_time_steps;
+
+    if(!reInitializePlanner())
+        return false;
+
     return true;
 
 }

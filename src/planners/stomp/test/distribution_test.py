@@ -13,24 +13,24 @@ d = 10
 
 A = np.random.random([d,d])
 
-print "A = ", A
+print ("A = ", A)
 
 R = np.dot(A.T,A)
 
 R = np.eye(d)
 
-print "R = ", R
+print ("R = ", R)
 
 R_inv = np.linalg.inv(R)
 
-print "R_inv= ", R_inv
+print ("R_inv= ", R_inv)
 
 R_inv_chol = np.linalg.cholesky(R_inv)
 
-print "R_inv_chol = ", R_inv_chol
+print ("R_inv_chol = ", R_inv_chol)
 
 test = np.dot(R_inv_chol.T, np.dot(R, R_inv_chol))
-print "test = ", test
+print ("test = ", test)
 
 N = 100000
 costs = np.zeros((N))

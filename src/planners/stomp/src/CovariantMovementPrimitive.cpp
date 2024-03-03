@@ -73,6 +73,60 @@ bool CovariantMovementPrimitive::initialize(const int num_time_steps,
   return true;
 }
 
+// bool CovariantMovementPrimitive::reInitialize(const int num_time_steps,
+//                                             const int num_dimensions,
+//                                             const double movement_duration,
+//                                             const std::vector<base::MatrixXd>& derivative_costs,
+//                                             const std::vector<base::VectorXd>& initial_trajectory)
+// {
+//   num_time_steps_ = num_time_steps;
+//   num_dimensions_ = num_dimensions;
+//   movement_duration_ = movement_duration;
+//   derivative_costs_ = derivative_costs;
+//   parameters_all_ = initial_trajectory;  
+  
+//   STOMP_VERIFY(initializeVariables());
+//   STOMP_VERIFY(initializeCosts());
+//   //////////////////////////////////////////////////////////////////////
+//   // createDifferentiationMatrices();
+
+//   // control_costs_all_.clear();
+//   // control_costs_.clear();
+//   // inv_control_costs_.clear();
+//   // derivative_costs_sqrt_.clear();
+//   // for (int d=0; d<num_dimensions_; ++d)
+//   // {
+//   //   // get sqrt of derivative costs
+//   //   derivative_costs_sqrt_.push_back(derivative_costs_[d].array().sqrt().matrix());
+
+//   //   // construct the quadratic cost matrices (for all variables)
+//   //   base::MatrixXd cost_all = MatrixXd::Zero(num_vars_all_, num_vars_all_);
+//   //   //MatrixXd cost_all = MatrixXd::Identity(num_vars_all_, num_vars_all_) * cost_ridge_factor_;   
+    
+//   //   for (int i=0; i<NUM_DIFF_RULES; ++i)
+//   //   {
+
+//   //     cost_all += movement_dt_ * (differentiation_matrices_[i].transpose() *
+//   //         derivative_costs_[d].col(i).asDiagonal() *
+//   //         differentiation_matrices_[i]);
+//   //   }
+//   //   control_costs_all_.push_back(cost_all);
+
+//   //   // extract the quadratic cost just for the free variables:    
+//   //   base::MatrixXd cost_free = cost_all.block(DIFF_RULE_LENGTH-1, DIFF_RULE_LENGTH-1, num_vars_free_, num_vars_free_);    
+//   //   control_costs_.push_back(cost_free);   
+    
+//   //   //inv_control_costs_.push_back(cost_free.colPivHouseholderQr().inverse());    
+//   //   inv_control_costs_.push_back(cost_free.fullPivLu().inverse());   
+    
+//   // }
+//   //////////////////////////////////////////////////////////////////////
+//   STOMP_VERIFY(initializeBasisFunctions());
+
+//   return true;
+// }
+
+
 bool CovariantMovementPrimitive::setToMinControlCost()
 {
   computeMinControlCostParameters();

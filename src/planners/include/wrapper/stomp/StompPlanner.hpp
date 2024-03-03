@@ -28,6 +28,8 @@ class StompPlanner: public motion_planners::AbstractPlanner
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
 
         bool reInitializePlanner();
+
+        bool reInitializeTimeSteps(const int &num_time_steps);
         
         base::JointsTrajectory getInitialTrajectory();
 

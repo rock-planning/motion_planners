@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import matplotlib
-matplotlib.use('GtkAgg')
+matplotlib.use('Gtk3Agg')
 import matplotlib.pyplot as plt
 import numpy
 import time
