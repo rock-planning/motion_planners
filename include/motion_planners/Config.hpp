@@ -47,15 +47,6 @@ struct PlannerConfig
     enum PlannerLibrary planner;
 };
 
-struct DualArmPlannerConfig
-{    
-    kinematics_library::KinematicsConfig active_chain_kin_config;    // active arm 
-    kinematics_library::KinematicsConfig passive_chain_kin_config;   // passive arm
-    robot_model::RobotModelConfig robot_model_config;
-    std::string planner_specific_config;
-    enum PlannerLibrary planner;
-};
-
 struct EnvironmentConfig
 {
     collision_detection::CollisionDetectionConfig collision_detection_config;
