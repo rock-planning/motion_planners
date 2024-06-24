@@ -12,7 +12,7 @@ namespace motion_planners
 enum Constraint
 {
     POSITION_CONSTRAINT, ORIENTATION_CONSTRAINT, POSE_CONSTRAINT, 
-    JOINTS_CONSTRAINT, KLC_CONSTRAINT, NO_CONSTRAINT
+    JOINTS_CONSTRAINT, NO_CONSTRAINT
 };
 
 struct ConstraintValues
@@ -20,25 +20,6 @@ struct ConstraintValues
     base::VectorXd value;
     // tolerance for roll, pitch and yaw. Please provide only positive value
     base::VectorXd tolerance;
-};
-
-// KLC - Kinematic Loop Closure
-struct KLCLink
-{
-    // This information is used to create a kinematic chain
-    std::string base_link;
-    std::string tip_link;
-};
-
-struct KLCConstraint
-{
-    // we plan for active chain and project the passive chain in active chain manifold.
-    std::string active_chain_planning_group;
-    std::string active_chain_kinematic_name;
-    std::string passive_chain_planning_group;
-    std::string passive_chain_kinematic_name;
-    //base::Pose active_chain_offset_pose;
-    //base::Pose passive_chain_offset_pose;
 };
 
 struct ConstraintPlanning
@@ -52,21 +33,11 @@ struct ConstraintPlanning
     ConstraintValues position_constraint;
     // joint constraint
     ConstraintValues joint_constraint;
-    // Kinematic Loop Closure constraint
-    KLCConstraint klc_constraint;
     // goal pose
     base::samples::RigidBodyState target_pose;
     // goal in joint space
     base::samples::Joints target_joints_value;
     
-};
-
-struct KLCConfig
-{
-    // Kinematic Loop Closure constraint
-    kinematics_library::KinematicsConfig passive_chain_kin_config;   // passive arm
-    // Kinematic Loop Closure constraint
-    KLCConstraint klc_constraint;    
 };
 
 struct PlannerStatus

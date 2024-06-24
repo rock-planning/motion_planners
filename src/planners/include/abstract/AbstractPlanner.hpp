@@ -12,7 +12,11 @@
 
 namespace motion_planners
 {
-
+/**
+* @brief  Load configuration file.
+* @param  filename Configuration file.
+* @param  config Output yaml node.
+*/
 inline void loadConfigFile(std::string filename, YAML::Node &config)
 {
     try
@@ -80,26 +84,63 @@ class AbstractPlanner
 {
 
     public:
-
+        /**
+        * @brief Abstract class constructor
+        */
         AbstractPlanner();
+        /**
+        * @brief Destructor
+        */
         virtual ~AbstractPlanner(){};
-
+        /**
+        * @brief Initialize the motion planner
+        * @param robot_model Robot model.
+        * @param planner_specfic Configuration file for planner.
+        * @return Returns true, when the initialization is successful or else returns false
+        */
         virtual bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string planner_specfic) = 0;
-
+        /**
+        * @brief Reinitialize the motion planner. This function is used in STOMP planner.
+        * @return Returns true, when the initialization is successful or else returns false
+        */
         virtual bool reInitializePlanner() = 0;
-
+        /**
+        * @brief Reinitialize the time step in the motion planner. This function is used in STOMP planner.
+        */
         virtual bool reInitializeTimeSteps(const int &num_time_steps) = 0;
-
+        /**
+        * @brief  Solve the planning problem.
+        * @param  solution Planner solution.
+        * @param  planner_status Planner status.        
+        * @return Returns true, when the planning is successful else returns false.
+        */
         virtual bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status) = 0;
-
+        /**
+        * @brief  Set the start and goal to the planner.
+        * @param  start Start configuration in joint space. 
+        * @param  goal Goal configuration in joint space.        
+        */
         virtual void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal) = 0;
-
+        /**
+        * @brief  Set the contraints for the planner. This function is used in OMPL planner.
+        * @param  constraints Constraints.        
+        */
         virtual void setConstraints(const ConstraintPlanning constraints) = 0;
-
+        /**
+        * @brief  Update the initial trajectory. This function is used only for the STOMP planner.
+        * @param  trajectory Initial trajectory.
+        * @return Returns true, when the update is successful or else returns false.
+        */
         virtual bool updateInitialTrajectory(const base::JointsTrajectory &trajectory) = 0;
-        
+        /**
+        * @brief  Get the initial trajectory. This function is used only for the STOMP planner.        
+        * @return Initial trajectory.
+        */
         virtual base::JointsTrajectory getInitialTrajectory() = 0;
-        
+        /**
+        * @brief  Get the number of iteration used for the planning problem. This function is used only for the STOMP planner.        
+        * @return Number of iteration.
+        */
         virtual size_t getNumOfIterationsUsed() = 0;        
 
     protected:
@@ -108,7 +149,7 @@ class AbstractPlanner
         std::vector< std::string> planning_group_joints_name_;
         std::vector< std::pair<std::string,urdf::Joint> > planning_group_joints_;
         std::string root_name_, base_name_, tip_name_;
-
+        
         bool assignPlanningJointInformation(std::shared_ptr<robot_model::RobotModel> robot_model);
 };
 

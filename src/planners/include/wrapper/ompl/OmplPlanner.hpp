@@ -37,17 +37,63 @@ namespace motion_planners
 class OmplPlanner: public motion_planners::AbstractPlanner
 {
     public:
+        /**
+        * @brief OMPL planner class constructor
+        */
         OmplPlanner();
+        /**
+        * @brief OMPL class destructor
+        */
         ~OmplPlanner();
+        /**
+        * @brief Initialize the motion planner
+        * @param robot_model Robot model.
+        * @param planner_specfic Configuration file for planner.
+        * @return Returns true, when the initialization is successful or else returns false
+        */
         bool initializePlanner(std::shared_ptr<robot_model::RobotModel>& robot_model, std::string config_file_path);
-        bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);		
-        void updateInitialTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal, PlannerStatus &planner_status);
+        /**
+        * @brief Reinitialize the motion planner. This function is used only in STOMP planner.
+        * @return Returns true, when the initialization is successful or else returns false
+        */
         bool reInitializePlanner(){return false;}
+        /**
+        * @brief Reinitialize the time step in the motion planner. This function is used in STOMP planner.
+        */
         bool reInitializeTimeSteps(const int &num_time_steps){return false;}
+        /**
+        * @brief  Solve the planning problem.
+        * @param  solution Planner solution.
+        * @param  planner_status Planner status.        
+        * @return Returns true, when the planning is successful else returns false.
+        */
+        bool solve(base::JointsTrajectory &solution, PlannerStatus &planner_status);
+        /**
+        * @brief  Set the start and goal to the planner.
+        * @param  start Start configuration in joint space. 
+        * @param  goal Goal configuration in joint space.        
+        */
         void setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
+        /**
+        * @brief  Set the contraints for the planner. This function is used in OMPL planner.
+        * @param  constraints Constraints.        
+        */
         void setConstraints(const ConstraintPlanning constraints){constraints_ = constraints;};
+        /**
+        * @brief  Update the initial trajectory. This function is used only for the STOMP planner.
+        * @param  trajectory Initial trajectory.
+        * @return Returns true, when the update is successful or else returns false.
+        */
         bool updateInitialTrajectory(const base::JointsTrajectory &trajectory);
+        /**
+        * @brief  Get the initial trajectory. This function is used only for the STOMP planner.        
+        * @return Initial trajectory.
+        */
         base::JointsTrajectory getInitialTrajectory(){ return base::JointsTrajectory();}
+        /**
+        * @brief  Get the number of iteration used for the planning problem. This function is used only for the STOMP planner.        
+        * @return Number of iteration.
+        */
         size_t getNumOfIterationsUsed(){return 0;}        
     private:
 
@@ -56,12 +102,6 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         base::samples::Joints start_joint_values_, goal_joint_values_;
         base::samples::RigidBodyState start_pose_, goal_pose_;
         std::size_t planning_group_joints_size_;
-        // kinematics loop closure
-        base::samples::RigidBodyState active_chain_pose_, passive_chain_pose_;
-        Eigen::Affine3d klc_offset_pose_, passive_active_offset_;        
-        kinematics_library::AbstractKinematicPtr active_chain_kin_solver_, passive_chain_kin_solver_;
-        std::vector<base::commands::Joints> passive_chain_projected_state_;
-        base::JointsTrajectory passive_chain_solution_;
         ConstraintPlanning constraints_;
         double collision_cost_;
 
@@ -78,6 +118,7 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         std::vector <std::map<std::string , double > >  path_joint_values_;
         std::vector <std::map<std::string , double > >  cartesian_path_;
         std::vector <std::string> orientation_constraint_names_ , position_constraint_names_;
+        kinematics_library::AbstractKinematicPtr kin_solver_;
 
         bool setUpPlanningTaskInJointSpace(PlannerStatus &planner_status);
         bool setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_status);	
@@ -96,23 +137,10 @@ class OmplPlanner: public motion_planners::AbstractPlanner
         bool solveTaskInCartesianSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status);
         bool solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status);
         bool cartesianSpaceStateValidityChecker(const ompl::base::State *state);  
-        bool kinematicLoopClosureValidChecker(const ompl::base::State *state);  
-//         void setCartesianConstraints(CartesianContraints constraints);
         void simplifySolution(const ompl::base::ProblemDefinitionPtr &problem, ompl::geometric::PathSimplifier &path_simplifier, 
                               unsigned int step_size = 1, double duration = 0.0);
         bool setLimitsFromConstraints( const std::vector<std::string> &value_name, const ConstraintValues &constraint);
 
-        bool kinematicLoopClosureProjection(const base::samples::Joints &joint_values, 
-                                            std::vector<base::commands::Joints> &projected_state);
-
-        bool calculateKLCOffset();
-
-        bool checkPassiveChainCollision(PlannerStatus &planner_status);
-
-        bool calculatePassiveChainIKSoln(const base::samples::Joints &active_chain_joints, const base::samples::Joints &passive_chain_joints, 
-                                         std::vector<base::commands::Joints> &passive_chain_iksoln, PlannerStatus &planner_status);
-        
-        void convertOmplStateToBaseJoints(const ompl::base::State *state, base::samples::Joints &joint_values);
 };
 }// end namespace motion_planners
 #endif // OMPLPLANNER_HPP
