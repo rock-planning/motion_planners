@@ -206,8 +206,6 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
         ompl::geometric::PathSimplifier path_simplifier(space_information);
         //simplify the solution
         simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
-        
-        // Single arm planner
         solution.resize(planning_group_joints_size_, solution_path_ptr_->getStates().size());
         for(size_t i = 0; i < planning_group_joints_size_; ++i)
             solution.names.at(i) = planning_group_joints_.at(i).first;
@@ -216,29 +214,40 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
         {
             ompl::base::RealVectorStateSpace::StateType* x=(ompl::base::RealVectorStateSpace::StateType*) solution_path_ptr_->getState(i);           
             
+            if( (constraints_.use_constraint == motion_planners::NO_CONSTRAINT)  || 
+                (constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT))
+            {
+                for(size_t j = 0; j < number_of_dimensions_; j++)
+                    solution.elements.at(j).at(i).position = x->values[j];
+            }
+            else
+            {
+                base::samples::RigidBodyState target_pose;
+                target_pose.sourceFrame = start_pose_.sourceFrame;
+                target_pose.targetFrame = start_pose_.targetFrame;
+                
+                target_pose.position.x() = x->values[0];
+                target_pose.position.y() = x->values[1];
+                target_pose.position.z() = x->values[2];
+                target_pose.orientation = base::Quaterniond(  base::AngleAxisd(x->values[5], Eigen::Matrix<double,3,1>::UnitZ())*
+                                                            base::AngleAxisd(x->values[4], Eigen::Matrix<double,3,1>::UnitY())*
+                                                            base::AngleAxisd(x->values[3], Eigen::Matrix<double,3,1>::UnitX()));
+                
+                std::vector<base::commands::Joints> ik_solution;
+                kinematics_library::KinematicsStatus solver_status;
 
-            base::samples::RigidBodyState target_pose;
-            target_pose.sourceFrame = start_pose_.sourceFrame;
-            target_pose.targetFrame = start_pose_.targetFrame;
-            
-            target_pose.position.x() = x->values[0];
-            target_pose.position.y() = x->values[1];
-            target_pose.position.z() = x->values[2];
-            target_pose.orientation = base::Quaterniond(  base::AngleAxisd(x->values[5], Eigen::Matrix<double,3,1>::UnitZ())*
-                                                        base::AngleAxisd(x->values[4], Eigen::Matrix<double,3,1>::UnitY())*
-                                                        base::AngleAxisd(x->values[3], Eigen::Matrix<double,3,1>::UnitX()));
-            
-            std::vector<base::commands::Joints> ik_solution;
-            kinematics_library::KinematicsStatus solver_status;
-
-            kin_solver_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
-            
-            if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
-                return false;
-            
-            for(size_t j = 0; j < planning_group_joints_size_; j++)
-                solution.elements.at(j).at(i).position = ik_solution[0].elements.at(j).position;
-
+                kin_solver_->solveIK(target_pose, start_joint_values_, ik_solution, solver_status);
+                
+                if(solver_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND)
+                {
+                    planner_status.statuscode = motion_planners::PlannerStatus::KINEMATIC_ERROR;
+                    planner_status.kinematic_status.statuscode = solver_status.statuscode;
+                    return false;
+                }
+                
+                for(size_t j = 0; j < planning_group_joints_size_; j++)
+                    solution.elements.at(j).at(i).position = ik_solution[0].elements.at(j).position;
+            }
         }        
         planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
     }
@@ -273,6 +282,7 @@ bool OmplPlanner::setUpPlanningTaskInCartesianSpace(PlannerStatus &planner_statu
 
     double x_start,y_start,z_start,roll_start,pitch_start,yaw_start,x_goal,y_goal,z_goal,roll_goal,pitch_goal,yaw_goal;
 
+    // TODO: These limits should be acquired from a config file
     lower_limits_["x"] = -5.0; upper_limits_["x"] = 5.0; lower_limits_["y"] = -5.0; upper_limits_["y"] = 5.0;
     lower_limits_["z"] = -5.0; upper_limits_["z"] = 5.0;
     lower_limits_["roll"] = -3.145; upper_limits_["roll"] = 3.145;lower_limits_["pitch"] = -3.145; upper_limits_["pitch"] = 3.145;
