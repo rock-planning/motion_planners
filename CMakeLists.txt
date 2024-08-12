@@ -8,3 +8,4 @@ add_subdirectory(src/planners)
 
 rock_init(motion_planners 0.2)
 rock_standard_layout()
+add_subdirectory(test)

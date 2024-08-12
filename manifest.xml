@@ -1,10 +1,10 @@
 <package>
     <description>"Motion Planning Libraries">A framework for robot motion planning. This library contains different state of the art motion planners.
-    The current version supports optimization and sampling based planner. 
+    The current version supports optimization and sampling based planners. 
     Available motion planners are STOMP, TrajOpt and OMPL.</description>
     <author>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</author>
     <!-- Use the short version name from:https://spdx.org/licenses/ -->
-    <license></license>
+    <license>BSD-3-Clause</license>
     <url>https://git.hb.dfki.de/dfki-planning/motion_planners.git</url>
     <logo>http://</logo>
     <depend package="base/cmake" />
@@ -19,7 +19,7 @@
     <depend package="planning/ompl" />
     <depend package="boost" />
     <name>motion_planners</name>
-    <maintainer>Sankar Natarajan/sankar.natarajan@dfki.de</maintainer>
+    <maintainer>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</maintainer>
     <stage>-1</stage>
     <keywords>
         <keyword>planning</keyword>

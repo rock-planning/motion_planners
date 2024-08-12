@@ -1,0 +1,33 @@
+stomp:
+  # set the three parameters below to the same value for normal operation
+  max_rollouts_: 50
+  min_rollouts_: 5
+  num_rollouts_per_iteration_: 10 #50
+  num_iterations_: 30 #120 
+  num_time_steps_: 20 #50
+  num_dimensions_: 7
+  movement_duration_: 5.0 #1.0
+  control_cost_weight_: 0.001
+  resolution_: 0.02
+  min_cost_improvement_: 0.01
+  delay_per_iteration_: 0.04
+  #noise adaptation mode: recommended
+  use_noise_adaptation_: true #false #true #true
+  #initial noise stddev - needs to be tuned.
+  #noise_stddev_: [ 0.2, 0.220, 1.0, 0.50, 0.20, 0.01]
+  noise_stddev_: [ 0.1, 0.20, 0.50, 0.4, 0.3, 0.3, 0.1]
+  #how much to decay the noise every iteration, only used if noise_adaptation is disabled
+  noise_decay_: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  #minimum value the noise can reach
+  noise_min_stddev_: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+  num_thread_: 1
+  use_openmp_: false
+
+
+debug:
+  output_dir_: ./debug_data
+  save_noisy_trajectories_: false
+  save_noiseless_trajectories_: false
+  save_cost_function_: false
+  write_to_file_: false
+
