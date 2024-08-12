@@ -55,6 +55,9 @@ motion_planners contains the following directories:
 - src/planners/src/wrappers - contain wrappers for OMPL, STOMP and TrajOpt library.
 
 # Deployment
+- A simple example code is in test folder.
+  - usage: ./test_motion_planners "absolute_path_to_test_folder"
+- Using Orogen component:
+  - Please refer to [motion_planner](https://git.hb.dfki.de/dfki-planning/orogen-motion_planners) deployment package for how to deploy this libray.
 
-Please refer to [motion_planner](https://git.hb.dfki.de/dfki-planning/orogen-motion_planners) deployment package for how to deploy this libray.
                      
