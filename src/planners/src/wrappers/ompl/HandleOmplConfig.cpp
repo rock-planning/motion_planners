@@ -52,8 +52,7 @@ ompl_config::OmplConfig getOmplConfig(const YAML::Node &yaml_data)
         config.type_of_planner = motion_planners::getValue<ompl_config::PlannerType>(yaml_data, "type_of_planner");
     }
     config.max_solve_time                   = motion_planners::getValue<double>(yaml_data, "max_solve_time");
-    config.max_step_smoothing               = motion_planners::getValue<unsigned int, double>(yaml_data, "max_step_smoothing");
-    config.max_time_soln_simpilification    = motion_planners::getValue<double>(yaml_data, "max_time_soln_simpilification");
+    config.max_step_smoothing               = motion_planners::getValue<unsigned int, double>(yaml_data, "max_step_smoothing");    
     try 
     {
         config.planner_specific_parameters_range = motion_planners::getValue<std::string>(yaml_data, "planner_specific_parameters_range");

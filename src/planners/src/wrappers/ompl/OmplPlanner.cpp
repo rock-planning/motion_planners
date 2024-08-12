@@ -217,7 +217,7 @@ bool OmplPlanner::solveProblem(ompl::base::PlannerPtr &planner,  const ompl::bas
             if( (constraints_.use_constraint == motion_planners::NO_CONSTRAINT)  || 
                 (constraints_.use_constraint == motion_planners::JOINTS_CONSTRAINT))
             {
-                for(size_t j = 0; j < number_of_dimensions_; j++)
+                for(size_t j = 0; j < planning_group_joints_size_; j++)
                     solution.elements.at(j).at(i).position = x->values[j];
             }
             else
