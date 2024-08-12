@@ -67,36 +67,15 @@ motion_planners::Config getMotionPlannerConfig(std::string test_folder_path)
     return config;
 }
 
-
-base::samples::Joints getStartState()
+base::samples::Joints convertToBaseJoints(std::vector<double> data)
 {
     base::samples::Joints joint_values;
     joint_values.names = {"joint_a1", "joint_a2", "joint_a3", "joint_a4", "joint_a5", "joint_a6", "joint_a7"};
     joint_values.elements.resize(7);
-    joint_values.elements[0].position =  0.5;
-    joint_values.elements[1].position =  0.5;
-    joint_values.elements[2].position =  0.5;
-    joint_values.elements[3].position = -1.5;
-    joint_values.elements[4].position =  0.5;
-    joint_values.elements[5].position =  0.5;
-    joint_values.elements[6].position =  0.5;
-
-    return joint_values;
-}
-
-base::samples::Joints getGoalState()
-{
-    base::samples::Joints joint_values;
-    joint_values.names = {"joint_a1", "joint_a2", "joint_a3", "joint_a4", "joint_a5", "joint_a6", "joint_a7"};
-    joint_values.elements.resize(7);
-    joint_values.elements[0].position = -1.5;
-    joint_values.elements[1].position = -1.5;
-    joint_values.elements[2].position = -1.5;
-    joint_values.elements[3].position =  1.5;
-    joint_values.elements[4].position = -1.5;
-    joint_values.elements[5].position = -1.5;
-    joint_values.elements[6].position = -0.5;
-
+    assert(joint_values.size() == data.size());
+    for(size_t i = 0; i < data.size(); i++)
+        joint_values.elements[i].position =  data[i];
+    
     return joint_values;
 }
 
@@ -230,9 +209,11 @@ int main(int argc, char * argv[])
     }
 
     // assign planning request
-    base::samples::Joints start_joint_values = getStartState();
-    base::samples::Joints target_joint_values = getGoalState();
-
+    std::vector<double> start_vec_values = {0.5, 0.5, 0.5, -1.5, 0.5, 0.5, 0.5};    
+    base::samples::Joints start_joint_values = convertToBaseJoints(start_vec_values);
+    std::vector<double> target_vec_values = {-1.5, -1.5, -1.5, 1.5, -1.5, -1.5, -0.5};
+    base::samples::Joints target_joint_values = convertToBaseJoints(target_vec_values);
+    
     if(planner.assignPlanningRequest(start_joint_values, target_joint_values, planner_status))
     {
         // plan only if the planning request is success
@@ -243,14 +224,12 @@ int main(int argc, char * argv[])
         {
             std::cout<<"Path Found"<<std::endl;
             printTrajectory(solution);
-
         }
         else
         {
             std::cout<<"No Path Found. Refer to planner status to get the error information"<<std::endl;
             printPlannerStatus(planner_status);
-        }
-        
+        }        
     }
     else
     {
@@ -259,4 +238,3 @@ int main(int argc, char * argv[])
     }        
     return 0;
 }
-
