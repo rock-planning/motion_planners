@@ -1,3 +1,4 @@
+add_subdirectory(planners)
 project(motion_planners)
 
 set(MOTION_PLANNERS 0.2)

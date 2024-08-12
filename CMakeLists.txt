@@ -1,11 +1,13 @@
-# CMakeLists.txt has to be located in the project folder and cmake has to be
-# executed from 'project/build' with 'cmake ../'.
-cmake_minimum_required(VERSION 2.6)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+cmake_minimum_required(VERSION 3.9)
+project(motion_planners
+        VERSION 0.2
+        DESCRIPTION "A framework for robot motion planning")
+
 find_package(Rock)
 
-add_subdirectory(src/planners)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-rock_init(motion_planners 0.2)
+rock_init()
 rock_standard_layout()
 add_subdirectory(test)
