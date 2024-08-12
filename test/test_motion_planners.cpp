@@ -67,7 +67,7 @@ motion_planners::Config getMotionPlannerConfig(std::string test_folder_path)
     return config;
 }
 
-base::samples::Joints convertToBaseJoints(std::vector<double> data)
+base::samples::Joints convertToBaseJoints(const std::vector<double> &data)
 {
     base::samples::Joints joint_values;
     joint_values.names = {"joint_a1", "joint_a2", "joint_a3", "joint_a4", "joint_a5", "joint_a6", "joint_a7"};
@@ -79,9 +79,9 @@ base::samples::Joints convertToBaseJoints(std::vector<double> data)
     return joint_values;
 }
 
-void printTrajectory(base::JointsTrajectory traj)
+void printTrajectory(const base::JointsTrajectory &traj)
 {
-    std::cout<<traj.getTimeSteps()<<"  "<<traj.getNumberOfJoints()<<std::endl;
+    std::cout<<"Number of timestep :"<<traj.getTimeSteps()<<". Number of joints = "<<traj.getNumberOfJoints()<<std::endl;
     for(size_t i = 0; i < traj.getTimeSteps(); i++)    
     {
         for(size_t j = 0; j < traj.elements.size(); j++)    
