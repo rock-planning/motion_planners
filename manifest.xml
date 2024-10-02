@@ -20,6 +20,8 @@
     <depend package="boost" />
     <name>motion_planners</name>
     <maintainer>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</maintainer>
+    <maintainer>Siddhant Kadwe/siddhant.kadwe@dfki.de</maintainer>
+    <maintainer>Vamsi Origanti/vamsi.origanti@dfki.de</maintainer>
     <stage>-1</stage>
     <keywords>
         <keyword>planning</keyword>
