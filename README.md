@@ -19,9 +19,9 @@ are currently integrated:
 
 As shown in the above figure this package contains only the planner part, for collision detection and kinematics
 it depends on the following library:
-- [Robot Model Library](https://git.hb.dfki.de/dfki-planning/robot_model)
-- [Kinematics Library](https://git.hb.dfki.de/dfki-planning/kinematics_library)
-- [Collision Detection Library](https://git.hb.dfki.de/dfki-planning/collision_detection)
+- [Robot Model Library](https://github.com/rock-planning/robot_model)
+- [Kinematics Library](https://github.com/rock-planning/kinematics_library)
+- [Collision Detection Library](https://github.com/rock-planning/collision_detection)
 
 # Installation
 
@@ -54,7 +54,7 @@ motion_planners contains the following directories:
 - src/planners/trajopt - contains original [trajopt](https://github.com/joschu/trajopt) core library. In order to maintian
                         the originality of the the code, only the openrave and bullet dependency is removed and some minor corrections are made.
                         The original code used openrave for simulation/visualization and uses bullet for collision. As we use 
-                        [collision_detection](https://git.hb.dfki.de/dfki-planning/collision_detection) library for collision detection, the bullet library 
+                        [collision_detection](https://github.com/rock-planning/collision_detection) library for collision detection, the bullet library 
                         is stripped from the code.
 - src/planners/src/wrappers - contain wrappers for OMPL, STOMP and TrajOpt library.
 
@@ -62,7 +62,7 @@ motion_planners contains the following directories:
 - A simple example code is in test folder.
   - usage: ./test_motion_planners "absolute_path_to_test_folder"
 - Using Orogen component:
-  - Please refer to [motion_planner](https://git.hb.dfki.de/dfki-planning/orogen-motion_planners) deployment package for how to deploy this libray.
+  - Please refer to [motion_planner](https://github.com/rock-planning/orogen-motion_planners) deployment package for how to deploy this libray.
 
 # License
 BSD 3-Clause License - The license file can be found [here](/motion_planners/LICENSE)
