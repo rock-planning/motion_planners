@@ -1,5 +1,9 @@
 # motion_planners
 
+The motion_planner package was initiated and is currently developed at the
+[Robotics Innovation Center](http://robotik.dfki-bremen.de/en/startpage.html) of the
+[German Research Center for Artificial Intelligence (DFKI)](http://www.dfki.de) in Bremen.
+
 The motion_planner package contains different state of the art motion planners. This package is one of the main package of
 the Motion planner framework. The Motion planner framework is focussed on to generate a collision free path for complex robotics system 
 with higher degrees of freedom. This package contains different state of the art motion planners.
@@ -11,7 +15,7 @@ are currently integrated:
 
 # Requirements 
 
-![motion_planner_framework](/uploads/f3c99b5f66ce5888fde8757c9026116a/framework_1.png)
+![motion_planner_framework](/motion_planners/images/framework_1.png)
 
 As shown in the above figure this package contains only the planner part, for collision detection and kinematics
 it depends on the following library:
@@ -23,7 +27,7 @@ it depends on the following library:
 
 On any Unix based operating systems, you can install this package. A simple way to install this package is to
 use [Rock](https://www.rock-robotics.org/) framework. As this package is dependent only on the [base-types](https://github.com/rock-core/base-types)
-of the [Rock](https://www.rock-robotics.org/) framework, it can also be build independent of the [Rock](https://www.rock-robotics.org/) framework. 
+of the [Rock](https://www.rock-robotics.org/) framework, it can also be built independent of the [Rock](https://www.rock-robotics.org/) framework. 
 
 The optimization based planners: STOMP and TrajOpt will be installed along with this package. The sampling-based planner:
 OMPL is not installed by default. It is up to the user, whether to use the sampling-based planner or not. This package
@@ -60,4 +64,5 @@ motion_planners contains the following directories:
 - Using Orogen component:
   - Please refer to [motion_planner](https://git.hb.dfki.de/dfki-planning/orogen-motion_planners) deployment package for how to deploy this libray.
 
-                     
+# License
+BSD 3-Clause License - The license file can be found [here](/motion_planners/LICENSE)
