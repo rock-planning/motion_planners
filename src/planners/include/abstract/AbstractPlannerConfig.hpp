@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <base/samples/Joints.hpp>
+#include <base-types/samples/Joints.hpp>
 #include <kinematics_library/KinematicsConfig.hpp>
 
 namespace motion_planners

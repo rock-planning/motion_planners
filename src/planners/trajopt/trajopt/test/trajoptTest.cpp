@@ -6,7 +6,7 @@
 #include <iostream>
 #include "trajopt/problem_description.hpp"
 #include "utils/clock.hpp"
-#include "json/json.h"
+// #include "json/json.h"
 
 using namespace trajopt;
 using namespace Json;

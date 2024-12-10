@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 #include <math.h>
-#include <base/samples/Joints.hpp>
-#include <base/JointsTrajectory.hpp>
+#include <base-types/samples/Joints.hpp>
+#include <base-types/JointsTrajectory.hpp>
 #include <collision_detection/CollisionFactory.hpp>
 #include <kinematics_library/KinematicsFactory.hpp>
 #include <robot_model/RobotModel.hpp>

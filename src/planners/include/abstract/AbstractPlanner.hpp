@@ -7,7 +7,7 @@
 #include <yaml-cpp/yaml.h>
 #include "AbstractPlannerConfig.hpp"
 #include <robot_model/RobotModel.hpp>
-#include <base/JointsTrajectory.hpp>
+#include <base-types/JointsTrajectory.hpp>
 // #include <kinematics_library/KinematicsConfig.hpp>
 
 namespace motion_planners

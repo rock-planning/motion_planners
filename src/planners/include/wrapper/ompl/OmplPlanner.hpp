@@ -23,7 +23,7 @@
 #include <ompl/geometric/planners/prm/PRM.h> // PRM
 #include <ompl/geometric/planners/prm/PRMstar.h> //PRMstar
 
-#include <base-logging/Logging.hpp>
+#include <base-logging/logging/Logging.hpp>
 #include <abstract/AbstractPlanner.hpp>
 #include <robot_model/RobotModel.hpp>
 #include "RobotFreeJointParameter.hpp"

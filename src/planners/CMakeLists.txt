@@ -19,7 +19,7 @@ pkg_check_modules(KDL_PARSER REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
-#pkg_check_modules(YAML REQUIRED yaml-cpp)  # This is not working
+pkg_check_modules(YAML REQUIRED yaml-cpp)  # This is not working
 
 set (DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
               ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOTMODEL_LIBRARIES}
