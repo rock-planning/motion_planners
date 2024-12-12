@@ -16,10 +16,10 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 INCLUDE(FindPkgConfig)
 
 find_package(Eigen3 REQUIRED)
-find_package(yaml-cpp REQUIRED)
+# find_package(yaml-cpp REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
-pkg_check_modules(BASE_TYPES REQUIRED base-types)
-pkg_search_module(BASE_LOGGING REQUIRED base-logging)
+pkg_check_modules(BASE_TYPES REQUIRED base_types)
+pkg_search_module(BASE_LOGGING REQUIRED base_logging)
 pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
 pkg_check_modules(KDL_PARSER REQUIRED kdl_parser)
 pkg_check_modules(URDF REQUIRED urdfdom)
@@ -51,7 +51,7 @@ set(MOTIONPLANNER_LINK_DIRS ${BASE_TYPES_LIBRARY_DIRS} ${BASE_LOGGING_LIBRARY_DI
 )
 
 set(MOTIONPLANNER_DEP_LIBS  ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}
-                            ${BASE_TYPES_LIBRARIES} ${BASE_LOGGING_LIBRARIES} ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES}
+                            ${BASE_TYPES_LIBRARY} ${BASE_LOGGING_LIBRARY} ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES}
                             ${URDF_LIBRARIES} ${URDFHEADER_LIBRARIES} ${SRDF_LIBRARIES} ${OCTOMAP_LIBRARIES} ${KINEMATICS_LIBRARIES} 
                             ${COLLISION_DETECTION_LIBRARIES} ${ROBOT_MODEL_LIBRARIES})
 
@@ -76,8 +76,8 @@ endforeach()
 # set(PKGCONFIG_EXTRA_LIBS "-lboost_system -lboost_filesystem -lboost_program_options -lyaml-cpp")
 # set(PROJECT_DESCRIPTION "A framework for motion planning.")
 # now we add all the required libraries in PKGCONFIG_REQUIRES macro
-list(APPEND PKGCONFIG_REQUIRES base-types)
-list(APPEND PKGCONFIG_REQUIRES base-logging)
+list(APPEND PKGCONFIG_REQUIRES base_types)
+list(APPEND PKGCONFIG_REQUIRES base_logging)
 list(APPEND PKGCONFIG_REQUIRES orocos_kdl)
 list(APPEND PKGCONFIG_REQUIRES kdl_parser)
 list(APPEND PKGCONFIG_REQUIRES urdfdom)

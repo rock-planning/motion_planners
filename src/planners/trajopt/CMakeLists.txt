@@ -12,7 +12,7 @@ find_package(Eigen3 REQUIRED)
 
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(YAML REQUIRED yaml-cpp)
+# pkg_check_modules(YAML REQUIRED yaml-cpp)
 
 set (TRAJOPT_PATH ${CMAKE_CURRENT_LIST_DIR})
 
