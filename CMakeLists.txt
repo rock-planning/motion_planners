@@ -92,16 +92,15 @@ string (REPLACE ";" " " PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES}")
 
 CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
-install(DIRECTORY ../include/ DESTINATION include/motion_planners)
+install(DIRECTORY ./include/ DESTINATION include/motion_planners)
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
 # Build the test
-# add_executable(test_motion_planners
-#     test/test_motion_planners.cpp
-# )
+#add_executable(test_motion_planners
+#    test/test_motion_planners.cpp
+#)
 
-# target_link_libraries(test_motion_planners
-#    ${TARGET_NAME}
-# )
-
+#target_link_libraries(test_motion_planners
+#   ${TARGET_NAME}
+#)

@@ -12,7 +12,7 @@ motion_planners::EnvironmentConfig getCollisionDetectionConfig()
     config.collision_detection_config.stop_after_first_collision = true;
     config.collision_detection_config.calculate_distance_information = false;
     config.collision_detection_config.max_num_collision_contacts = 1;
-    config.collision_detection_config.env_debug_config.save_oc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           = false;
+    config.collision_detection_config.env_debug_config.save_octree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           = false;
     config.collision_detection_config.env_debug_config.save_octree_filename="";
     config.collision_detection_config.env_debug_config.save_octree_path="";
     config.env_object_name = "environment";
