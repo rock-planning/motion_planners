@@ -6,7 +6,7 @@ includedir=${prefix}/include/@TARGET_NAME@
 Name: @TARGET_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
-Requires: @PKGCONFIG_REQUIRES@
-Libs: -L${libdir} -l@TARGET_NAME@ @PKGCONFIG_EXTRA_LIBS@
-Cflags: -std=c++14 -I${includedir} @PKGCONFIG_EXTRA_CFLAGS@
-
+Requires: orocos_kdl kdl_parser urdfdom urdfdom_headers srdfdom octomap kinematics_library collision_detection robot_model
+Requires.private: eigen3 base_types base_logging
+Libs: -L${libdir} -l@TARGET_NAME@ -lboost_system -lboost_filesystem @PKGCONFIG_LIBS@ @PKGCONFIG_EXTRA_LIBS@
+Cflags: -std=c++14 -I${includedir} @PKGCONFIG_CFLAGS@ -I@BOOST_INCLUDEDIR@ -I@EIGEN3_INCLUDE_DIR@ @PKGCONFIG_EXTRA_CFLAGS@

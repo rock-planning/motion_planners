@@ -1,25 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
-project(motion_planners)
+project(motion_planners VERSION 0.2)
 
-set(MOTION_PLANNERS 0.2)
 set(TARGET_NAME ${PROJECT_NAME})
 
-# Boost configuration
-# set(BOOST_ROOT /home/rsc/rsc/projects/libraries/dfki/dependancies/boost_1_82_0)
-# set(BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/lib)
-# set(BOOST_INCLUDEDIR ${BOOST_ROOT})
-
-CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
-
+# CMake configuration
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-INCLUDE(FindPkgConfig)
-
-find_package(Eigen3 REQUIRED)
-# find_package(yaml-cpp REQUIRED)
+# Boost configuration
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
+
+# External dependencies
+find_package(Eigen3 REQUIRED)
+INCLUDE(FindPkgConfig)
 pkg_check_modules(BASE_TYPES REQUIRED base_types)
-pkg_search_module(BASE_LOGGING REQUIRED base_logging)
+pkg_check_modules(BASE_LOGGING REQUIRED base_logging)
 pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
 pkg_check_modules(KDL_PARSER REQUIRED kdl_parser)
 pkg_check_modules(URDF REQUIRED urdfdom)
@@ -30,6 +28,7 @@ pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 
+# Include subdirectory for planners
 add_subdirectory(src/planners)
 
 get_directory_property(PLANNERS_PATH DIRECTORY src/planners DEFINITION PLANNERS_DIR_PATH)
@@ -39,68 +38,93 @@ get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY src/planners DEFINITION 
 #If OMPL is installed through ROS, we need to specify the ompl install folder for linking.
 get_directory_property(WRAPPERS_LINK_DIR DIRECTORY src/planners DEFINITION WRAPPERS_LINK_DIR)
 
-set(MOTIONPLANNER_LIB_INCLUDES  ${CMAKE_SOURCE_DIR}/include ${EIGEN3_INCLUDE_DIR} ${BASE_TYPES_INCLUDE_DIRS} 
-                                ${BASE_LOGGING_INCLUDE_DIRS} ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} 
-                                ${URDF_INCLUDE_DIRS} ${URDFHEADER_INCLUDE_DIRS} ${SRDF_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} 
-                                ${KINEMATICS_INCLUDE_DIRS} ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} 
-                                ${PLANNERS_PATH}/include ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
-
-set(MOTIONPLANNER_LINK_DIRS ${BASE_TYPES_LIBRARY_DIRS} ${BASE_LOGGING_LIBRARY_DIRS} ${KDL_PARSER_LIBRARY_DIRS} 
-                            ${URDF_LIBRARY_DIRS} ${URDFHEADER_LIBRARY_DIRS} ${SRDF_LIBRARY_DIRS} ${OCTOMAP_LIBRARY_DIRS} 
-                            ${KINEMATICS_LIBRARY_DIRS} ${COLLISION_DETECTION_LIBRARY_DIRS} ${ROBOT_MODEL_LIBRARY_DIRS}
+# Collect include directories and libraries
+set(MOTIONPLANNER_LIB_INCLUDES
+    ${CMAKE_SOURCE_DIR}/include
+    ${EIGEN3_INCLUDE_DIR}
+    ${BASE_TYPES_INCLUDE_DIRS}
+    ${BASE_LOGGING_INCLUDE_DIRS}
+    ${OROCOS_KDL_INCLUDE_DIRS}
+    ${KDL_PARSER_INCLUDE_DIRS}
+    ${URDF_INCLUDE_DIRS}
+    ${URDFHEADER_INCLUDE_DIRS}
+    ${SRDF_INCLUDE_DIRS}
+    ${OCTOMAP_INCLUDE_DIRS}
+    ${KINEMATICS_INCLUDE_DIRS}
+    ${COLLISION_DETECTION_INCLUDE_DIRS}
+    ${ROBOT_MODEL_INCLUDE_DIRS}
+    ${PLANNERS_PATH}/include
+    ${STOMP_PATH}/include
+    ${TRAJOPT_INCLUDE_HEADER}
 )
 
-set(MOTIONPLANNER_DEP_LIBS  ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}
-                            ${BASE_TYPES_LIBRARY} ${BASE_LOGGING_LIBRARY} ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES}
-                            ${URDF_LIBRARIES} ${URDFHEADER_LIBRARIES} ${SRDF_LIBRARIES} ${OCTOMAP_LIBRARIES} ${KINEMATICS_LIBRARIES} 
-                            ${COLLISION_DETECTION_LIBRARIES} ${ROBOT_MODEL_LIBRARIES})
-
-
-include_directories(${CMAKE_SOURCE_DIR}/include ${MOTIONPLANNER_LIB_INCLUDES})
-link_directories(${MOTIONPLANNER_LINK_DIRS} ${WRAPPERS_LINK_DIR})
-
-
-add_library(motion_planners SHARED
-            src/MotionPlanners.cpp            
+set(MOTIONPLANNER_DEP_LIBS
+    Boost::system
+    Boost::filesystem
+    Boost::program_options
+    ${BASE_TYPES_LIBRARY}
+    ${BASE_LOGGING_LIBRARY}
+    ${OROCOS_KDL_LIBRARIES}
+    ${KDL_PARSER_LIBRARIES}
+    ${URDF_LIBRARIES}
+    ${URDFHEADER_LIBRARIES}
+    ${SRDF_LIBRARIES}
+    ${OCTOMAP_LIBRARIES}
+    ${KINEMATICS_LIBRARIES}
+    ${COLLISION_DETECTION_LIBRARIES}
+    ${ROBOT_MODEL_LIBRARIES}
 )
 
-target_link_libraries(motion_planners ${MOTIONPLANNER_DEP_LIBS} planner_factory)
+# Create the main library
+add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp)
 
+# Target-based dependency management
+target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES})
+target_link_libraries(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_DEP_LIBS} planner_factory)
+
+# Generate pkg-config file
 set(PKGCONFIG_EXTRA_CFLAGS "-I${PLANNERS_PATH}/include -I${STOMP_PATH}/include")
 foreach(include ${TRAJOPT_INCLUDE_HEADER})
-    #escape any spaces
-    string (REPLACE " " "\\ " include "${include}")
+    string(REPLACE " " "\\ " include "${include}")
     set(PKGCONFIG_EXTRA_CFLAGS "${PKGCONFIG_EXTRA_CFLAGS} -I${include}")
 endforeach()
-#set(PKGCONFIG_EXTRA_LIBS "${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}")
-# set(PKGCONFIG_EXTRA_LIBS "-lboost_system -lboost_filesystem -lboost_program_options -lyaml-cpp")
-# set(PROJECT_DESCRIPTION "A framework for motion planning.")
-# now we add all the required libraries in PKGCONFIG_REQUIRES macro
-list(APPEND PKGCONFIG_REQUIRES base_types)
-list(APPEND PKGCONFIG_REQUIRES base_logging)
-list(APPEND PKGCONFIG_REQUIRES orocos_kdl)
-list(APPEND PKGCONFIG_REQUIRES kdl_parser)
-list(APPEND PKGCONFIG_REQUIRES urdfdom)
-list(APPEND PKGCONFIG_REQUIRES urdfdom_headers)
-list(APPEND PKGCONFIG_REQUIRES srdfdom)
-list(APPEND PKGCONFIG_REQUIRES octomap)
-list(APPEND PKGCONFIG_REQUIRES kinematics_library)
-list(APPEND PKGCONFIG_REQUIRES collision_detection)
-list(APPEND PKGCONFIG_REQUIRES robot_model)
-string (REPLACE ";" " " PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES}")
+list(APPEND PKGCONFIG_REQUIRES base_types base_logging orocos_kdl kdl_parser urdfdom urdfdom_headers srdfdom octomap kinematics_library collision_detection robot_model)
+string(REPLACE ";" " " PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES}")
 
+configure_file("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
-CONFIGURE_FILE("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
-
+# Installation
 install(DIRECTORY ./include/ DESTINATION include/motion_planners)
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
-# Build the test
-#add_executable(test_motion_planners
-#    test/test_motion_planners.cpp
-#)
+# # Testing configuration
+# option(ENABLE_TESTS "Build tests" ON)
 
-#target_link_libraries(test_motion_planners
-#   ${TARGET_NAME}
-#)
+# if(ENABLE_TESTS)
+#     enable_testing()
+
+#     add_executable(test_motion_planners test/test_motion_planners.cpp)
+
+#     target_include_directories(test_motion_planners PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
+    
+#     # Modified link libraries to include all planners explicitly
+#     target_link_libraries(test_motion_planners PRIVATE 
+#         ${TARGET_NAME}
+#         ${MOTIONPLANNER_DEP_LIBS}
+#         ompl_wrapper
+#         stomp_wrapper
+#         trajopt_wrapper
+#         planner_factory
+#         abstract_planner
+#         stomp
+#         trajopt
+#         trajopt_sco
+#         trajopt_utils
+#         json
+#         -lompl
+#         # -lfcl_wrapper
+#     )
+
+#     add_test(NAME MotionPlannersTest COMMAND test_motion_planners)
+# endif()
