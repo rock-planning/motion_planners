@@ -24,7 +24,7 @@ pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
 
 # Libraries required for linking
 set(DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-              ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOTMODEL_LIBRARIES}
+              ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOT_MODEL_LIBRARIES}
               ${COLLISION_DETECTION_LIBRARIES} ${KINEMATICS_LIBRARIES})
 
 # Get the planner directories
@@ -84,29 +84,31 @@ find_package(ompl REQUIRED)
 
 if(ompl_FOUND)
     message(STATUS "OMPL found!")
-    include_directories(/usr/local/include/ompl-1.6)  # Add OMPL includes
-    # link_directories(${OMPL_LIBRARY_DIRS})  # Add OMPL library directories
+    # include_directories(/usr/include/ompl-1.5)  # Add OMPL includes
+    set(OMPL_INCLUDE_DIRS "/usr/include/ompl-1.5")
+    include_directories(${OMPL_INCLUDE_DIRS})
+    link_directories(${OMPL_LIBRARY_DIRS})
 
     # OMPL Wrappers
     add_library(ompl_wrapper SHARED
         ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/OmplPlanner.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/HandleOmplConfig.cpp
     )
+
+    target_include_directories(ompl_wrapper PUBLIC ${OMPL_INCLUDE_DIRS})
+
     target_link_libraries(ompl_wrapper
-        ${OMPL_LIBRARIES}  # Link OMPL libraries
-        ${OROCOS_KDL_LIBRARIES}
+        ${OMPL_LIBRARIES}
         abstract_planner
         collision_detection
         robot_model
+        ${DEPS_LIB}
     )
 
-    target_include_directories(ompl_wrapper PRIVATE ${OMPL_INCLUDE_DIRS})
-
-    target_link_directories(ompl_wrapper PRIVATE ${OMPL_LIBRARY_DIRS})
+    # target_link_directories(ompl_wrapper PUBLIC ${OMPL_LIBRARY_DIRS})
 
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
     install(TARGETS ompl_wrapper DESTINATION lib)
-
 else()
     message(STATUS "OMPL not found!")
 endif()

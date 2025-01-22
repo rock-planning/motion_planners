@@ -15,6 +15,7 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 # External dependencies
 find_package(Eigen3 REQUIRED)
+find_package(ompl REQUIRED)
 INCLUDE(FindPkgConfig)
 pkg_check_modules(BASE_TYPES REQUIRED base_types)
 pkg_check_modules(BASE_LOGGING REQUIRED base_logging)
@@ -75,12 +76,16 @@ set(MOTIONPLANNER_DEP_LIBS
     ${ROBOT_MODEL_LIBRARIES}
 )
 
+set(OMPL_INCLUDE_DIRS "/usr/include/ompl-1.5")
+include_directories(${OMPL_INCLUDE_DIRS})
+link_directories(${OMPL_LIBRARY_DIRS})
+
 # Create the main library
 add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp)
 
 # Target-based dependency management
-target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES})
-target_link_libraries(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_DEP_LIBS} planner_factory)
+target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES} ${OMPL_INCLUDE_DIRS})
+target_link_libraries(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_DEP_LIBS} planner_factory ${OMPL_LIBRARIES})
 
 # Generate pkg-config file
 set(PKGCONFIG_EXTRA_CFLAGS "-I${PLANNERS_PATH}/include -I${STOMP_PATH}/include")

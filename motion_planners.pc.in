@@ -8,5 +8,5 @@ Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
 Requires: @PKGCONFIG_REQUIRES_STR@
 Requires.private: eigen3
-Libs: -L${libdir} -l@TARGET_NAME@ -lboost_system -lboost_filesystem @PKGCONFIG_LIBS@ @PKGCONFIG_EXTRA_LIBS@
+Libs: -L${libdir} -l@TARGET_NAME@ -lboost_system -lboost_filesystem @PKGCONFIG_LIBS@ @PKGCONFIG_EXTRA_LIBS@ -lompl -lompl_wrapper
 Cflags: -I${includedir} @PKGCONFIG_CFLAGS@ @PKGCONFIG_EXTRA_CFLAGS@ -I@BOOST_INCLUDEDIR@ -I@EIGEN3_INCLUDE_DIR@
