@@ -89,14 +89,14 @@ foreach(include ${TRAJOPT_INCLUDE_HEADER})
     set(PKGCONFIG_EXTRA_CFLAGS "${PKGCONFIG_EXTRA_CFLAGS} -I${include}")
 endforeach()
 list(APPEND PKGCONFIG_REQUIRES base_types base_logging orocos_kdl kdl_parser urdfdom urdfdom_headers srdfdom octomap kinematics_library collision_detection robot_model)
-string(REPLACE ";" " " PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES}")
+list(JOIN PKGCONFIG_REQUIRES " " PKGCONFIG_REQUIRES_STR)
 
 configure_file("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
-# Installation
-install(DIRECTORY ./include/ DESTINATION include/motion_planners)
+# Install rules
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME} DESTINATION include)
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
+install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
 # # Testing configuration
 # option(ENABLE_TESTS "Build tests" ON)
