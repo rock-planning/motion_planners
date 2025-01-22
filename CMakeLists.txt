@@ -62,8 +62,8 @@ set(MOTIONPLANNER_DEP_LIBS
     Boost::system
     Boost::filesystem
     Boost::program_options
-    ${BASE_TYPES_LIBRARY}
-    ${BASE_LOGGING_LIBRARY}
+    ${BASE_TYPES_LIBRARIES}
+    ${BASE_LOGGING_LIBRARIES}
     ${OROCOS_KDL_LIBRARIES}
     ${KDL_PARSER_LIBRARIES}
     ${URDF_LIBRARIES}
@@ -98,33 +98,20 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME} DESTINATION includ
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
-# # Testing configuration
-# option(ENABLE_TESTS "Build tests" ON)
+# Testing configuration
+option(ENABLE_TESTS "Build tests" ON)
 
-# if(ENABLE_TESTS)
-#     enable_testing()
+if(ENABLE_TESTS)
+    enable_testing()
 
-#     add_executable(test_motion_planners test/test_motion_planners.cpp)
+    add_executable(test_motion_planners test/test_motion_planners.cpp)
 
-#     target_include_directories(test_motion_planners PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
-    
-#     # Modified link libraries to include all planners explicitly
-#     target_link_libraries(test_motion_planners PRIVATE 
-#         ${TARGET_NAME}
-#         ${MOTIONPLANNER_DEP_LIBS}
-#         ompl_wrapper
-#         stomp_wrapper
-#         trajopt_wrapper
-#         planner_factory
-#         abstract_planner
-#         stomp
-#         trajopt
-#         trajopt_sco
-#         trajopt_utils
-#         json
-#         -lompl
-#         # -lfcl_wrapper
-#     )
+    target_include_directories(test_motion_planners PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
 
-#     add_test(NAME MotionPlannersTest COMMAND test_motion_planners)
-# endif()
+    target_link_libraries(test_motion_planners PRIVATE
+        ${TARGET_NAME}
+        ${MOTIONPLANNER_DEP_LIBS}
+    )
+
+    add_test(NAME MotionPlannersTest COMMAND test_motion_planners)
+endif()
