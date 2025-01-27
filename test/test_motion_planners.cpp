@@ -12,7 +12,7 @@ motion_planners::EnvironmentConfig getCollisionDetectionConfig()
     config.collision_detection_config.stop_after_first_collision = true;
     config.collision_detection_config.calculate_distance_information = false;
     config.collision_detection_config.max_num_collision_contacts = 1;
-    config.collision_detection_config.env_debug_config.save_octree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           = false;
+    config.collision_detection_config.env_debug_config.save_octree = false;
     config.collision_detection_config.env_debug_config.save_octree_filename="";
     config.collision_detection_config.env_debug_config.save_octree_path="";
     config.env_object_name = "environment";
@@ -27,7 +27,7 @@ kinematics_library::KinematicsConfig getKinematicsConfig(std::string test_folder
 
     config.config_name = "kuka_arm";
     config.base_name = "base_link";
-    config.tip_name = "link_7";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+    config.tip_name = "link_7";
     config.urdf_file = test_folder_path +"./data/kuka_iiwa.urdf";
     config.kinematic_solver = kinematics_library::KDL;
     config.solver_config_abs_path = test_folder_path +"./config";
@@ -58,7 +58,7 @@ motion_planners::Config getMotionPlannerConfig(std::string test_folder_path)
     // get robot model config
     config.planner_config.robot_model_config = getRobotModelConfig(test_folder_path);
     // planner specific config
-    config.planner_config.planner_specific_config = test_folder_path +"./config/ompl.yml"; //stompl.yml
+    config.planner_config.planner_specific_config = test_folder_path +"./config/ompl.yml"; //stomp.yml
     // planner
     config.planner_config.planner = motion_planners::OMPL; //motion_planners::STOMP;
     
@@ -152,7 +152,7 @@ void printPlannerStatus(motion_planners::PlannerStatus &planner_status)
                     std::cout<<"IK_TIMEOUT"<<std::endl; break;        
                 case kinematics_library::KinematicsStatus::IK_JOINTLIMITS_VIOLATED:
                     std::cout<<"IK_JOINTLIMITS_VIOLATED"<<std::endl; break;
-               case kinematics_library::KinematicsStatus::NO_CONFIG_FILE:
+                case kinematics_library::KinematicsStatus::NO_CONFIG_FILE:
                     std::cout<<"NO_KINEMATIC_CONFIG_FILE"<<std::endl; break;
                 case kinematics_library::KinematicsStatus::CONFIG_READ_ERROR:
                     std::cout<<"KINEMATIC_CONFIG_READ_ERROR"<<std::endl; break;
