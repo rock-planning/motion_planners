@@ -78,22 +78,20 @@ target_link_libraries(trajopt_wrapper abstract_planner trajopt  ${DEPS_LIB})
 LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
 # OMPL Configuration
-#set(OMPL_DIR "/usr/local/share/ompl/cmake")  # Set OMPL directory
-#pkg_check_modules(OMPL ompl)  # Find OMPL package
 find_package(ompl REQUIRED)
 
 if(ompl_FOUND)
     message(STATUS "OMPL found!")
     include_directories(/usr/local/include/ompl-1.6)  # Add OMPL includes
-    #link_directories(${OMPL_LIBRARY_DIRS})  # Add OMPL library directories
 
     # OMPL Wrappers
     add_library(ompl_wrapper SHARED
         ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/OmplPlanner.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/HandleOmplConfig.cpp
     )
+
     target_link_libraries(ompl_wrapper
-        ${OMPL_LIBRARIES}  # Link OMPL libraries
+        ompl::ompl  # Link OMPL libraries
         ${OROCOS_KDL_LIBRARIES}
         ${YAML_LIBRARIES}
         abstract_planner
@@ -101,8 +99,8 @@ if(ompl_FOUND)
         robot_model
     )
 
+    # these variables are not set by OMPL
     target_include_directories(ompl_wrapper PRIVATE ${OMPL_INCLUDE_DIRS})
-
     target_link_directories(ompl_wrapper PRIVATE ${OMPL_LIBRARY_DIRS})
 
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
@@ -113,8 +111,7 @@ else()
 endif()
 
 # Add definition for OMPL
-#add_definitions(-DOMPL_LIB_FOUND=${OMPL_LIB_FOUND})
-#message("ompl = ${OMPL_LIB_FOUND}")
+add_definitions(-DOMPL_LIB_FOUND=${ompl_FOUND})
 
 # Planner Factory Library
 add_library(planner_factory SHARED
