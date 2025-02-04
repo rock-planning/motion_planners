@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Boost configuration
-find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+find_package(Boost COMPONENTS system thread filesystem program_options REQUIRED)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 # External dependencies
@@ -42,6 +42,7 @@ get_directory_property(WRAPPERS_LINK_DIR DIRECTORY src/planners DEFINITION WRAPP
 set(MOTIONPLANNER_LIB_INCLUDES
     ${CMAKE_SOURCE_DIR}/include
     ${EIGEN3_INCLUDE_DIR}
+    ${BOOST_INCLUDE_DIR}
     ${BASE_TYPES_INCLUDE_DIRS}
     ${BASE_LOGGING_INCLUDE_DIRS}
     ${OROCOS_KDL_INCLUDE_DIRS}
@@ -60,6 +61,7 @@ set(MOTIONPLANNER_LIB_INCLUDES
 
 set(MOTIONPLANNER_DEP_LIBS
     Boost::system
+    Boost::thread
     Boost::filesystem
     Boost::program_options
     ${BASE_TYPES_LIBRARY}
