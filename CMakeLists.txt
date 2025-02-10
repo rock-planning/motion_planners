@@ -104,11 +104,32 @@ option(ENABLE_TESTS "Build tests" ON)
 if(ENABLE_TESTS)
     enable_testing()
 
+    # Initial
     add_executable(test_motion_planners test/test_motion_planners.cpp)
 
     target_include_directories(test_motion_planners PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
 
     target_link_libraries(test_motion_planners PRIVATE
+        ${TARGET_NAME}
+        ${MOTIONPLANNER_DEP_LIBS}
+    )
+
+    # VISPA EU-RISE
+    add_executable(test_vispa test/test_vispa.cpp)
+
+    target_include_directories(test_vispa PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
+
+    target_link_libraries(test_vispa PRIVATE
+        ${TARGET_NAME}
+        ${MOTIONPLANNER_DEP_LIBS}
+    )
+
+    # KUKA EU-RISE
+    add_executable(test_kuka test/test_kuka.cpp)
+
+    target_include_directories(test_kuka PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
+
+    target_link_libraries(test_kuka PRIVATE
         ${TARGET_NAME}
         ${MOTIONPLANNER_DEP_LIBS}
     )

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<robot name="EURISE_workbench" xmlns:xacro="http://wiki.ros.org/xacro">
+  <!-- Robotic workbench using 3 VISPA links for Webots -->
+
+  <webots>
+    <plugin type="webots_custom_ros2_control::Ros2Control" />
+  </webots>
+
+  <!-- Robotic workbench -->
+  <xacro:include filename="$(find simulation)/protos/EURISE/EuriseWorkbench/urdf/workbench_macro.xacro" />
+
+  <!-- Define robot constants -->
+  <xacro:arg name="arm_name" default="workbench"/>
+  <xacro:arg name="arm_origin_xyz" default="0 0 0"/>
+  <xacro:arg name="arm_origin_rpy" default="0 0 0"/>
+
+  <!-- Mock components -->
+  <xacro:arg name="mock_type" default="webots"/>
+
+  <!-- Fixed World -->
+  <link name="$(arg arm_name)_base_link"/>
+
+  <!-- Arm -->
+  <xacro:Workbench robot_name="$(arg arm_name)" parent_name="$(arg arm_name)_base_link">
+    <origin xyz="$(arg arm_origin_xyz)" rpy="$(arg arm_origin_rpy)" />
+  </xacro:Workbench>
+
+  <!-- ros2 control include -->
+  <xacro:include filename="$(find simulation)/protos/EURISE/EuriseWorkbench/urdf/workbench.ros2_control.xacro" />
+  <!-- ros2 control instance -->
+  <xacro:EURISE_workbench_ros2_control name="WebotsControl" prefix="$(arg arm_name)" mock_type="$(arg mock_type)"/>
+
+</robot>
