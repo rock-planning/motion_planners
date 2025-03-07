@@ -230,6 +230,15 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 
         kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
 
+        for (size_t i = 0; i < ik_solution_.size(); i++)
+        {
+            for (size_t j = 0; j < ik_solution_[i].elements.size(); j++)
+            {
+                std::cout << ik_solution_[i].elements[j].position << ", ";
+            }
+            std::cout << std::endl;
+        }
+
         if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND || planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
         {
 

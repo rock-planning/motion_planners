@@ -1095,7 +1095,7 @@
     </visual>
     <collision>
         <geometry>
-            <box size="0.15 0.15 0.15" />
+            <mesh filename="./meshes/v_kuka_link_7-MF-Touch-pneumatisch.dae"/>
         </geometry>
     </collision>
   </link>

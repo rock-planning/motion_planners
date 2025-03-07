@@ -1,112 +1,6 @@
 #include <motion_planners/MotionPlanners.hpp>
-#include <tinyxml2.h>
-#include <unordered_set>
-#include <boost/container_hash/hash.hpp>  // Ensure boost::hash is fully defined
-#include <fstream>
 
 using namespace motion_planners;
-
-std::vector<std::pair<std::string, std::string>> getDisabledCollisionPairs(const std::string& srdf_path)
-{
-    std::vector<std::pair<std::string, std::string>> disabled_pairs;
-    tinyxml2::XMLDocument doc;
-    
-    if (doc.LoadFile(srdf_path.c_str()) != tinyxml2::XML_SUCCESS) {
-        std::cout << "Error: Unable to load SRDF file " << srdf_path << std::endl;
-        return disabled_pairs;
-    }
-
-    tinyxml2::XMLElement* robot = doc.FirstChildElement("robot");
-    if (!robot) {
-        std::cout << "Error: No <robot> tag found in SRDF!" << std::endl;
-        return disabled_pairs;
-    }
-
-    tinyxml2::XMLElement* collision_matrix = robot->FirstChildElement("collision_matrix");
-    if (!collision_matrix) {
-        std::cout << "Warning: No <collision_matrix> found in SRDF. Defaulting to enabled collisions." << std::endl;
-        return disabled_pairs;
-    }
-
-    tinyxml2::XMLElement* pair = collision_matrix->FirstChildElement("pair");
-    while (pair) {
-        const char* link1 = pair->Attribute("link1");
-        const char* link2 = pair->Attribute("link2");
-
-        if (link1 && link2) {
-            disabled_pairs.emplace_back(link1, link2);
-        }
-
-        pair = pair->NextSiblingElement("pair");
-    }
-
-    return disabled_pairs;
-}
-
-std::unordered_set<std::pair<std::string, std::string>, boost::hash<std::pair<std::string, std::string>>> getEnabledCollisionPairs(const std::string& srdf_path)
-{
-    std::unordered_set<std::pair<std::string, std::string>, boost::hash<std::pair<std::string, std::string>>> enabled_pairs;
-    tinyxml2::XMLDocument doc;
-
-    if (doc.LoadFile(srdf_path.c_str()) != tinyxml2::XML_SUCCESS) {
-        std::cout << "Error: Unable to load SRDF file " << srdf_path << std::endl;
-        return enabled_pairs;
-    }
-
-    tinyxml2::XMLElement* robot = doc.FirstChildElement("robot");
-    if (!robot) {
-        std::cout << "Error: No <robot> tag found in SRDF!" << std::endl;
-        return enabled_pairs;
-    }
-
-    tinyxml2::XMLElement* collision_matrix = robot->FirstChildElement("collision_matrix");
-    if (!collision_matrix) {
-        std::cout << "Warning: No <collision_matrix> found in SRDF. Defaulting to enabling all collisions." << std::endl;
-        return enabled_pairs;
-    }
-
-    tinyxml2::XMLElement* pair = collision_matrix->FirstChildElement("pair");
-    while (pair) {
-        const char* link1 = pair->Attribute("link1");
-        const char* link2 = pair->Attribute("link2");
-
-        if (link1 && link2) {
-            enabled_pairs.insert({std::string(link1), std::string(link2)});
-        }
-
-        pair = pair->NextSiblingElement("pair");
-    }
-
-    return enabled_pairs;
-}
-
-std::vector<std::string> getAllRobotLinks(const std::string& urdf_path) {
-    std::vector<std::string> link_names;
-    tinyxml2::XMLDocument doc;
-
-    // Load the URDF file
-    if (doc.LoadFile(urdf_path.c_str()) != tinyxml2::XML_SUCCESS) {
-        std::cerr << "Failed to load URDF file: " << urdf_path << std::endl;
-        return link_names;
-    }
-
-    // Get the root element (<robot>)
-    tinyxml2::XMLElement* robot = doc.FirstChildElement("robot");
-    if (!robot) {
-        std::cerr << "URDF does not contain <robot> element." << std::endl;
-        return link_names;
-    }
-
-    // Iterate over all <link> elements
-    for (tinyxml2::XMLElement* link = robot->FirstChildElement("link"); link; link = link->NextSiblingElement("link")) {
-        const char* name = link->Attribute("name");
-        if (name) {
-            link_names.push_back(name);
-        }
-    }
-
-    return link_names;
-}
 
 // motion_planners::EnvironmentConfig getCollisionDetectionConfig()
 // {
@@ -126,11 +20,11 @@ std::vector<std::string> getAllRobotLinks(const std::string& urdf_path) {
 //     return config;
 // }
 
-motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string& srdf_path, 
-                                                               const std::vector<std::string>& all_links)
+motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string &srdf_path,
+                                                               const std::vector<std::string> &all_links)
 {
     motion_planners::EnvironmentConfig config;
-    config.env_frame = "IIWA14_BASE_LINK_link";
+    config.env_frame = "WEBOTS_WORLD_link";
     config.collision_detection_config.collision_library = collision_detection::FCL;
     config.collision_detection_config.collision_info_type = collision_detection::MULTI_CONTACT;
     config.collision_detection_config.stop_after_first_collision = true;
@@ -142,37 +36,40 @@ motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string
     // Get enabled collision pairs from SRDF
     auto enabled_pairs = getEnabledCollisionPairs(srdf_path);
 
-    // Open a file to write the disabled collision pairs
-    std::ofstream output_file("disabled_collisions_kuka.xml");
+    // // Open a file to write the disabled collision pairs
+    // std::ofstream output_file("disabled_collisions_kuka.xml");
 
-    if (!output_file.is_open()) {
-        std::cout << "Error: Unable to open file for writing!" << std::endl;
-    }
+    // if (!output_file.is_open())
+    // {
+    //     std::cout << "Error: Unable to open file for writing!" << std::endl;
+    // }
 
-    // Iterate through all possible pairs and disable everything except enabled ones
-    for (size_t i = 0; i < all_links.size(); ++i) {
-        for (size_t j = i + 1; j < all_links.size(); ++j) {
-            std::string link1 = all_links[i];
-            std::string link2 = all_links[j];
+    // // Iterate through all possible pairs and disable everything except enabled ones
+    // for (size_t i = 0; i < all_links.size(); ++i)
+    // {
+    //     for (size_t j = i + 1; j < all_links.size(); ++j)
+    //     {
+    //         std::string link1 = all_links[i];
+    //         std::string link2 = all_links[j];
 
-            // If this pair is NOT in the enabled list, disable it
-            if (enabled_pairs.find({link1, link2}) == enabled_pairs.end() &&
-                enabled_pairs.find({link2, link1}) == enabled_pairs.end()) 
-            {
-                collision_detection::CollisionLinkName disabled_collision(link1, link2);
-                // Write to the file instead of console output
-                output_file << "<disable_collisions link1=\"" << link1
-                            << "\" link2=\"" << link2
-                            << "\" reason=\"Never\" />\n";
-                config.disabled_collision_pair.collision_link_names.push_back(disabled_collision);
-            }
-        }
-    }
+    //         // If this pair is NOT in the enabled list, disable it
+    //         if (enabled_pairs.find({link1, link2}) == enabled_pairs.end() &&
+    //             enabled_pairs.find({link2, link1}) == enabled_pairs.end())
+    //         {
+    //             collision_detection::CollisionLinkName disabled_collision(link1, link2);
+    //             // Write to the file instead of console output
+    //             output_file << "<disable_collisions link1=\"" << link1
+    //                         << "\" link2=\"" << link2
+    //                         << "\" reason=\"Never\" />\n";
+    //             config.disabled_collision_pair.collision_link_names.push_back(disabled_collision);
+    //         }
+    //     }
+    // }
 
     // output_file.close();
 
     config.env_object_name = "environment";
-    collision_detection::CollisionLinkName disabled_collision("environment", "IIWA14_BASE_LINK_link"); // WEBOTS_WORLD_link
+    collision_detection::CollisionLinkName disabled_collision("environment", "WEBOTS_WORLD_link"); // WEBOTS_WORLD_link
     config.disabled_collision_pair.collision_link_names.push_back(disabled_collision);
 
     return config;
@@ -183,12 +80,12 @@ kinematics_library::KinematicsConfig getKinematicsConfig(std::string test_folder
     kinematics_library::KinematicsConfig config;
 
     config.config_name = "kuka_arm";
-    config.base_name = "IIWA14_BASE_LINK_link"; // WEBOTS_WORLD_link
+    config.base_name = "WEBOTS_WORLD_link";
     config.tip_name = "IIWA14_LINK_7_link";
     config.urdf_file = test_folder_path + "./data/eu-rise/eurise_scene.urdf";
-    config.kinematic_solver = kinematics_library::KDL;
+    config.kinematic_solver = kinematics_library::TRACIK; // kinematics_library::KDL; kinematics_library::TRACIK; kinematics_library::OPT;
     config.solver_config_abs_path = test_folder_path + "./config";
-    config.solver_config_filename = "kdl_config.yml";
+    config.solver_config_filename = "trac_ik_config.yml"; // kdl_config.yml; trac_ik_config.yml; opt_ik_config.yml;
 
     return config;
 }
@@ -219,9 +116,6 @@ motion_planners::Config getMotionPlannerConfig(std::string test_folder_path)
     // planner
     config.planner_config.planner = motion_planners::STOMP; // motion_planners::STOMP;
 
-    // // get collision detection config
-    // config.env_config = getCollisionDetectionConfig();
-
     std::vector<std::string> all_links = getAllRobotLinks(config.planner_config.robot_model_config.urdf_file);
 
     // get collision detection config
@@ -238,7 +132,6 @@ base::samples::Joints convertToBaseJoints(const std::vector<double> &data)
     assert(joint_values.size() == data.size());
     for (size_t i = 0; i < data.size(); i++)
     {
-        // std::cout << "i = " << i << "; " << data[i] << std::endl;
         joint_values.elements[i].position = data[i];
     }
 
@@ -411,21 +304,21 @@ int main(int argc, char *argv[])
     }
 
     // assign planning request
-    std::vector<double> start_vec_values = {0.773089, 1.42911, 2.96706, -1.50978, 2.22399, -0.0448741, 1.37055};
+    std::vector<double> start_vec_values = {0.113729, 1.07171, 2.96481, -0.608764, 2.56874, -0.552499, 1.30846};
     base::samples::Joints start_joint_values = convertToBaseJoints(start_vec_values);
 
-    std::vector<double> target_vec_values = {1.95047, 1.74664, -1.81535, -1.38971, 2.96706, 1.57035, -1.24202};
+    std::vector<double> target_vec_values = {2.49624, 0.4691, 1.23152, -0.517199, 2.92409, -0.646905, 2.40708};
     base::samples::Joints target_joint_values = convertToBaseJoints(target_vec_values);
 
     // base::samples::RigidBodyState target_pose_values;
-    // target_pose_values.position(0) = 2.33729;
-    // target_pose_values.position(1) = 2.67717;
-    // target_pose_values.position(2) = 1.11836;
+    // target_pose_values.position(0) = 2.337290;
+    // target_pose_values.position(1) = 2.677170;
+    // target_pose_values.position(2) = 1.118360;
 
-    // target_pose_values.orientation.y() = 0.9518084;
-    // target_pose_values.orientation.x() = 0.0453606;
-    // target_pose_values.orientation.w() = 0.2529564;
-    // target_pose_values.orientation.z() = -0.1673806;
+    // target_pose_values.orientation.w() = -0.167381;
+    // target_pose_values.orientation.x() = 0.951808;
+    // target_pose_values.orientation.y() = 0.045361;
+    // target_pose_values.orientation.z() = 0.252956;
 
     // target_pose_values.sourceFrame = "WEBOTS_WORLD_link"; // WEBOTS_WORLD_link
     // target_pose_values.targetFrame = "IIWA14_LINK_7_link";
@@ -454,9 +347,9 @@ int main(int argc, char *argv[])
         printPlannerStatus(planner_status);
         collision_detection::CollisionLinksName collided_objects = planner.getCollidedObjectsNames();
         for (const auto &collision_name : collided_objects.collision_link_names)
-            {
-                std::cout << "Collided Object 1: " << collision_name.link_1 << ", Collided Object 2: " << collision_name.link_2 << std::endl;
-            }
+        {
+            std::cout << "Collided Object 1: " << collision_name.link_1 << ", Collided Object 2: " << collision_name.link_2 << std::endl;
+        }
     }
     return 0;
 }

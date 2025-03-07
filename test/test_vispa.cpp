@@ -1,117 +1,6 @@
 #include <motion_planners/MotionPlanners.hpp>
-// #include <tinyxml2.h>
-// #include <unordered_set>
-// #include <urdf_parser/urdf_parser.h> // If using urdfdom
-// #include <urdf_model/model.h> // If using urdfdom_headers
-// #include <urdf_model/link.h> 
-// #include <urdf_model/joint.h>
-// #include <boost/container_hash/hash.hpp>  // Ensure boost::hash is fully defined
-// #include <fstream>
 
 using namespace motion_planners;
-
-// std::vector<std::pair<std::string, std::string>> getDisabledCollisionPairs(const std::string& srdf_path)
-// {
-//     std::vector<std::pair<std::string, std::string>> disabled_pairs;
-//     tinyxml2::XMLDocument doc;
-    
-//     if (doc.LoadFile(srdf_path.c_str()) != tinyxml2::XML_SUCCESS) {
-//         std::cout << "Error: Unable to load SRDF file " << srdf_path << std::endl;
-//         return disabled_pairs;
-//     }
-
-//     tinyxml2::XMLElement* robot = doc.FirstChildElement("robot");
-//     if (!robot) {
-//         std::cout << "Error: No <robot> tag found in SRDF!" << std::endl;
-//         return disabled_pairs;
-//     }
-
-//     tinyxml2::XMLElement* collision_matrix = robot->FirstChildElement("collision_matrix");
-//     if (!collision_matrix) {
-//         std::cout << "Warning: No <collision_matrix> found in SRDF. Defaulting to enabled collisions." << std::endl;
-//         return disabled_pairs;
-//     }
-
-//     tinyxml2::XMLElement* pair = collision_matrix->FirstChildElement("pair");
-//     while (pair) {
-//         const char* link1 = pair->Attribute("link1");
-//         const char* link2 = pair->Attribute("link2");
-
-//         if (link1 && link2) {
-//             disabled_pairs.emplace_back(link1, link2);
-//         }
-
-//         pair = pair->NextSiblingElement("pair");
-//     }
-
-//     return disabled_pairs;
-// }
-
-// std::unordered_set<std::pair<std::string, std::string>, boost::hash<std::pair<std::string, std::string>>> getEnabledCollisionPairs(const std::string& srdf_path)
-// {
-//     std::unordered_set<std::pair<std::string, std::string>, boost::hash<std::pair<std::string, std::string>>> enabled_pairs;
-//     tinyxml2::XMLDocument doc;
-
-//     if (doc.LoadFile(srdf_path.c_str()) != tinyxml2::XML_SUCCESS) {
-//         std::cout << "Error: Unable to load SRDF file " << srdf_path << std::endl;
-//         return enabled_pairs;
-//     }
-
-//     tinyxml2::XMLElement* robot = doc.FirstChildElement("robot");
-//     if (!robot) {
-//         std::cout << "Error: No <robot> tag found in SRDF!" << std::endl;
-//         return enabled_pairs;
-//     }
-
-//     tinyxml2::XMLElement* collision_matrix = robot->FirstChildElement("collision_matrix");
-//     if (!collision_matrix) {
-//         std::cout << "Warning: No <collision_matrix> found in SRDF. Defaulting to enabling all collisions." << std::endl;
-//         return enabled_pairs;
-//     }
-
-//     tinyxml2::XMLElement* pair = collision_matrix->FirstChildElement("pair");
-//     while (pair) {
-//         const char* link1 = pair->Attribute("link1");
-//         const char* link2 = pair->Attribute("link2");
-
-//         if (link1 && link2) {
-//             enabled_pairs.insert({std::string(link1), std::string(link2)});
-//         }
-
-//         pair = pair->NextSiblingElement("pair");
-//     }
-
-//     return enabled_pairs;
-// }
-
-// std::vector<std::string> getAllRobotLinks(const std::string& urdf_path) {
-//     std::vector<std::string> link_names;
-//     tinyxml2::XMLDocument doc;
-
-//     // Load the URDF file
-//     if (doc.LoadFile(urdf_path.c_str()) != tinyxml2::XML_SUCCESS) {
-//         std::cerr << "Failed to load URDF file: " << urdf_path << std::endl;
-//         return link_names;
-//     }
-
-//     // Get the root element (<robot>)
-//     tinyxml2::XMLElement* robot = doc.FirstChildElement("robot");
-//     if (!robot) {
-//         std::cerr << "URDF does not contain <robot> element." << std::endl;
-//         return link_names;
-//     }
-
-//     // Iterate over all <link> elements
-//     for (tinyxml2::XMLElement* link = robot->FirstChildElement("link"); link; link = link->NextSiblingElement("link")) {
-//         const char* name = link->Attribute("name");
-//         if (name) {
-//             link_names.push_back(name);
-//         }
-//     }
-
-//     return link_names;
-// }
-
 
 motion_planners::EnvironmentConfig getCollisionDetectionConfig()
 {
@@ -158,7 +47,7 @@ motion_planners::EnvironmentConfig getCollisionDetectionConfig()
 //     return config;
 // }
 
-// motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string& srdf_path, 
+// motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string& srdf_path,
 //                                                                const std::vector<std::string>& all_links)
 // {
 //     motion_planners::EnvironmentConfig config;
@@ -189,7 +78,7 @@ motion_planners::EnvironmentConfig getCollisionDetectionConfig()
 
 //             // If this pair is NOT in the enabled list, disable it
 //             if (enabled_pairs.find({link1, link2}) == enabled_pairs.end() &&
-//                 enabled_pairs.find({link2, link1}) == enabled_pairs.end()) 
+//                 enabled_pairs.find({link2, link1}) == enabled_pairs.end())
 //             {
 //                 collision_detection::CollisionLinkName disabled_collision(link1, link2);
 //                 // // Write to the file instead of console output
@@ -206,20 +95,19 @@ motion_planners::EnvironmentConfig getCollisionDetectionConfig()
 //     return config;
 // }
 
-
 kinematics_library::KinematicsConfig getKinematicsConfig(std::string test_folder_path)
 {
     kinematics_library::KinematicsConfig config;
 
     config.config_name = "vispa_arm";
-    config.base_name = "VISPA_BASE_LINK_link";
+    config.base_name = "VISPA_BASE_LINK_link"; // WEBOTS_WORLD_link
     config.tip_name = "VISPA_LINK_6_link";
     config.urdf_file = test_folder_path + "./data/eu-rise/eurise_scene.urdf";
-    config.kinematic_solver = kinematics_library::KDL;
+    config.kinematic_solver = kinematics_library::KDL; // kinematics_library::KDL; kinematics_library::TRACIK; kinematics_library::OPT;
     config.solver_config_abs_path = test_folder_path + "./config";
-    config.solver_config_filename = "kdl_config.yml";
+    config.solver_config_filename = "kdl_config.yml"; // kdl_config.yml; trac_ik_config.yml; opt_ik_config.yml;
 
-    return config;
+        return config;
 }
 
 robot_model::RobotModelConfig getRobotModelConfig(std::string test_folder_path)
@@ -247,13 +135,11 @@ motion_planners::Config getMotionPlannerConfig(std::string test_folder_path)
     config.planner_config.planner_specific_config = test_folder_path + "./config/stomp_vispa.yml"; // stomp.yml
     // planner
     config.planner_config.planner = motion_planners::STOMP; // motion_planners::STOMP;
-    config.env_config = getCollisionDetectionConfig();
 
-    // std::vector<std::string> all_links = getAllRobotLinks(config.planner_config.robot_model_config.urdf_file);
+    std::vector<std::string> all_links = getAllRobotLinks(config.planner_config.robot_model_config.urdf_file);
 
     // get collision detection config
-    // config.env_config = getCollisionDetectionConfig(test_folder_path + "./data/eu-rise/vispa.srdf");
-    // config.env_config = getCollisionDetectionConfig(config.planner_config.robot_model_config.srdf_file, all_links);
+    config.env_config = getCollisionDetectionConfig(config.planner_config.robot_model_config.srdf_file, all_links);
     return config;
 }
 
@@ -265,7 +151,6 @@ base::samples::Joints convertToBaseJoints(const std::vector<double> &data)
     assert(joint_values.size() == data.size());
     for (size_t i = 0; i < data.size(); i++)
     {
-        // std::cout << "i = " << i << "; " << data[i] << std::endl;
         joint_values.elements[i].position = data[i];
     }
 
@@ -466,9 +351,9 @@ int main(int argc, char *argv[])
         printPlannerStatus(planner_status);
         collision_detection::CollisionLinksName collided_objects = planner.getCollidedObjectsNames();
         for (const auto &collision_name : collided_objects.collision_link_names)
-            {
-                std::cout << "Collided Object 1: " << collision_name.link_1 << ", Collided Object 2: " << collision_name.link_2 << std::endl;
-            }
+        {
+            std::cout << "Collided Object 1: " << collision_name.link_1 << ", Collided Object 2: " << collision_name.link_2 << std::endl;
+        }
     }
     return 0;
 }

@@ -10,7 +10,7 @@ trac_ik_config:
 
   # End Effector Pose Tolerance - used for setting the tolerances in trac_ik
   tolerances:
-    - 6.0
+    - 0.0
     - 0.0
 
   # weight each of the seven joints with 1/7
