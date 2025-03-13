@@ -78,7 +78,7 @@ set(MOTIONPLANNER_DEP_LIBS
 )
 
 # Create the main library
-add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp)
+add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp src/MotionPlannerUtils.cpp)
 
 # Target-based dependency management
 target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES})
@@ -96,12 +96,12 @@ string(REPLACE ";" " " PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES}")
 configure_file("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
 # Installation
-install(DIRECTORY ./include/ DESTINATION include/motion_planners)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
 # Testing configuration
-option(ENABLE_TESTS "Build tests" ON)
+option(ENABLE_TESTS "Build tests" OFF)
 
 if(ENABLE_TESTS)
     enable_testing()

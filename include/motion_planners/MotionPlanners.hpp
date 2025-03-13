@@ -23,6 +23,15 @@ namespace motion_planners
     class MotionPlanners
     {
     public:
+        //     struct PairHash
+        //     {
+        //         template <typename T1, typename T2>
+        //         std::size_t operator()(const std::pair<T1, T2> &p) const
+        //         {
+        //             return std::hash<T1>{}(p.first) ^ (std::hash<T2>{}(p.second) << 1);
+        //         }
+        //     };
+
         /**
          * @brief Constructor.
          * @param config Configuration for motion planner.
@@ -144,6 +153,14 @@ namespace motion_planners
         base::JointsTrajectory planner_solution_;
 
         AbstractPlannerPtr planner_;
+
+        static Config getMotionPlannerConfig(const std::string &config_folder_path);
+        static motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string &srdf_path,
+                                                                              const std::vector<std::string> &all_links);
+        static std::unordered_set<std::pair<std::string, std::string>, boost::hash<std::pair<std::string, std::string>>> getEnabledCollisionPairs(const std::string &srdf_path);
+        static std::vector<std::string> getAllRobotLinks(const std::string &urdf_path);
+        static robot_model::RobotModelConfig getRobotModelConfig(const std::string &test_folder_path);
+        static kinematics_library::KinematicsConfig getKinematicsConfig(const std::string &test_folder_path);
 
     protected:
         /**
