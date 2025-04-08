@@ -55,7 +55,8 @@ link_directories(${MOTIONPLANNER_LINK_DIRS} ${WRAPPERS_LINK_DIR})
 
 
 add_library(motion_planners SHARED
-            ${CMAKE_CURRENT_LIST_DIR}/MotionPlanners.cpp            
+            ${CMAKE_CURRENT_LIST_DIR}/MotionPlanners.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/MotionPlannerUtils.cpp
 )
 
 target_link_libraries(motion_planners ${MOTIONPLANNER_DEP_LIBS} planner_factory)

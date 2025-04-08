@@ -146,6 +146,14 @@ class MotionPlanners
 
         AbstractPlannerPtr planner_;
 
+        static Config getMotionPlannerConfig(const std::string &config_folder_path);
+        static motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string &srdf_path,
+                                                                              const std::vector<std::string> &all_links);
+        static std::unordered_set<std::pair<std::string, std::string>, boost::hash<std::pair<std::string, std::string>>> getEnabledCollisionPairs(const std::string &srdf_path);
+        static std::vector<std::string> getAllRobotLinks(const std::string &urdf_path);
+        static robot_model::RobotModelConfig getRobotModelConfig(const std::string &test_folder_path);
+        static kinematics_library::KinematicsConfig getKinematicsConfig(const std::string &test_folder_path);
+
     protected:
         /**
         * @brief  Check the start state for the planning request.
