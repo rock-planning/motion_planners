@@ -6,7 +6,7 @@
 #include "utils/eigen_slicing.hpp"
 #include "utils/logging.hpp"
 #include "utils/stl_to_string.hpp"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/format.hpp>
 #include <Eigen/Geometry>
 #include <iostream>
@@ -16,7 +16,7 @@ using namespace std;
 using namespace sco;
 using namespace Eigen;
 using namespace util;
-
+using namespace boost::placeholders;
 
 namespace {
   
