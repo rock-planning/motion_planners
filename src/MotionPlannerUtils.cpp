@@ -55,7 +55,7 @@ bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
     }
 
     // planner specific config (stomp_kuka or stomp_vispa)
-    config.planner_config.planner_specific_config = config_folder_path + "/config/" +
+    config.planner_config.planner_specific_config = config_folder_path + "/planner/" +
                                                     planner_name + "_" + robot_name + ".yml";
 
     // planner
@@ -86,8 +86,7 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
                                          const std::string &solver_name,
                                          const std::string &reference_frame)
 {
-    std::string urdf_path = test_folder_path + "/data/eu-rise/eurise_scene.urdf";
-    std::cout << "urdf_path " << urdf_path << std::endl;
+    std::string urdf_path = test_folder_path + "/data/eurise_scene.urdf";
     if (boost::filesystem::exists(urdf_path))
     {
         kinematic_config.urdf_file = urdf_path;
@@ -98,7 +97,7 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
         return false;
     }
 
-    kinematic_config.solver_config_abs_path = test_folder_path + "/config";
+    kinematic_config.solver_config_abs_path = test_folder_path + "/solver";
 
     // Set robot-specific parameters
     if (robot_name == "kuka")
@@ -139,7 +138,7 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
                                          const std::string &test_folder_path,
                                          const std::string &robot_name)
 {
-    std::string urdf_path = test_folder_path + "/data/eu-rise/eurise_scene.urdf";
+    std::string urdf_path = test_folder_path + "/data/eurise_scene.urdf";
     if (boost::filesystem::exists(urdf_path))
     {
         robot_config.urdf_file = urdf_path;
@@ -153,7 +152,7 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
     // Set robot-specific parameters
     if (robot_name == "kuka")
     {
-        std::string srdf_path = test_folder_path + "/data/eu-rise/kuka.srdf";
+        std::string srdf_path = test_folder_path + "/data/kuka.srdf";
         if (boost::filesystem::exists(srdf_path))
         {
             robot_config.srdf_file = srdf_path;
@@ -167,7 +166,7 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
     }
     else if (robot_name == "vispa")
     {
-        robot_config.srdf_file = test_folder_path + "/data/eu-rise/vispa.srdf";
+        robot_config.srdf_file = test_folder_path + "/data/vispa.srdf";
         robot_config.planning_group_name = "vispa_manipulator";
     }
 
@@ -292,6 +291,125 @@ StringPairSet MotionPlanners::getEnabledCollisionPairs(const std::string &srdf_p
     }
 
     return enabled_pairs;
+}
+
+void MotionPlanners::printPlannerStatus(motion_planners::PlannerStatus &planner_status)
+{
+    switch (planner_status.statuscode)
+    {
+    case motion_planners::PlannerStatus::PATH_FOUND:
+        std::cout << "PATH_FOUND" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::NO_PATH_FOUND:
+        std::cout << "NO_PATH_FOUND" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::START_STATE_IN_COLLISION:
+        std::cout << "START_STATE_IN_COLLISION" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::GOAL_STATE_IN_COLLISION:
+        std::cout << "GOAL_STATE_IN_COLLISION" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::START_JOINTANGLES_NOT_AVAILABLE:
+        std::cout << "START_JOINTANGLES_NOT_AVAILABLE" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::GOAL_JOINTANGLES_NOT_AVAILABLE:
+        std::cout << "GOAL_JOINTANGLES_NOT_AVAILABLE" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::PLANNING_REQUEST_SUCCESS:
+        std::cout << "PLANNING_REQUEST_SUCCESS" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::CONSTRAINED_POSE_NOT_WITHIN_BOUNDS:
+        std::cout << "CONSTRAINED_POSE_NOT_WITHIN_BOUNDS" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::TIMEOUT:
+        std::cout << "TIMEOUT" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::INVALID_START_STATE:
+        std::cout << "INVALID_START_STATE" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::INVALID_GOAL_STATE:
+        std::cout << "INVALID_GOAL_STATE" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::UNRECOGNIZED_GOAL_TYPE:
+        std::cout << "UNRECOGNIZED_GOAL_TYPE" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::APPROXIMATE_SOLUTION:
+        std::cout << "APPROXIMATE_SOLUTION" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::EXACT_SOLUTION:
+        std::cout << "PATH_FOUND" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::ROBOTMODEL_INITIALISATION_FAILED:
+        std::cout << "ROBOTMODEL_INITIALISATION_FAILED" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::PLANNER_INITIALISATION_FAILED:
+        std::cout << "PLANNER_INITIALISATION_FAILED" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::CRASH:
+        std::cout << "CRASH" << std::endl;
+        break;
+    case motion_planners::PlannerStatus::KINEMATIC_ERROR:
+    {
+        switch (planner_status.kinematic_status.statuscode)
+        {
+        case kinematics_library::KinematicsStatus::KDL_TREE_FAILED:
+            std::cout << "KDL_TREE_FAILED" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::KDL_CHAIN_FAILED:
+            std::cout << "KDL_CHAIN_FAILED" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::URDF_FAILED:
+            std::cout << "URDF_FAILED" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::NO_KINEMATIC_SOLVER_FOUND:
+            std::cout << "NO_KINEMATIC_SOLVER_FOUND" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::IK_FOUND:
+            std::cout << "IK_FOUND" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::NO_IK_SOLUTION:
+            std::cout << "NO_IK_SOLUTION" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::NO_FK_SOLUTION:
+            std::cout << "NO_FK_SOLUTION" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::IK_TIMEOUT:
+            std::cout << "IK_TIMEOUT" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::IK_JOINTLIMITS_VIOLATED:
+            std::cout << "IK_JOINTLIMITS_VIOLATED" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::NO_CONFIG_FILE:
+            std::cout << "NO_KINEMATIC_CONFIG_FILE" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::CONFIG_READ_ERROR:
+            std::cout << "KINEMATIC_CONFIG_READ_ERROR" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::INVALID_STATE:
+            std::cout << "INVALID_KINEMATIC_STATE" << std::endl;
+            break;
+        case kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION:
+            std::cout << "IK_FOUND" << std::endl;
+            break;
+        default:
+        {
+            std::cout << "unknown Kinematics state" << planner_status.kinematic_status.statuscode << std::endl;
+            throw new std::runtime_error("This kinematic status is unknown");
+            break;
+        }
+        }
+        break;
+    }
+    case motion_planners::PlannerStatus::INVALID:
+        std::cout << "UNKNOWN_STATE" << std::endl;
+        break;
+    default:
+    {
+        LOG_ERROR("[PlannerTask]: Planner is in an unknown state. The current state value is %d", planner_status.statuscode);
+        std::cout << "UNKNOWN_STATE" << std::endl;
+        break;
+    }
+    }
 }
 
 // Create an iterate function

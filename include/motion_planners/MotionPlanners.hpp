@@ -201,6 +201,11 @@ namespace motion_planners
          */
         void loadConfig(Config config);
 
+        /**
+         * 
+         */
+        void printPlannerStatus(motion_planners::PlannerStatus &planner_status);
+
     protected:
         /**
          * @brief  Check the start state for the planning request.

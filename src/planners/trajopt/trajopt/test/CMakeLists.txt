@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 find_package(Boost COMPONENTS system filesystem unit_test_framework REQUIRED)
 add_executable(trajoptTest trajoptTest.cpp)
 
