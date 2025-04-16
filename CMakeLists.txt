@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Boost configuration
-find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+find_package(Boost COMPONENTS system thread filesystem program_options REQUIRED)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 # External dependencies
@@ -43,6 +43,7 @@ get_directory_property(WRAPPERS_LINK_DIR DIRECTORY src/planners DEFINITION WRAPP
 set(MOTIONPLANNER_LIB_INCLUDES
     ${CMAKE_SOURCE_DIR}/include
     ${EIGEN3_INCLUDE_DIR}
+    ${BOOST_INCLUDE_DIR}
     ${BASE_TYPES_INCLUDE_DIRS}
     ${BASE_LOGGING_INCLUDE_DIRS}
     ${OROCOS_KDL_INCLUDE_DIRS}
@@ -61,6 +62,7 @@ set(MOTIONPLANNER_LIB_INCLUDES
 
 set(MOTIONPLANNER_DEP_LIBS
     Boost::system
+    Boost::thread
     Boost::filesystem
     Boost::program_options
     ${BASE_TYPES_LIBRARIES}
@@ -81,7 +83,7 @@ include_directories(${OMPL_INCLUDE_DIRS})
 link_directories(${OMPL_LIBRARY_DIRS})
 
 # Create the main library
-add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp)
+add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp src/MotionPlannerUtils.cpp)
 
 # Target-based dependency management
 target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES} ${OMPL_INCLUDE_DIRS})
@@ -104,16 +106,37 @@ install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
 # Testing configuration
-option(ENABLE_TESTS "Build tests" ON)
+option(ENABLE_TESTS "Build tests" OFF)
 
 if(ENABLE_TESTS)
     enable_testing()
 
+    # Initial
     add_executable(test_motion_planners test/test_motion_planners.cpp)
 
     target_include_directories(test_motion_planners PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
 
     target_link_libraries(test_motion_planners PRIVATE
+        ${TARGET_NAME}
+        ${MOTIONPLANNER_DEP_LIBS}
+    )
+
+    # VISPA EU-RISE
+    add_executable(test_vispa test/test_vispa.cpp)
+
+    target_include_directories(test_vispa PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
+
+    target_link_libraries(test_vispa PRIVATE
+        ${TARGET_NAME}
+        ${MOTIONPLANNER_DEP_LIBS}
+    )
+
+    # KUKA EU-RISE
+    add_executable(test_kuka test/test_kuka.cpp)
+
+    target_include_directories(test_kuka PRIVATE ${MOTIONPLANNER_LIB_INCLUDES})
+
+    target_link_libraries(test_kuka PRIVATE
         ${TARGET_NAME}
         ${MOTIONPLANNER_DEP_LIBS}
     )

@@ -1,0 +1,6 @@
+ompl_config:
+  type_of_planner: :RRTConnect #RRTstar
+  max_solve_time: 180.0 #sec
+  max_step_smoothing: 2
+  planner_specific_parameters_range: "0.05"  # how dense the serach shoule be. values in radians
+
