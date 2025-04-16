@@ -58,9 +58,9 @@ motion_planners::Config getMotionPlannerConfig(std::string test_folder_path)
     // get robot model config
     config.planner_config.robot_model_config = getRobotModelConfig(test_folder_path);
     // planner specific config
-    config.planner_config.planner_specific_config = test_folder_path +"./config/ompl.yml"; //stompl.yml
+    config.planner_config.planner_specific_config = test_folder_path +"./config/stomp.yml"; //stompl.yml ompl
     // planner
-    config.planner_config.planner = motion_planners::OMPL; //motion_planners::STOMP;
+    config.planner_config.planner = motion_planners::STOMP; //motion_planners::STOMP; OMPL
     
     // get collision detection config
     config.env_config = getCollisionDetectionConfig();

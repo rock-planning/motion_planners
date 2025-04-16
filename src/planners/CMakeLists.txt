@@ -1,8 +1,8 @@
+project(planner_factory)
+
 # Add subdirectories for STOMP and TrajOpt
 add_subdirectory(stomp)
 add_subdirectory(trajopt)
-
-project(planner_factory)
 
 set(PLANNER_FACTORY_VERSION 0.1)
 set(TARGET_NAME ${PROJECT_NAME})
@@ -13,6 +13,7 @@ INCLUDE(FindPkgConfig)
 # Find basic libraries
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 find_package(Eigen3 REQUIRED)
+# find_package(yaml-cpp REQUIRED)
 
 # Find the packages using pkg-config
 pkg_check_modules(OROCOS_KDL REQUIRED orocos_kdl)
@@ -20,12 +21,11 @@ pkg_check_modules(KDL_PARSER REQUIRED kdl_parser)
 pkg_check_modules(COLLISION_DETECTION REQUIRED collision_detection)
 pkg_check_modules(KINEMATICS REQUIRED kinematics_library)
 pkg_check_modules(ROBOT_MODEL REQUIRED robot_model)
-# pkg_check_modules(YAML REQUIRED yaml-cpp)  # This is not working
 
 # Libraries required for linking
 set(DEPS_LIB ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-              ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOTMODEL_LIBRARIES}
-              ${COLLISION_DETECTION_LIBRARIES} ${KINEMATICS_LIBRARIES} ${YAML_LIBRARIES})
+              ${OROCOS_KDL_LIBRARIES} ${KDL_PARSER_LIBRARIES} ${ROBOT_MODEL_LIBRARIES}
+              ${COLLISION_DETECTION_LIBRARIES} ${KINEMATICS_LIBRARIES})
 
 # Get the planner directories
 get_directory_property(STOMP_PATH DIRECTORY stomp DEFINITION STOMP_DIR_PATH)
@@ -37,7 +37,7 @@ set(PLANNERS_PATH ${STOMP_PATH}/include ${TRAJOPT_INCLUDE_HEADER})
 
 # Set the header and library path
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/include ${EIGEN3_INCLUDE_DIR} 
-                    ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS} 
+                    ${OROCOS_KDL_INCLUDE_DIRS} ${KDL_PARSER_INCLUDE_DIRS}
                     ${COLLISION_DETECTION_INCLUDE_DIRS} ${ROBOT_MODEL_INCLUDE_DIRS} ${PLANNERS_PATH} 
                     ${KINEMATICS_INCLUDE_DIRS})
 
@@ -64,7 +64,7 @@ add_library(stomp_wrapper SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/stomp/StompPlanner.cpp	 
             ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/stomp/HandleStompConfig.cpp
 )
-target_link_libraries(stomp_wrapper  abstract_planner stomp ${DEPS_LIB})
+target_link_libraries(stomp_wrapper abstract_planner stomp ${DEPS_LIB})
 LIST(APPEND WRAPPERS_LIB "stomp_wrapper")
 
 # TrajOpt Wrappers
@@ -74,7 +74,7 @@ add_library(trajopt_wrapper SHARED
             ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/trajopt/FCLCollisionChecker.cpp
 )
 
-target_link_libraries(trajopt_wrapper abstract_planner trajopt  ${DEPS_LIB})
+target_link_libraries(trajopt_wrapper abstract_planner trajopt ${DEPS_LIB})
 LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
 # OMPL Configuration
@@ -97,6 +97,7 @@ if(ompl_FOUND)
         abstract_planner
         collision_detection
         robot_model
+        ${DEPS_LIB}
     )
 
     # these variables are not set by OMPL
@@ -105,7 +106,6 @@ if(ompl_FOUND)
 
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
     install(TARGETS ompl_wrapper DESTINATION lib)
-
 else()
     message(STATUS "OMPL not found!")
 endif()

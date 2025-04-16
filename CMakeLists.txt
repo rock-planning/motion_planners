@@ -15,6 +15,7 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 # External dependencies
 find_package(Eigen3 REQUIRED)
+find_package(ompl REQUIRED)
 INCLUDE(FindPkgConfig)
 pkg_check_modules(BASE_TYPES REQUIRED base_types)
 pkg_check_modules(BASE_LOGGING REQUIRED base_logging)
@@ -77,12 +78,16 @@ set(MOTIONPLANNER_DEP_LIBS
     ${ROBOT_MODEL_LIBRARIES}
 )
 
+set(OMPL_INCLUDE_DIRS "/usr/include/ompl-1.5")
+include_directories(${OMPL_INCLUDE_DIRS})
+link_directories(${OMPL_LIBRARY_DIRS})
+
 # Create the main library
 add_library(${TARGET_NAME} SHARED src/MotionPlanners.cpp src/MotionPlannerUtils.cpp)
 
 # Target-based dependency management
-target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES})
-target_link_libraries(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_DEP_LIBS} planner_factory)
+target_include_directories(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_LIB_INCLUDES} ${OMPL_INCLUDE_DIRS})
+target_link_libraries(${TARGET_NAME} PUBLIC ${MOTIONPLANNER_DEP_LIBS} planner_factory ${OMPL_LIBRARIES})
 
 # Generate pkg-config file
 set(PKGCONFIG_EXTRA_CFLAGS "-I${PLANNERS_PATH}/include -I${STOMP_PATH}/include")
@@ -91,14 +96,14 @@ foreach(include ${TRAJOPT_INCLUDE_HEADER})
     set(PKGCONFIG_EXTRA_CFLAGS "${PKGCONFIG_EXTRA_CFLAGS} -I${include}")
 endforeach()
 list(APPEND PKGCONFIG_REQUIRES base_types base_logging orocos_kdl kdl_parser urdfdom urdfdom_headers srdfdom octomap kinematics_library collision_detection robot_model)
-string(REPLACE ";" " " PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES}")
+list(JOIN PKGCONFIG_REQUIRES " " PKGCONFIG_REQUIRES_STR)
 
 configure_file("${PROJECT_NAME}.pc.in" "${PROJECT_NAME}.pc" @ONLY)
 
-# Installation
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
+# Install rules
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME} DESTINATION include)
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
+install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
 
 # Testing configuration
 option(ENABLE_TESTS "Build tests" OFF)
