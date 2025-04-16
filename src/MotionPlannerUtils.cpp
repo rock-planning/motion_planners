@@ -27,20 +27,32 @@ namespace
     }
 }
 
-motion_planners::Config MotionPlanners::getMotionPlannerConfig(const std::string &config_folder_path,
-                                                               const std::string &robot_name,
-                                                               const std::string &planner_name,
-                                                               const std::string &solver_name,
-                                                               const std::string &reference_frame)
+bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
+                                            const std::string &config_folder_path,
+                                            const std::string &robot_name,
+                                            const std::string &planner_name,
+                                            const std::string &solver_name,
+                                            const std::string &reference_frame)
 {
-    motion_planners::Config config;
+    bool result;
 
     // get kinematics config
-    config.planner_config.kinematics_config = getKinematicsConfig(
-        config_folder_path, robot_name, solver_name, reference_frame);
+    result = getKinematicsConfig(config.planner_config.kinematics_config,
+                                 config_folder_path, robot_name, solver_name, reference_frame);
+
+    if (result == false)
+    {
+        return result;
+    }
 
     // get robot model config
-    config.planner_config.robot_model_config = getRobotModelConfig(config_folder_path, robot_name);
+    result = getRobotModelConfig(config.planner_config.robot_model_config,
+                                 config_folder_path, robot_name);
+
+    if (result == false)
+    {
+        return result;
+    }
 
     // planner specific config (stomp_kuka or stomp_vispa)
     config.planner_config.planner_specific_config = config_folder_path + "/config/" +
@@ -65,73 +77,101 @@ motion_planners::Config MotionPlanners::getMotionPlannerConfig(const std::string
     config.env_config = getCollisionDetectionConfig(
         config.planner_config.robot_model_config.srdf_file, all_links, reference_frame, robot_name);
 
-    return config;
+    return true;
 }
 
-kinematics_library::KinematicsConfig MotionPlanners::getKinematicsConfig(const std::string &test_folder_path,
-                                                                         const std::string &robot_name,
-                                                                         const std::string &solver_name,
-                                                                         const std::string &reference_frame)
+bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &kinematic_config,
+                                         const std::string &test_folder_path,
+                                         const std::string &robot_name,
+                                         const std::string &solver_name,
+                                         const std::string &reference_frame)
 {
-    kinematics_library::KinematicsConfig config;
-    config.urdf_file = test_folder_path + "/data/eu-rise/eurise_scene.urdf";
-    config.solver_config_abs_path = test_folder_path + "/config";
+    std::string urdf_path = test_folder_path + "/data/eu-rise/eurise_scene.urdf";
+    std::cout << "urdf_path " << urdf_path << std::endl;
+    if (boost::filesystem::exists(urdf_path))
+    {
+        kinematic_config.urdf_file = urdf_path;
+    }
+    else
+    {
+        std::cout << "[MotionPlanners::getKinematicsConfig] No URDF file" << std::endl;
+        return false;
+    }
+
+    kinematic_config.solver_config_abs_path = test_folder_path + "/config";
 
     // Set robot-specific parameters
     if (robot_name == "kuka")
     {
-        config.config_name = "kuka_arm";
-        config.tip_name = "IIWA14_LINK_7_link";
+        kinematic_config.config_name = "kuka_arm";
+        kinematic_config.tip_name = "IIWA14_LINK_7_link";
     }
     else if (robot_name == "vispa")
     {
-        config.config_name = "vispa_arm";
-        config.tip_name = "VISPA_LINK_6_link";
+        kinematic_config.config_name = "vispa_arm";
+        kinematic_config.tip_name = "VISPA_LINK_6_link";
     }
 
     // Set base name
-    config.base_name = getBaseName(reference_frame, robot_name);
+    kinematic_config.base_name = getBaseName(reference_frame, robot_name);
 
     // Set solver type and config filename
     if (solver_name == "kdl")
     {
-        config.kinematic_solver = kinematics_library::KDL;
-        config.solver_config_filename = "kdl_config.yml";
+        kinematic_config.kinematic_solver = kinematics_library::KDL;
+        kinematic_config.solver_config_filename = "kdl_config.yml";
     }
     else if (solver_name == "opt")
     {
-        config.kinematic_solver = kinematics_library::OPT;
-        config.solver_config_filename = "opt_ik_config.yml";
+        kinematic_config.kinematic_solver = kinematics_library::OPT;
+        kinematic_config.solver_config_filename = "opt_ik_config.yml";
     }
     else
     {
-        config.kinematic_solver = kinematics_library::TRACIK;
-        config.solver_config_filename = "trac_ik_config.yml";
+        kinematic_config.kinematic_solver = kinematics_library::TRACIK;
+        kinematic_config.solver_config_filename = "trac_ik_config.yml";
     }
 
-    return config;
+    return true;
 }
 
-robot_model::RobotModelConfig MotionPlanners::getRobotModelConfig(const std::string &test_folder_path,
-                                                                  const std::string &robot_name)
+bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_config,
+                                         const std::string &test_folder_path,
+                                         const std::string &robot_name)
 {
-    robot_model::RobotModelConfig config;
-    // Set common URDF file
-    config.urdf_file = test_folder_path + "/data/eu-rise/eurise_scene.urdf";
+    std::string urdf_path = test_folder_path + "/data/eu-rise/eurise_scene.urdf";
+    if (boost::filesystem::exists(urdf_path))
+    {
+        robot_config.urdf_file = urdf_path;
+    }
+    else
+    {
+        std::cout << "[MotionPlanners::getRobotModelConfig] No URDF file" << std::endl;
+        return false;
+    }
 
     // Set robot-specific parameters
     if (robot_name == "kuka")
     {
-        config.srdf_file = test_folder_path + "/data/eu-rise/kuka.srdf";
-        config.planning_group_name = "kuka_manipulator";
+        std::string srdf_path = test_folder_path + "/data/eu-rise/kuka.srdf";
+        if (boost::filesystem::exists(srdf_path))
+        {
+            robot_config.srdf_file = srdf_path;
+        }
+        else
+        {
+            std::cout << "[MotionPlanners::getRobotModelConfig] No SRDF file" << std::endl;
+            return false;
+        }
+        robot_config.planning_group_name = "kuka_manipulator";
     }
     else if (robot_name == "vispa")
     {
-        config.srdf_file = test_folder_path + "/data/eu-rise/vispa.srdf";
-        config.planning_group_name = "vispa_manipulator";
+        robot_config.srdf_file = test_folder_path + "/data/eu-rise/vispa.srdf";
+        robot_config.planning_group_name = "vispa_manipulator";
     }
 
-    return config;
+    return true;
 }
 
 motion_planners::EnvironmentConfig MotionPlanners::getCollisionDetectionConfig(const std::string &srdf_path,
@@ -139,19 +179,19 @@ motion_planners::EnvironmentConfig MotionPlanners::getCollisionDetectionConfig(c
                                                                                const std::string &reference_frame,
                                                                                const std::string &robot_name)
 {
-    motion_planners::EnvironmentConfig config;
+    motion_planners::EnvironmentConfig env_config;
 
     // Set environment frame
-    config.env_frame = getBaseName(reference_frame, robot_name);
+    env_config.env_frame = getBaseName(reference_frame, robot_name);
 
-    config.collision_detection_config.collision_library = collision_detection::FCL;
-    config.collision_detection_config.collision_info_type = collision_detection::MULTI_CONTACT;
-    config.collision_detection_config.stop_after_first_collision = true;
-    config.collision_detection_config.calculate_distance_information = false;
-    config.collision_detection_config.max_num_collision_contacts = 1;
-    config.collision_detection_config.env_debug_config.save_octree = false;
-    config.collision_detection_config.env_debug_config.save_octree_filename = "";
-    config.collision_detection_config.env_debug_config.save_octree_path = "";
+    env_config.collision_detection_config.collision_library = collision_detection::FCL;
+    env_config.collision_detection_config.collision_info_type = collision_detection::MULTI_CONTACT;
+    env_config.collision_detection_config.stop_after_first_collision = true;
+    env_config.collision_detection_config.calculate_distance_information = false;
+    env_config.collision_detection_config.max_num_collision_contacts = 1;
+    env_config.collision_detection_config.env_debug_config.save_octree = false;
+    env_config.collision_detection_config.env_debug_config.save_octree_filename = "";
+    env_config.collision_detection_config.env_debug_config.save_octree_path = "";
     // Get enabled collision pairs from SRDF
     StringPairSet enabled_pairs = getEnabledCollisionPairs(srdf_path);
 
@@ -167,16 +207,16 @@ motion_planners::EnvironmentConfig MotionPlanners::getCollisionDetectionConfig(c
             if (enabled_pairs.find({link1, link2}) == enabled_pairs.end() &&
                 enabled_pairs.find({link2, link1}) == enabled_pairs.end())
             {
-                config.disabled_collision_pair.collision_link_names.emplace_back(link1, link2);
+                env_config.disabled_collision_pair.collision_link_names.emplace_back(link1, link2);
             }
         }
     }
 
     // Disable collision between environment and base frame
-    collision_detection::CollisionLinkName disabled_collision("environment", config.env_frame);
-    config.disabled_collision_pair.collision_link_names.push_back(disabled_collision);
+    collision_detection::CollisionLinkName disabled_collision("environment", env_config.env_frame);
+    env_config.disabled_collision_pair.collision_link_names.push_back(disabled_collision);
 
-    return config;
+    return env_config;
 }
 
 std::vector<std::string> MotionPlanners::getAllRobotLinks(const std::string &urdf_path)
@@ -187,7 +227,7 @@ std::vector<std::string> MotionPlanners::getAllRobotLinks(const std::string &urd
     // Load the URDF file
     if (doc.LoadFile(urdf_path.c_str()) != tinyxml2::XML_SUCCESS)
     {
-        std::cerr << "Failed to load URDF file: " << urdf_path << std::endl;
+        std::cout << "[MotionPlanners::getAllRobotLinks] Failed to load URDF file: " << urdf_path << std::endl;
         return link_names;
     }
 
@@ -195,7 +235,7 @@ std::vector<std::string> MotionPlanners::getAllRobotLinks(const std::string &urd
     tinyxml2::XMLElement *robot = doc.FirstChildElement("robot");
     if (!robot)
     {
-        std::cerr << "URDF does not contain <robot> element." << std::endl;
+        std::cout << "[MotionPlanners::getAllRobotLinks] URDF does not contain <robot> element." << std::endl;
         return link_names;
     }
 
@@ -219,21 +259,21 @@ StringPairSet MotionPlanners::getEnabledCollisionPairs(const std::string &srdf_p
 
     if (doc.LoadFile(srdf_path.c_str()) != tinyxml2::XML_SUCCESS)
     {
-        std::cout << "Error: Unable to load SRDF file " << srdf_path << std::endl;
+        std::cout << "[MotionPlanners::getEnabledCollisionPairs] Error: Unable to load SRDF file " << srdf_path << std::endl;
         return enabled_pairs;
     }
 
     tinyxml2::XMLElement *robot = doc.FirstChildElement("robot");
     if (!robot)
     {
-        std::cout << "Error: No <robot> tag found in SRDF!" << std::endl;
+        std::cout << "[MotionPlanners::getEnabledCollisionPairs] Error: No <robot> tag found in SRDF!" << std::endl;
         return enabled_pairs;
     }
 
     tinyxml2::XMLElement *collision_matrix = robot->FirstChildElement("collision_matrix");
     if (!collision_matrix)
     {
-        std::cout << "Warning: No <collision_matrix> found in SRDF. Defaulting to enabling all collisions." << std::endl;
+        std::cout << "[MotionPlanners::getEnabledCollisionPairs] Warning: No <collision_matrix> found in SRDF. Defaulting to enabling all collisions." << std::endl;
         return enabled_pairs;
     }
 

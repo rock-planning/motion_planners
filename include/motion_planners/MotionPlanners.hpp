@@ -28,6 +28,10 @@ namespace motion_planners
     public:
         /**
          * @brief Constructor.
+         */
+        MotionPlanners();
+        /**
+         * @brief Constructor.
          * @param config Configuration for motion planner.
          */
         MotionPlanners(Config config);
@@ -151,11 +155,12 @@ namespace motion_planners
         /**
          *
          */
-        static Config getMotionPlannerConfig(const std::string &config_folder_path,
-                                             const std::string &robot_name,
-                                             const std::string &planner_name,
-                                             const std::string &solver_name,
-                                             const std::string &reference_frame);
+        bool getMotionPlannerConfig(motion_planners::Config &config,
+                                    const std::string &config_folder_path,
+                                    const std::string &robot_name,
+                                    const std::string &planner_name,
+                                    const std::string &solver_name,
+                                    const std::string &reference_frame);
 
         /**
          *
@@ -178,16 +183,23 @@ namespace motion_planners
         /**
          *
          */
-        static robot_model::RobotModelConfig getRobotModelConfig(const std::string &test_folder_path,
-                                                                 const std::string &robot_name);
+        bool getRobotModelConfig(robot_model::RobotModelConfig &robot_config,
+                                 const std::string &test_folder_path,
+                                 const std::string &robot_name);
 
         /**
          *
          */
-        static kinematics_library::KinematicsConfig getKinematicsConfig(const std::string &test_folder_path,
-                                                                        const std::string &robot_name,
-                                                                        const std::string &solver_name,
-                                                                        const std::string &reference_frame);
+        bool getKinematicsConfig(kinematics_library::KinematicsConfig &kinematic_config,
+                                 const std::string &test_folder_path,
+                                 const std::string &robot_name,
+                                 const std::string &solver_name,
+                                 const std::string &reference_frame);
+        
+        /**
+         *
+         */
+        void loadConfig(Config config);
 
     protected:
         /**
