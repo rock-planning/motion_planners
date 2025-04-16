@@ -30,4 +30,3 @@ debug:
   save_noiseless_trajectories_: false
   save_cost_function_: false
   write_to_file_: false
-

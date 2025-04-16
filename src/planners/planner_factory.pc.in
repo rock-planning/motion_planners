@@ -6,7 +6,7 @@ includedir=${prefix}/include/motion_planners/planner_factory
 Name: @TARGET_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
-Requires: 
-Libs: -L${libdir} -l@TARGET_NAME@ @PKGCONFIG_LIBS@
-Cflags: -I${includedir} @PKGCONFIG_CFLAGS@
+Requires: @PKGCONFIG_REQUIRES@ ompl
+Libs: -L${libdir} -l@TARGET_NAME@ @PKGCONFIG_LIBS@ -lompl -lompl_wrapper
+Cflags: -I${includedir} @PKGCONFIG_CFLAGS@ -I@OMPL_INCLUDE_DIRS@
 
