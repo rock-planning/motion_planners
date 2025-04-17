@@ -16,7 +16,7 @@
     <depend package="planning/collision_detection" />
     <depend package="planning/robot_model" />
     <depend package="slam/octomap" />
-    <depend package="planning/ompl" />
+    <depend package="external/ompl" />
     <depend package="boost" />
     <name>motion_planners</name>
     <maintainer>Sankaranarayanan Natarajan/sankar.natarajan@dfki.de</maintainer>

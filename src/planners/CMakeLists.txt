@@ -78,7 +78,7 @@ LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 
 # if OMPL is found, add it to the planner factory
 
-set(OMPL_LIB_FOUND false)  #This variable need to be defined here, so that C++ complier knows about it.
+set(OMPL_LIB_FOUND FALSE)  #This variable need to be defined here, so that C++ complier knows about it.
 # pkg_check_modules(OMPL ompl)
 find_package(ompl REQUIRED)
 

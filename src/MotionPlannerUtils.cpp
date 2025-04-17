@@ -184,7 +184,7 @@ motion_planners::EnvironmentConfig MotionPlanners::getCollisionDetectionConfig(c
     env_config.env_frame = getBaseName(reference_frame, robot_name);
 
     env_config.collision_detection_config.collision_library = collision_detection::FCL;
-    env_config.collision_detection_config.collision_info_type = collision_detection::MULTI_CONTACT;
+    env_config.collision_detection_config.collision_info_type = collision_detection::MULTI_CONTACT; // MULTI_CONTACT, DISTANCE
     env_config.collision_detection_config.stop_after_first_collision = true;
     env_config.collision_detection_config.calculate_distance_information = false;
     env_config.collision_detection_config.max_num_collision_contacts = 1;
