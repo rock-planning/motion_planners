@@ -42,7 +42,8 @@ link_directories(${KDL_PARSER_LIBRARY_DIRS}
     ${ROBOT_MODEL_LIBRARY_DIRS}
     ${OROCOS_KDL_LIBRARY_DIRS}
     ${COLLISION_DETECTION_LIBRARY_DIRS}
-    ${KINEMATICS_LIBRARY_DIRS})
+    ${KINEMATICS_LIBRARY_DIRS}
+)
 
 add_library(abstract_planner SHARED
     ${CMAKE_CURRENT_LIST_DIR}/src/abstract/AbstractPlanner.cpp
@@ -94,7 +95,14 @@ if(${OMPL_FOUND})
         ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/OmplPlanner.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/wrappers/ompl/HandleOmplConfig.cpp)
 
-    target_link_libraries(ompl_wrapper ${OMPL_LIBRARIES} ${OROCOS_KDL_LIBRARIES} ${YAML_LIBRARIES} abstract_planner collision_detection robot_model)
+    target_link_libraries(ompl_wrapper
+        ${OMPL_LIBRARIES}
+        ${OROCOS_KDL_LIBRARIES}
+        ${YAML_LIBRARIES}
+        abstract_planner
+        collision_detection
+        robot_model
+    )
 
     LIST(APPEND WRAPPERS_LIB "ompl_wrapper")
 
@@ -103,18 +111,8 @@ if(${OMPL_FOUND})
 
     install(TARGETS ompl_wrapper DESTINATION lib)
 
-    # Properly add OMPL to pkg-config requirements
     set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} ompl")
-
-    # Add OMPL include directories to CFLAGS
-    foreach(INCLUDE_DIR ${OMPL_INCLUDE_DIRS})
-        set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -I${INCLUDE_DIR}")
-    endforeach()
-
-    # Add OMPL library directories to LIBS if needed
-    foreach(LIB_DIR ${OMPL_LIBRARY_DIRS})
-        set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} -L${LIB_DIR}")
-    endforeach()
+    set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${OMPL_INCLUDE_DIRS}")
 
 else(${OMPL_FOUND})
     message("OMPL not found !")

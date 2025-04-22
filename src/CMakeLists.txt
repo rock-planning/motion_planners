@@ -69,8 +69,10 @@ foreach(include ${TRAJOPT_INCLUDE_HEADER})
     set(PKGCONFIG_EXTRA_CFLAGS "${PKGCONFIG_EXTRA_CFLAGS} -I${include}")
 endforeach()
 
+set(PKGCONFIG_EXTRA_CFLAGS "${PKGCONFIG_EXTRA_CFLAGS} -I${OMPL_INCLUDE_DIRS}")
+
 # set(PKGCONFIG_EXTRA_LIBS "${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}")
-set(PKGCONFIG_EXTRA_LIBS "-lboost_system -lboost_filesystem -lboost_program_options -lyaml-cpp")
+set(PKGCONFIG_EXTRA_LIBS "-lboost_system -lboost_filesystem -lboost_program_options -lyaml-cpp -lompl")
 set(PROJECT_DESCRIPTION "A framework for motion planning.")
 
 # now we add all the required libraries in PKGCONFIG_REQUIRES macro
