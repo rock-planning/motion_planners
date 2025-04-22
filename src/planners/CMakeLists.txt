@@ -80,7 +80,7 @@ LIST(APPEND WRAPPERS_LIB "trajopt_wrapper")
 # if OMPL is found, add it to the planner factory
 set(OMPL_LIB_FOUND FALSE) # This variable need to be defined here, so that C++ complier knows about it.
 
-# pkg_check_modules(OMPL ompl)
+# Find OMPL package
 find_package(ompl REQUIRED)
 
 if(${OMPL_FOUND})
@@ -103,8 +103,18 @@ if(${OMPL_FOUND})
 
     install(TARGETS ompl_wrapper DESTINATION lib)
 
-    set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} ${OMPL_LIBRARIES}")
-    set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS};${OMPL_INCLUDE_DIRS}")
+    # Properly add OMPL to pkg-config requirements
+    set(PKGCONFIG_REQUIRES "${PKGCONFIG_REQUIRES} ompl")
+
+    # Add OMPL include directories to CFLAGS
+    foreach(INCLUDE_DIR ${OMPL_INCLUDE_DIRS})
+        set(PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS} -I${INCLUDE_DIR}")
+    endforeach()
+
+    # Add OMPL library directories to LIBS if needed
+    foreach(LIB_DIR ${OMPL_LIBRARY_DIRS})
+        set(PKGCONFIG_LIBS "${PKGCONFIG_LIBS} -L${LIB_DIR}")
+    endforeach()
 
 else(${OMPL_FOUND})
     message("OMPL not found !")

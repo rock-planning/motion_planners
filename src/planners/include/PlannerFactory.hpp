@@ -6,9 +6,9 @@
 #include <wrapper/stomp/StompPlanner.hpp>
 #include <wrapper/trajopt/TrajoptPlanner.hpp>
 
-#if OMPL_LIB_FOUND
+// #if OMPL_LIB_FOUND
 #include <wrapper/ompl/OmplPlanner.hpp>
-#endif
+// #endif
 
 /** \file PlannerFactory.hpp
  *    \brief Factory class for the PlannerFactory class.
