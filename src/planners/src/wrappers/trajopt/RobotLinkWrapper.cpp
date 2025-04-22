@@ -2,7 +2,6 @@
 
 RobotLinkWrapper::RobotLinkWrapper()
 {
-
 }
 
 std::string RobotLinkWrapper::GetName() const
@@ -12,15 +11,12 @@ std::string RobotLinkWrapper::GetName() const
 
 trajopt::geometry::Transform RobotLinkWrapper::GetTransform()
 {
-
 }
 
 int RobotLinkWrapper::GetIndex() const
 {
-
 }
 
 trajopt::LinkPtr RobotLinkWrapper::getParent()
 {
-
 }

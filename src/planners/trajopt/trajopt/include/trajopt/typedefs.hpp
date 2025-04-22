@@ -8,39 +8,38 @@
 #include "utils/basic_array.hpp"
 #include "utils/macros.h"
 
-namespace trajopt {
+namespace trajopt
+{
 
-using std::vector;
-using std::map;
-using namespace sco;
-using namespace util;
+    using std::map;
+    using std::vector;
+    using namespace sco;
+    using namespace util;
 
-typedef BasicArray<Var> VarArray;
-typedef BasicArray<AffExpr> AffArray;
-typedef BasicArray<Cnt> CntArray;
+    typedef BasicArray<Var> VarArray;
+    typedef BasicArray<AffExpr> AffArray;
+    typedef BasicArray<Cnt> CntArray;
 
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> DblMatrix;
 
+    typedef vector<double> DblVec;
+    typedef vector<int> IntVec;
 
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> DblMatrix;
+    using Eigen::Vector3d;
+    using Eigen::Vector4d;
+    using Eigen::VectorXd;
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> TrajArray;
+    using Eigen::Matrix3d;
+    using Eigen::MatrixXd;
 
-typedef vector<double> DblVec;
-typedef vector<int> IntVec;
-
-using Eigen::Vector3d;
-using Eigen::Vector4d;
-using Eigen::VectorXd;
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> TrajArray;
-using Eigen::MatrixXd;
-using Eigen::Matrix3d;
-
-///**
-//Interface for objects that know how to plot themselves given solution vector x
-//*/
-//class Plotter {
-//public:
-//  virtual void Plot(const DblVec& x, OR::EnvironmentBase&, std::vector<OR::GraphHandlePtr>& handles) = 0;
-//  virtual ~Plotter() {}
-//};
-//typedef boost::shared_ptr<Plotter> PlotterPtr;
+    ///**
+    // Interface for objects that know how to plot themselves given solution vector x
+    //*/
+    // class Plotter {
+    // public:
+    //   virtual void Plot(const DblVec& x, OR::EnvironmentBase&, std::vector<OR::GraphHandlePtr>& handles) = 0;
+    //   virtual ~Plotter() {}
+    // };
+    // typedef boost::shared_ptr<Plotter> PlotterPtr;
 
 }

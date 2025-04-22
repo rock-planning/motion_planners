@@ -10,11 +10,10 @@ find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 
-
 INCLUDE(FindPkgConfig)
 pkg_check_modules(YAML REQUIRED yaml-cpp)
 
-set (TRAJOPT_PATH ${CMAKE_CURRENT_LIST_DIR})
+set(TRAJOPT_PATH ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(trajopt_utils)
 add_subdirectory(trajopt_sco)
@@ -30,10 +29,10 @@ get_directory_property(TRAJOPT_PLANNER_DIR_PATH DIRECTORY trajopt DEFINITION TRA
 get_directory_property(TRAJOPT_INCLUDE_HEADER DIRECTORY trajopt DEFINITION TRAJOPT_INCLUDE_HEADER)
 
 include_directories(
-${EIGEN3_INCLUDE_DIR}
-${TRAJOPT_INCLUDE_HEADER}
-${BULLET_INCLUDE_DIRS}
-${YAML_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
+        ${TRAJOPT_INCLUDE_HEADER}
+        ${BULLET_INCLUDE_DIRS}
+        ${YAML_INCLUDE_DIRS}
 )
 
 add_library(trajopt SHARED
@@ -47,5 +46,3 @@ add_library(trajopt SHARED
 target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} trajopt_sco trajopt_utils json)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
-
-

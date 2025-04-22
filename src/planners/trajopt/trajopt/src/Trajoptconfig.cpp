@@ -2,5 +2,4 @@
 
 TrajoptConfig::TrajoptConfig()
 {
-
 }

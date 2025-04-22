@@ -195,14 +195,14 @@ namespace motion_planners
                                  const std::string &robot_name,
                                  const std::string &solver_name,
                                  const std::string &reference_frame);
-        
+
         /**
          *
          */
         void loadConfig(Config config);
 
         /**
-         * 
+         *
          */
         void printPlannerStatus(motion_planners::PlannerStatus &planner_status);
 

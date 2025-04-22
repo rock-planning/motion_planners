@@ -45,13 +45,12 @@ namespace stomp
 
 {
 
-class StompTask
-{
+  class StompTask
+  {
 
-public:
-
-    StompTask(){};
-    virtual ~StompTask(){};
+  public:
+    StompTask() {};
+    virtual ~StompTask() {};
 
     /**
      * Initialize the task for a given number of threads.
@@ -68,16 +67,16 @@ public:
      * @param weighted_feature_values num_time_steps x num_features matrix of weighted feature values per time step
      * @return
      */
-    virtual bool execute(std::vector<base::VectorXd>& parameters,
-                         std::vector<base::VectorXd>& projected_parameters,
-                         base::VectorXd& costs,
-                         base::MatrixXd& weighted_feature_values,
+    virtual bool execute(std::vector<base::VectorXd> &parameters,
+                         std::vector<base::VectorXd> &projected_parameters,
+                         base::VectorXd &costs,
+                         base::MatrixXd &weighted_feature_values,
                          const int iteration_number,
                          const int rollout_number,
                          int thread_id,
                          bool compute_gradients,
-                         std::vector<base::VectorXd>& gradients,
-                         bool& validity) = 0;
+                         std::vector<base::VectorXd> &gradients,
+                         bool &validity) = 0;
 
     /**
      * Filters the given parameters - for eg, clipping of joint limits
@@ -85,15 +84,15 @@ public:
      * @param parameters
      * @return false if no filtering was done
      */
-    //virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id) {return false;};
-    virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id)=0;
+    // virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id) {return false;};
+    virtual bool filter(std::vector<base::VectorXd> &parameters, int rollout_id, int thread_id) = 0;
 
     /**
      * Get the Policy object of this Task
      * @param policy
      * @return
      */
-    virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy) = 0;
+    virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive> &policy) = 0;
 
     /**
      * Sets the Policy object of this Task
@@ -111,9 +110,8 @@ public:
     /**
      * Callback executed after each iteration
      */
-    virtual void onEveryIteration(){};
-
-};
+    virtual void onEveryIteration() {};
+  };
 
 }
 #endif /* STOMPTASK_H_ */

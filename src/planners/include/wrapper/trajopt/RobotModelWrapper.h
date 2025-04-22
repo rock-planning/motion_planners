@@ -16,27 +16,25 @@ class RobotModelWrapper : public Configuration
 {
     std::shared_ptr<RobotModel> m_robot_model;
     std::string m_planning_group_name_;
-    std::vector< std::string> m_planning_group_joints_names_;
-    std::vector< double > m_lower_limits_;
-    std::vector< double > m_upper_limits_;
+    std::vector<std::string> m_planning_group_joints_names_;
+    std::vector<double> m_lower_limits_;
+    std::vector<double> m_upper_limits_;
 
 public:
-
-    RobotModelWrapper(){}
+    RobotModelWrapper() {}
     RobotModelWrapper(std::shared_ptr<RobotModel> &robot_model);
 
     virtual ~RobotModelWrapper() {}
 
-
-//    void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model = robot_model; }
+    //    void setRobotModel(std::shared_ptr<RobotModel> robot_model){ m_robot_model = robot_model; }
     void setRobotModel(std::shared_ptr<RobotModel> robot_model);
-    virtual void setDOFValues(const DblVec& dofs);
-    virtual void getDOFLimits(DblVec& lower, DblVec& upper) const;
+    virtual void setDOFValues(const DblVec &dofs);
+    virtual void getDOFLimits(DblVec &lower, DblVec &upper) const;
     virtual DblVec getDOFValues();
     virtual int getDOF() const;
-    virtual DblMatrix getPositionJacobian(std::string link_name, const Vector3d& pt) /*const*/;
+    virtual DblMatrix getPositionJacobian(std::string link_name, const Vector3d &pt) /*const*/;
     // FIXME Never used?
-    //virtual DblMatrix getRotationJacobian(std::string link_name) const;
+    // virtual DblMatrix getRotationJacobian(std::string link_name) const;
     virtual DblVec setRandomDOFValues();
     virtual geometry::Transform getLinkTransformByName(std::string link_name);
     virtual bool checkIfLinkExists(const std::string link_name);

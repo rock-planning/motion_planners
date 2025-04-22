@@ -10,7 +10,7 @@
 #include <boost/format.hpp>
 #include <Eigen/Geometry>
 #include <iostream>
-#include"trajopt/transform.h"
+#include "trajopt/transform.h"
 
 using namespace std;
 using namespace sco;
@@ -18,17 +18,19 @@ using namespace Eigen;
 using namespace util;
 using namespace boost::placeholders;
 
-namespace {
-  
+namespace
+{
+
 #if 0
 Vector3d rotVec(const Matrix3d& m) {
   Quaterniond q; q = m;
   return Vector3d(q.x(), q.y(), q.z());
 }
 #endif
-inline Vector3d rotVec(const trajopt::geometry::Vector& q) {
-  return Vector3d(q[1], q[2], q[3]);
-}
+  inline Vector3d rotVec(const trajopt::geometry::Vector &q)
+  {
+    return Vector3d(q[1], q[2], q[3]);
+  }
 
 #if 0
 VectorXd concat(const VectorXd& a, const VectorXd& b) {
@@ -50,25 +52,27 @@ vector<T> concat(const vector<T>& a, const vector<T>& b) {
 
 }
 
-namespace trajopt {
+namespace trajopt
+{
 
-inline Vector3d rotVec(const trajopt::geometry::Vector& q) {
-  return Vector3d(q[1], q[2], q[3]);
-}
+  inline Vector3d rotVec(const trajopt::geometry::Vector &q)
+  {
+    return Vector3d(q[1], q[2], q[3]);
+  }
 
-// CostPtr ConstructCost(VectorOfVectorPtr err_calc, const VarVector& vars, const VectorXd& coeffs, PenaltyType type, const string& name) {
-//   return CostPtr(new CostFromErrFunc(err_calc), vars, coeffs, type, name);
-// }
-  
-  
-VectorXd CartPoseErrCalculator::operator()(const VectorXd& dof_vals) const {
-  manip_->setDOFValues(toDblVec(dof_vals));
-  geometry::Transform newpose = manip_->getLinkTransformByName(link_);
+  // CostPtr ConstructCost(VectorOfVectorPtr err_calc, const VarVector& vars, const VectorXd& coeffs, PenaltyType type, const string& name) {
+  //   return CostPtr(new CostFromErrFunc(err_calc), vars, coeffs, type, name);
+  // }
 
-  geometry::Transform pose_err = pose_inv_ * newpose;
-  VectorXd err = concat(rotVec(pose_err.rot), toVector3d(pose_err.trans));
-  return err;  
-}
+  VectorXd CartPoseErrCalculator::operator()(const VectorXd &dof_vals) const
+  {
+    manip_->setDOFValues(toDblVec(dof_vals));
+    geometry::Transform newpose = manip_->getLinkTransformByName(link_);
+
+    geometry::Transform pose_err = pose_inv_ * newpose;
+    VectorXd err = concat(rotVec(pose_err.rot), toVector3d(pose_err.trans));
+    return err;
+  }
 
 #if 0
 CartPoseCost::CartPoseCost(const VarVector& vars, const OR::Transform& pose, RobotAndDOFPtr manip, KinBody::LinkPtr link, const VectorXd& coeffs) :
@@ -98,34 +102,35 @@ struct CartPositionErrCalculator {
 };
 #endif
 
-MatrixXd CartVelJacCalculator::operator()(const VectorXd& dof_vals) const {
-  int n_dof = manip_->getDOF();
-  MatrixXd out(6, 2*n_dof);
-  manip_->setDOFValues(toDblVec(dof_vals.topRows(n_dof)));
-  geometry::Transform pose0 = manip_->getLinkTransformByName(link_);
-  MatrixXd jac0 = manip_->getPositionJacobian(link_, toVector3d(pose0.trans));
-  manip_->setDOFValues(toDblVec(dof_vals.bottomRows(n_dof)));
-  geometry::Transform pose1 = manip_->getLinkTransformByName(link_);
-  MatrixXd jac1 = manip_->getPositionJacobian(link_, toVector3d(pose1.trans));
-  out.block(0,0,3,n_dof) = -jac0;
-  out.block(0,n_dof,3,n_dof) = jac1;
-  out.block(3,0,3,n_dof) = jac0;
-  out.block(3,n_dof,3,n_dof) = -jac1;
-  return out;
-}
+  MatrixXd CartVelJacCalculator::operator()(const VectorXd &dof_vals) const
+  {
+    int n_dof = manip_->getDOF();
+    MatrixXd out(6, 2 * n_dof);
+    manip_->setDOFValues(toDblVec(dof_vals.topRows(n_dof)));
+    geometry::Transform pose0 = manip_->getLinkTransformByName(link_);
+    MatrixXd jac0 = manip_->getPositionJacobian(link_, toVector3d(pose0.trans));
+    manip_->setDOFValues(toDblVec(dof_vals.bottomRows(n_dof)));
+    geometry::Transform pose1 = manip_->getLinkTransformByName(link_);
+    MatrixXd jac1 = manip_->getPositionJacobian(link_, toVector3d(pose1.trans));
+    out.block(0, 0, 3, n_dof) = -jac0;
+    out.block(0, n_dof, 3, n_dof) = jac1;
+    out.block(3, 0, 3, n_dof) = jac0;
+    out.block(3, n_dof, 3, n_dof) = -jac1;
+    return out;
+  }
 
-VectorXd CartVelCalculator::operator()(const VectorXd& dof_vals) const {
-  int n_dof = manip_->getDOF();
-  manip_->setDOFValues(toDblVec(dof_vals.topRows(n_dof)));
-  geometry::Transform pose0 = manip_->getLinkTransformByName(link_);
-  manip_->setDOFValues(toDblVec(dof_vals.bottomRows(n_dof)));
-  geometry::Transform pose1 = manip_->getLinkTransformByName(link_);
-  VectorXd out(6);
-  out.topRows(3) = toVector3d(pose1.trans - pose0.trans - geometry::Vector(limit_,limit_,limit_));
-  out.bottomRows(3) = toVector3d( - pose1.trans + pose0.trans - geometry::Vector(limit_, limit_, limit_));
-  return out;
-}
-
+  VectorXd CartVelCalculator::operator()(const VectorXd &dof_vals) const
+  {
+    int n_dof = manip_->getDOF();
+    manip_->setDOFValues(toDblVec(dof_vals.topRows(n_dof)));
+    geometry::Transform pose0 = manip_->getLinkTransformByName(link_);
+    manip_->setDOFValues(toDblVec(dof_vals.bottomRows(n_dof)));
+    geometry::Transform pose1 = manip_->getLinkTransformByName(link_);
+    VectorXd out(6);
+    out.topRows(3) = toVector3d(pose1.trans - pose0.trans - geometry::Vector(limit_, limit_, limit_));
+    out.bottomRows(3) = toVector3d(-pose1.trans + pose0.trans - geometry::Vector(limit_, limit_, limit_));
+    return out;
+  }
 
 #if 0
 CartVelConstraint::CartVelConstraint(const VarVector& step0vars, const VarVector& step1vars, RobotAndDOFPtr manip, KinBody::LinkPtr link, double distlimit) :

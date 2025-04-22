@@ -10,7 +10,6 @@
 #include <abstract/AbstractPlanner.hpp>
 #include <wrapper/ompl/OmplConfig.hpp>
 
-
 namespace handle_ompl_config
 {
     ompl_config::OmplConfig getOmplConfig(const YAML::Node &yaml_data);
