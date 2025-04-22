@@ -220,7 +220,7 @@ namespace sco
   inline void setVec(DblVec &x, const VarVector &vars, const VecType &vals)
   {
     assert(vars.size() == vals.size());
-    for (int i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
     {
       x[vars[i].var_rep->index] = vals[i];
     }
@@ -229,7 +229,7 @@ namespace sco
   inline OutVecType getVec1(const vector<double> &x, const VarVector &vars)
   {
     OutVecType out(vars.size());
-    for (unsigned i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
       out[i] = x[vars[i].var_rep->index];
     return out;
   }

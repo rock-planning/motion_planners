@@ -40,8 +40,8 @@ namespace trajopt
     void CalcCollisions(const DblVec &x, vector<Collision> &collisions);
     VarVector GetVars() { return m_vars; }
 
-    CollisionCheckerPtr m_cc;
     ConfigurationPtr m_rad;
+    CollisionCheckerPtr m_cc;
     VarVector m_vars;
     short m_filterMask;
   };
@@ -56,8 +56,8 @@ namespace trajopt
     VarVector GetVars() { return concat(m_vars0, m_vars1); }
 
     // parameters:
-    CollisionCheckerPtr m_cc;
     ConfigurationPtr m_rad;
+    CollisionCheckerPtr m_cc;
     VarVector m_vars0;
     VarVector m_vars1;
     short m_filterMask;

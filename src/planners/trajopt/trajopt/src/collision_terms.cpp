@@ -74,7 +74,7 @@ namespace trajopt
     CollisionsToDistanceExpressions(collisions, rad, vars0, vals0, exprs0, false);
     CollisionsToDistanceExpressions(collisions, rad, vars1, vals1, exprs1, true);
     exprs.resize(exprs0.size());
-    for (int i = 0; i < exprs0.size(); ++i)
+    for (size_t i = 0; i < exprs0.size(); ++i)
     {
       exprScale(exprs0[i], (1 - collisions[i].time));
       exprScale(exprs1[i], collisions[i].time);
@@ -183,7 +183,7 @@ namespace trajopt
     ConvexObjectivePtr out(new ConvexObjective(model));
     vector<AffExpr> exprs;
     m_calc->CalcDistExpressions(x, exprs);
-    for (int i = 0; i < exprs.size(); ++i)
+    for (size_t i = 0; i < exprs.size(); ++i)
     {
       AffExpr viol = exprSub(AffExpr(m_dist_pen), exprs[i]);
       out->addHinge(viol, m_coeff);
@@ -195,7 +195,7 @@ namespace trajopt
     DblVec dists;
     m_calc->CalcDists(x, dists);
     double out = 0;
-    for (int i = 0; i < dists.size(); ++i)
+    for (size_t i = 0; i < dists.size(); ++i)
     {
       out += pospart(m_dist_pen - dists[i]) * m_coeff;
     }
@@ -218,7 +218,7 @@ namespace trajopt
     ConvexConstraintsPtr out(new ConvexConstraints(model));
     vector<AffExpr> exprs;
     m_calc->CalcDistExpressions(x, exprs);
-    for (int i = 0; i < exprs.size(); ++i)
+    for (size_t i = 0; i < exprs.size(); ++i)
     {
       AffExpr viol = exprSub(AffExpr(m_dist_pen), exprs[i]);
       out->addIneqCnt(exprMult(viol, m_coeff));
@@ -230,7 +230,7 @@ namespace trajopt
     DblVec dists;
     m_calc->CalcDists(x, dists);
     DblVec out(dists.size());
-    for (int i = 0; i < dists.size(); ++i)
+    for (size_t i = 0; i < dists.size(); ++i)
     {
       out[i] = pospart(m_dist_pen - dists[i]) * m_coeff;
     }

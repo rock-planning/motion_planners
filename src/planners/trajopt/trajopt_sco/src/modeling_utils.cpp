@@ -14,7 +14,7 @@ namespace sco
   VectorXd getVec(const vector<double> &x, const VarVector &vars)
   {
     VectorXd out(vars.size());
-    for (unsigned i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
       out[i] = x[vars[i].var_rep->index];
     return out;
   }
@@ -22,7 +22,7 @@ namespace sco
   DblVec getDblVec(const vector<double> &x, const VarVector &vars)
   {
     DblVec out(vars.size());
-    for (unsigned i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
       out[i] = x[vars[i].var_rep->index];
     return out;
   }

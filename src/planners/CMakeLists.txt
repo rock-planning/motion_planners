@@ -85,7 +85,7 @@ find_package(ompl REQUIRED)
 
 if(${OMPL_FOUND})
     set(OMPL_LIB_FOUND ${OMPL_FOUND})
-    message("OMPL found !")
+    message("OMPL found - ${OMPL_FOUND}!")
     message("OMPL dir ${OMPL_INCLUDE_DIRS}")
     include_directories(${PLANNERS_PATH} ${OMPL_INCLUDE_DIRS})
     link_directories(${OMPL_LIBRARY_DIRS})

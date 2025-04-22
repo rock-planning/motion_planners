@@ -12,6 +12,7 @@ INCLUDE(FindPkgConfig)
 
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(OpenMP REQUIRED)
 
 # find_package(orocos_kdl REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)

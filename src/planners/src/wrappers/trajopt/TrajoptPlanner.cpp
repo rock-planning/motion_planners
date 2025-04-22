@@ -19,8 +19,9 @@ namespace motion_planners
         return os;
     }
 
-    TrajoptPlanner::TrajoptPlanner() : m_robot_model_wrapper(new RobotModelWrapper()),
-                                       m_collision_checker_wrapper(new FCLCollisionChecker()), m_prb(new TrajOptProb)
+    TrajoptPlanner::TrajoptPlanner() : m_prb(new TrajOptProb),
+                                       m_robot_model_wrapper(new RobotModelWrapper()),
+                                       m_collision_checker_wrapper(new FCLCollisionChecker())
     {
     }
 
@@ -82,7 +83,7 @@ namespace motion_planners
         DblVec start_traj(m_prb->GetNumDOF());
         DblVec goal_traj(m_prb->GetNumDOF());
 
-        for (int i = 0; i < start_traj.size(); i++)
+        for (size_t i = 0; i < start_traj.size(); i++)
         {
             start_traj.at(i) = start.elements.at(i).position;
             goal_traj.at(i) = goal.elements.at(i).position;

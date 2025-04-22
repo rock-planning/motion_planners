@@ -11,7 +11,7 @@ namespace util
 
     Eigen::VectorXi out(nX);
     int iY = 0;
-    for (int iX = 0; iX < nX; iX++)
+    for (size_t iX = 0; iX < nX; iX++)
     {
       while (iY < nY && x[iX] > y[iY])
         iY++;
@@ -28,7 +28,7 @@ namespace util
     int nOld = xOld.size();
     MatrixT yNew(nNew, yOld.cols());
     Eigen::VectorXi new2old = searchsorted(xNew, xOld);
-    for (int iNew = 0; iNew < nNew; iNew++)
+    for (size_t iNew = 0; iNew < nNew; iNew++)
     {
       int iOldAbove = new2old(iNew);
       if (iOldAbove == 0)

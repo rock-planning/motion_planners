@@ -28,7 +28,7 @@ namespace sco
   {
     typedef std::map<int, double> Int2Double;
     Int2Double ind2val;
-    for (unsigned i = 0; i < inds.size(); ++i)
+    for (size_t i = 0; i < inds.size(); ++i)
     {
       if (vals[i] != 0)
         ind2val[inds[i]] += vals[i];

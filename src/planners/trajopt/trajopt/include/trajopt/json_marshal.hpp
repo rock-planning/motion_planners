@@ -35,7 +35,7 @@ namespace json_marshal
   template <class T>
   void fromJsonArray(const Json::Value &parent, std::vector<T> &ref, int size)
   {
-    if (parent.size() != size)
+    if (parent.size() != static_cast<size_t>(size))
     {
       PRINT_AND_THROW(boost::format("expected list of size size %i. got: %s\n") % size % parent);
     }
@@ -128,7 +128,7 @@ namespace yaml_marshal
   template <class T>
   void fromYamlArray(const YAML::Node &parent, std::vector<T> &ref, int size)
   {
-    if (parent.size() != size)
+    if (parent.size() != static_cast<size_t>(size))
     {
       PRINT_AND_THROW(boost::format("expected list of size size %i. got: %s\n") % size % parent);
     }

@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     vector<KinBodyPtr> bodies;
     env->GetBodies(bodies);
     //    for (int i=0; i < bodies.size(); ++i) if (bodies[i]->GetName() == "obstacle") viewer->SetTransparency(bodies[i], .5);
-    for (int i = 0; i < bodies.size(); ++i)
+    for (size_t i = 0; i < bodies.size(); ++i)
       if (bodies[i]->GetName() == "ground")
         CollisionChecker::GetOrCreate(*env)->ExcludeCollisionPair(*bodies[i]->GetLinks()[0], *robot->GetLinks()[0]);
     vector<GraphHandlePtr> handles;

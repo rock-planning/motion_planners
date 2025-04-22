@@ -27,7 +27,7 @@ namespace motion_planners
         if (!assignPlanningJointInformation(robot_model))
             return false;
 
-        assert(planning_group_joints_name_.size() == stomp_config_.num_dimensions_);
+        assert(planning_group_joints_name_.size() == static_cast<size_t>(stomp_config_.num_dimensions_));
         optimization_task_.reset(new OptimizationTask(stomp_config_, robot_model_));
         optimization_task_->stompInitialize(1, 1);
 
@@ -120,7 +120,7 @@ namespace motion_planners
                 std::vector<stomp::Rollout> rollouts;
                 stomp_->getAllRollouts(rollouts);
                 fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
-                for (unsigned int j = 0; j < rollouts.size(); ++j)
+                for (size_t j = 0; j < rollouts.size(); ++j)
                 {
                     std::stringstream ss2;
                     ss2 << debug_config_.output_dir_ << "/noisy_" << i + 1 << "_" << j << ".txt";

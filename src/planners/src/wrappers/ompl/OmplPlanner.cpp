@@ -57,11 +57,11 @@ namespace motion_planners
         goal_joint_values_ = goal;
 
         LOG_INFO("[OmplPlanner]: Start joint angles ");
-        for (int i = 0; i < start_joint_values_.size(); i++)
+        for (size_t i = 0; i < start_joint_values_.size(); i++)
             LOG_INFO("[OmplPlanner]: Joint name: %s = %f ", start_joint_values_.names[i].c_str(), start_joint_values_.elements[i].position);
 
         LOG_INFO("[OmplPlanner]: Goal joint angles ");
-        for (int i = 0; i < goal_joint_values_.size(); i++)
+        for (size_t i = 0; i < goal_joint_values_.size(); i++)
             LOG_INFO("[OmplPlanner]: Joint name: %s = %f ", goal_joint_values_.names[i].c_str(), goal_joint_values_.elements[i].position);
     }
 
@@ -330,7 +330,7 @@ namespace motion_planners
 
         joint_values.names = planning_group_joints_name_;
 
-        for (int i = 0; i < planning_group_joints_name_.size(); i++)
+        for (size_t i = 0; i < planning_group_joints_name_.size(); i++)
         {
             joint_values.elements.at(i).position = joint_values_to_be_checked->values[i];
         }

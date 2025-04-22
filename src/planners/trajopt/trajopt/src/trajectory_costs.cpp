@@ -25,7 +25,7 @@ namespace trajopt
 
   JointPosCost::JointPosCost(const VarVector &vars, const VectorXd &vals, const VectorXd &coeffs) : Cost("JointPos"), vars_(vars), vals_(vals), coeffs_(coeffs)
   {
-    for (int i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
     {
       if (coeffs[i] > 0)
       {

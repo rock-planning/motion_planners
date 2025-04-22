@@ -263,14 +263,14 @@ namespace sco
   void BPMPDModel::removeVars(const VarVector &vars)
   {
     vector<int> inds = vars2inds(vars);
-    for (int i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
       vars[i].var_rep->removed = true;
   }
 
   void BPMPDModel::removeCnts(const vector<Cnt> &cnts)
   {
     vector<int> inds = cnts2inds(cnts);
-    for (int i = 0; i < cnts.size(); ++i)
+    for (size_t i = 0; i < cnts.size(); ++i)
       cnts[i].cnt_rep->removed = true;
   }
 
@@ -278,7 +278,7 @@ namespace sco
   {
     {
       int inew = 0;
-      for (int iold = 0; iold < m_vars.size(); ++iold)
+      for (size_t iold = 0; iold < m_vars.size(); ++iold)
       {
         const Var &var = m_vars[iold];
         if (!var.var_rep->removed)
@@ -298,7 +298,7 @@ namespace sco
     }
     {
       int inew = 0;
-      for (int iold = 0; iold < m_cnts.size(); ++iold)
+      for (size_t iold = 0; iold < m_cnts.size(); ++iold)
       {
         const Cnt &cnt = m_cnts[iold];
         if (!cnt.cnt_rep->removed)
@@ -320,7 +320,7 @@ namespace sco
 
   void BPMPDModel::setVarBounds(const vector<Var> &vars, const vector<double> &lower, const vector<double> &upper)
   {
-    for (int i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
     {
       int varind = vars[i].var_rep->index;
       m_lbs[varind] = lower[i];
@@ -330,7 +330,7 @@ namespace sco
   vector<double> BPMPDModel::getVarValues(const VarVector &vars) const
   {
     vector<double> out(vars.size());
-    for (int i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
     {
       int varind = vars[i].var_rep->index;
       out[i] = m_soln[varind];
@@ -372,7 +372,7 @@ namespace sco
       // cout << "adding constraint " << aff << endl;
       vector<int> inds = vars2inds(aff.vars);
 
-      for (int i = 0; i < aff.vars.size(); ++i)
+      for (size_t i = 0; i < aff.vars.size(); ++i)
       {
         var2cntinds[inds[i]].push_back(iCnt);
         var2cntvals[inds[i]].push_back(aff.coeffs[i]); // xxx maybe repeated/
@@ -395,7 +395,7 @@ namespace sco
 
     vector<vector<double>> var2qcoeffs(n);
     vector<vector<int>> var2qinds(n);
-    for (int i = 0; i < m_objective.size(); ++i)
+    for (size_t i = 0; i < m_objective.size(); ++i)
     {
       int idx1 = m_objective.vars1[i].var_rep->index, idx2 = m_objective.vars2[i].var_rep->index;
       if (idx1 < idx2)
@@ -423,13 +423,13 @@ namespace sco
       qcolcnt[iVar] = var2qinds[iVar].size();
     }
 
-    for (int i = 0; i < m_objective.affexpr.size(); ++i)
+    for (size_t i = 0; i < m_objective.affexpr.size(); ++i)
     {
       obj[m_objective.affexpr.vars[i].var_rep->index] += m_objective.affexpr.coeffs[i];
     }
 
-#define VECINC(vec)                    \
-  for (int i = 0; i < vec.size(); ++i) \
+#define VECINC(vec)                       \
+  for (size_t i = 0; i < vec.size(); ++i) \
     ++vec[i];
     VECINC(acolidx);
     VECINC(qcolidx);

@@ -43,7 +43,12 @@
 #include <Eigen/Core>
 #include <base/Eigen.hpp>
 
-#define STOMP_VERIFY(cond) cond
+#define STOMP_VERIFY(cond)                                   \
+  if (!(cond))                                               \
+  {                                                          \
+    std::cerr << "Verification failed: " #cond << std::endl; \
+    std::terminate();                                        \
+  }
 #define STOMP_VERIFY_MSG(cond, ...) cond
 
 namespace stomp

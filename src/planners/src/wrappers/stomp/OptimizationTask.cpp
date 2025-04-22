@@ -10,7 +10,9 @@ namespace motion_planners
         planning_group_name_ = robot_model_->getPlanningGroupName();
         robot_model_->getPlanningGroupJointsName(planning_group_name_, planning_group_joints_names_);
         if (!robot_model->getJointLimits(lower_limits_, upper_limits_))
+        {
             LOG_FATAL_S << "[OptimizationTask]: Cannot get joint limits";
+        }
     }
 
     OptimizationTask::~OptimizationTask()
@@ -85,7 +87,7 @@ namespace motion_planners
     {
         bool filtered = false;
 
-        for (unsigned int d = 0; d < parameters.size(); ++d)
+        for (size_t d = 0; d < parameters.size(); ++d)
         {
             for (int t = 0; t < stomp_config_.num_time_steps_; ++t)
             {
@@ -218,7 +220,7 @@ namespace motion_planners
         double constraint_cost = 0.0;
         double diff_value = 0.0;
 
-        for (size_t i = 0; i < current_value.size(); i++)
+        for (auto i = 0; i < current_value.size(); i++)
         {
             diff_value = tolerance(i) - fabs(value(i) - current_value(i));
             if (diff_value < 0.0)

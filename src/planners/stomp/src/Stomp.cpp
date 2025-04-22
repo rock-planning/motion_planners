@@ -184,7 +184,7 @@ namespace stomp
 
     // filter rollouts and set them back if filtered:
     bool filtered = false;
-    for (unsigned int r = 0; r < rollouts_.size(); ++r)
+    for (size_t r = 0; r < rollouts_.size(); ++r)
     {
       if (stomp_task_->filter(rollouts_[r], r, 0))
         filtered = true;

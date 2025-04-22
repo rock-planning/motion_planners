@@ -47,7 +47,7 @@ namespace handle_ompl_config
         {
             config.type_of_planner = (ompl_config::PlannerType)motion_planners::getValue<int, double>(yaml_data, "type_of_planner");
         }
-        catch (std::exception)
+        catch (const std::exception &e)
         {
             config.type_of_planner = motion_planners::getValue<ompl_config::PlannerType>(yaml_data, "type_of_planner");
         }
@@ -57,7 +57,7 @@ namespace handle_ompl_config
         {
             config.planner_specific_parameters_range = motion_planners::getValue<std::string>(yaml_data, "planner_specific_parameters_range");
         }
-        catch (std::exception)
+        catch (const std::exception &e)
         {
             config.planner_specific_parameters_range = std::to_string(motion_planners::getValue<int, double>(yaml_data, "planner_specific_parameters_range"));
         }

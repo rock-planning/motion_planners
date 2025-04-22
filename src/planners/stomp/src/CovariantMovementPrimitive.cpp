@@ -206,12 +206,12 @@ namespace stomp
     for (int d = 0; d < num_dimensions_; ++d)
       num_parameters_.push_back(num_time_steps_);
 
-    STOMP_VERIFY(parameters_all_.size() == num_dimensions_);
-    STOMP_VERIFY(derivative_costs_.size() == num_dimensions_);
+    STOMP_VERIFY(parameters_all_.size() == static_cast<size_t>(num_dimensions_));
+    STOMP_VERIFY(derivative_costs_.size() == static_cast<size_t>(num_dimensions_));
     for (int d = 0; d < num_dimensions_; ++d)
     {
       STOMP_VERIFY(parameters_all_[d].size() == num_vars_all_);
-      STOMP_VERIFY(derivative_costs_[d].cols() == NUM_DIFF_RULES);
+      STOMP_VERIFY(derivative_costs_[d].cols() == static_cast<size_t>(NUM_DIFF_RULES));
       STOMP_VERIFY(derivative_costs_[d].rows() == num_vars_all_);
     }
 

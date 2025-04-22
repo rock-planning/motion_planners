@@ -273,7 +273,7 @@ namespace sco
   {
     assert(x.size() == lower_bounds_.size());
     DblVec center(x.size());
-    for (int i = 0; i < x.size(); ++i)
+    for (size_t i = 0; i < x.size(); ++i)
       center[i] = (lower_bounds_[i] + upper_bounds_[i]) / 2;
     return getClosestFeasiblePoint(center);
   }
@@ -282,7 +282,7 @@ namespace sco
     LOG_DEBUG("getClosestFeasiblePoint");
     assert(vars_.size() == x.size());
     QuadExpr obj;
-    for (int i = 0; i < x.size(); ++i)
+    for (size_t i = 0; i < x.size(); ++i)
     {
       exprInc(obj, exprSquare(exprSub(AffExpr(vars_[i]), x[i])));
     }

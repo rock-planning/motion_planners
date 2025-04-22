@@ -12,14 +12,14 @@ namespace sco
   inline double vecSum(const DblVec &v)
   {
     double out = 0;
-    for (int i = 0; i < v.size(); ++i)
+    for (size_t i = 0; i < v.size(); ++i)
       out += v[i];
     return out;
   }
   inline double vecAbsSum(const DblVec &v)
   {
     double out = 0;
-    for (int i = 0; i < v.size(); ++i)
+    for (size_t i = 0; i < v.size(); ++i)
       out += fabs(v[i]);
     return out;
   }
@@ -34,7 +34,7 @@ namespace sco
   inline double vecHingeSum(const DblVec &v)
   {
     double out = 0;
-    for (int i = 0; i < v.size(); ++i)
+    for (size_t i = 0; i < v.size(); ++i)
       out += pospart(v[i]);
     return out;
   }
@@ -46,7 +46,7 @@ namespace sco
   {
     assert(a.size() == b.size());
     double out = 0;
-    for (int i = 0; i < a.size(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
       out += a[i] * b[i];
     return out;
   }

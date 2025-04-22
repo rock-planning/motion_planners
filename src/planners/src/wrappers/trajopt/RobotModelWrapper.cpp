@@ -126,7 +126,7 @@ void RobotModelWrapper::getDOFValues(vector<std::string> &joint_names, DblVec &j
     joint_names.resize(m_planning_group_joints_names_.size());
     joint_values.resize(m_planning_group_joints_names_.size());
 
-    for (int i = 0; i < m_planning_group_joints_names_.size(); i++)
+    for (size_t i = 0; i < m_planning_group_joints_names_.size(); i++)
     {
         joint_names.at(i) = m_planning_group_joints_names_.at(i);
         joint_values.at(i) = m_robot_model->getRobotState().robot_joints_[m_planning_group_joints_names_.at(i)].getJointValue();
@@ -219,7 +219,7 @@ DblVec RobotModelWrapper::setRandomDOFValues()
 
     DblVec random_joint_values(m_planning_group_joints_names_.size());
 
-    for (int i; i < m_planning_group_joints_names_.size(); i++)
+    for (size_t i; i < m_planning_group_joints_names_.size(); i++)
     {
         random_joint_values.at(i) = planning_groups_joints_with_random_values[m_planning_group_joints_names_[i]];
     }

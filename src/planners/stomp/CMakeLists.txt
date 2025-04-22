@@ -31,7 +31,16 @@ add_library(stomp SHARED
 )
 
 # target_link_libraries(stomp ${BASE_TYPES_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OpenMP_CXX_FLAGS})
-target_link_libraries(stomp ${BASE_TYPES_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OpenMP_CXX_FLAGS})
+target_link_libraries(stomp
+    PUBLIC
+    ${BASE_TYPES_LIBRARIES}
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(stomp PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 # add_executable(test_stomp2d
 # test/stomp_2d_test.cpp

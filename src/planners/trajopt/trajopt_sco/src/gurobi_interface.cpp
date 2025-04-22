@@ -38,7 +38,7 @@ void simplify(vector<int>& inds, vector<double>& vals) {
   int work_size = max_ind - min_ind + 1;
   vector<double> work_vals(work_size, 0);
 
-  for (int i=0; i < orig_size; ++i) {
+  for (size_t i=0; i < orig_size; ++i) {
     work_vals[inds[i] - min_ind] += vals[i];
   }
 
@@ -152,7 +152,7 @@ void simplify(vector<int>& inds, vector<double>& vals) {
   {
     vector<int> inds = vars2inds(vars);
     ENSURE_SUCCESS(GRBdelvars(m_model, inds.size(), inds.data()));
-    for (int i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i)
       vars[i].var_rep->removed = true;
   }
 
@@ -160,7 +160,7 @@ void simplify(vector<int>& inds, vector<double>& vals) {
   {
     vector<int> inds = cnts2inds(cnts);
     ENSURE_SUCCESS(GRBdelconstrs(m_model, inds.size(), inds.data()));
-    for (int i = 0; i < cnts.size(); ++i)
+    for (size_t i = 0; i < cnts.size(); ++i)
       cnts[i].cnt_rep->removed = true;
   }
 

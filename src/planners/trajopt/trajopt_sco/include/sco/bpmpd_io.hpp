@@ -51,14 +51,14 @@ namespace bpmpd_io
     case SER:
     {
       int n = write(fp, x.data(), sizeof(T) * size);
-      assert(n == sizeof(T) * size);
+      assert(static_cast<size_t>(n) == sizeof(T) * size);
       break;
     }
     case DESER:
     {
       x.resize(size);
       int n = read(fp, x.data(), sizeof(T) * size);
-      assert(n == sizeof(T) * size);
+      assert(static_cast<size_t>(n) == sizeof(T) * size);
       break;
     }
     }

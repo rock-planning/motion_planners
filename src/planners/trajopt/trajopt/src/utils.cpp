@@ -36,11 +36,11 @@ namespace trajopt
 
   void AddVarArrays(OptProb &prob, int rows, const vector<int> &cols, const vector<string> &name_prefix, const vector<VarArray *> &newvars)
   {
-    int n_arr = name_prefix.size();
+    size_t n_arr = name_prefix.size();
     assert(n_arr == newvars.size());
 
     vector<MatrixXi> index(n_arr);
-    for (int i = 0; i < n_arr; ++i)
+    for (size_t i = 0; i < n_arr; ++i)
     {
       newvars[i]->resize(rows, cols[i]);
       index[i].resize(rows, cols[i]);
@@ -50,7 +50,7 @@ namespace trajopt
     int var_idx = prob.getNumVars();
     for (int i = 0; i < rows; ++i)
     {
-      for (int k = 0; k < n_arr; ++k)
+      for (size_t k = 0; k < n_arr; ++k)
       {
         for (int j = 0; j < cols[k]; ++j)
         {
@@ -63,7 +63,7 @@ namespace trajopt
     prob.createVariables(names); // note that w,r, are both unbounded
 
     const vector<Var> &vars = prob.getVars();
-    for (int k = 0; k < n_arr; ++k)
+    for (size_t k = 0; k < n_arr; ++k)
     {
       for (int i = 0; i < rows; ++i)
       {

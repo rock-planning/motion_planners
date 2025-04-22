@@ -82,7 +82,7 @@ namespace
 #if 0
 BoolVec toMask(const VectorXd& x) {
   BoolVec out(x.size());
-  for (int i=0; i < x.size(); ++i) out[i] = (x[i] > 0);
+  for (size_t i=0; i < x.size(); ++i) out[i] = (x[i] > 0);
   return out;
 }
 #endif
@@ -327,7 +327,7 @@ namespace trajopt
   TrajArray getStraightLineTrajData(int n_steps, int n_dof, DblVec startpoint, DblVec endpoint)
   {
     TrajArray data;
-    if (endpoint.size() != n_dof)
+    if (endpoint.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j") % n_dof % endpoint.size());
     }
@@ -354,7 +354,7 @@ namespace trajopt
     {
       FAIL_IF_FALSE(v.isMember("data"));
       const Value &vdata = v["data"];
-      if (vdata.size() != n_steps)
+      if (vdata.size() != static_cast<size_t>(n_steps))
       {
         PRINT_AND_THROW("given initialization traj has wrong length");
       }
@@ -371,7 +371,7 @@ namespace trajopt
       FAIL_IF_FALSE(v.isMember("endpoint"));
       DblVec endpoint;
       childFromJson(v, endpoint, "endpoint");
-      if (endpoint.size() != n_dof)
+      if (endpoint.size() != static_cast<size_t>(n_dof))
       {
         PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j") % n_dof % endpoint.size());
       }
@@ -394,7 +394,7 @@ namespace trajopt
     {
       FAIL_IF_FALSE(v["data"]);
       const YAML::Node &vdata = v["data"];
-      if (vdata.size() != n_steps)
+      if (vdata.size() != static_cast<size_t>(n_steps))
       {
         PRINT_AND_THROW("given initialization traj has wrong length");
       }
@@ -411,7 +411,7 @@ namespace trajopt
       FAIL_IF_FALSE(v["endpoint"]);
       DblVec endpoint;
       childFromYaml(v, endpoint, "endpoint");
-      if (endpoint.size() != n_dof)
+      if (endpoint.size() != static_cast<size_t>(n_dof))
       {
         PRINT_AND_THROW(boost::format("wrong number of dof values in initialization. expected %i got %j") % n_dof % endpoint.size());
       }
@@ -456,8 +456,9 @@ namespace trajopt
     gPCI = NULL;
   }
 
-  TrajOptResult::TrajOptResult(OptResults &opt, TrajOptProb &prob, OptStatus status) : cost_vals(opt.cost_vals),
-                                                                                       cnt_viols(opt.cnt_viols), status(status)
+  TrajOptResult::TrajOptResult(OptResults &opt, TrajOptProb &prob, OptStatus status) : status(status),
+                                                                                       cost_vals(opt.cost_vals),
+                                                                                       cnt_viols(opt.cnt_viols)
   {
     BOOST_FOREACH (const CostPtr &cost, prob.getCosts())
     {
@@ -565,7 +566,7 @@ namespace trajopt
     {
       vlower.insert(vlower.end(), lower.data(), lower.data() + lower.size());
       vupper.insert(vupper.end(), upper.data(), upper.data() + upper.size());
-      for (unsigned j = 0; j < n_dof; ++j)
+      for (int j = 0; j < n_dof; ++j)
       {
         names.push_back((boost::format("j_%i_%i") % i % j).str());
       }
@@ -637,7 +638,7 @@ namespace trajopt
       coeffs = DblVec(n_steps, coeffs[0]);
 
     int n_dof = gPCI->rad->getDOF();
-    if (vals.size() != n_dof)
+    if (vals.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of dof vals. expected %i got %i") % n_dof % vals.size());
     }
@@ -658,7 +659,7 @@ namespace trajopt
       coeffs = DblVec(n_steps, coeffs[0]);
 
     int n_dof = gPCI->rad->getDOF();
-    if (vals.size() != n_dof)
+    if (vals.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of dof vals. expected %i got %i") % n_dof % vals.size());
     }
@@ -735,7 +736,7 @@ namespace trajopt
     int n_dof = gPCI->rad->getDOF();
     if (coeffs.size() == 1)
       coeffs = DblVec(n_dof, coeffs[0]);
-    else if (coeffs.size() != n_dof)
+    else if (coeffs.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of coeffs. expected %i got %i") % n_dof % coeffs.size());
     }
@@ -753,7 +754,7 @@ namespace trajopt
     int n_dof = gPCI->rad->getDOF();
     if (coeffs.size() == 1)
       coeffs = DblVec(n_dof, coeffs[0]);
-    else if (coeffs.size() != n_dof)
+    else if (coeffs.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of coeffs. expected %i got %i") % n_dof % coeffs.size());
     }
@@ -778,7 +779,7 @@ namespace trajopt
     childFromJson(params, vals, "vals");
     childFromJson(params, first_step, "first_step", 0);
     childFromJson(params, last_step, "last_step", n_steps - 1);
-    FAIL_IF_FALSE(vals.size() == n_dof);
+    FAIL_IF_FALSE(vals.size() == static_cast<size_t>(n_dof));
     FAIL_IF_FALSE((first_step >= 0) && (first_step < n_steps));
     FAIL_IF_FALSE((last_step >= first_step) && (last_step < n_steps));
 
@@ -807,7 +808,7 @@ namespace trajopt
     childFromYaml(params, last_step, "last_step", n_steps - 1);
     if (vals.size() == 1)
       vals = DblVec(n_dof, vals[0]);
-    FAIL_IF_FALSE(vals.size() == n_dof);
+    FAIL_IF_FALSE(vals.size() == static_cast<size_t>(n_dof));
     FAIL_IF_FALSE((first_step >= 0) && (first_step < n_steps));
     FAIL_IF_FALSE((last_step >= first_step) && (last_step < n_steps));
 
@@ -819,7 +820,7 @@ namespace trajopt
   {
     for (int i = first_step; i <= last_step - 1; ++i)
     {
-      for (int j = 0; j < vals.size(); ++j)
+      for (size_t j = 0; j < vals.size(); ++j)
       {
         AffExpr vel = prob.GetVar(i + 1, j) - prob.GetVar(i, j);
         vel.constant *= (10 / 20);
@@ -846,14 +847,14 @@ namespace trajopt
     int n_terms = last_step - first_step + 1;
     if (coeffs.size() == 1)
       coeffs = DblVec(n_terms, coeffs[0]);
-    else if (coeffs.size() != n_terms)
+    else if (coeffs.size() != static_cast<size_t>(n_terms))
     {
       PRINT_AND_THROW(boost::format("wrong size: coeffs. expected %i got %i") % n_terms % coeffs.size());
     }
     childFromJson(params, dist_pen, "dist_pen");
     if (dist_pen.size() == 1)
       dist_pen = DblVec(n_terms, dist_pen[0]);
-    else if (dist_pen.size() != n_terms)
+    else if (dist_pen.size() != static_cast<size_t>(n_terms))
     {
       PRINT_AND_THROW(boost::format("wrong size: dist_pen. expected %i got %i") % n_terms % dist_pen.size());
     }
@@ -880,14 +881,14 @@ namespace trajopt
     int n_terms = last_step - first_step + 1;
     if (coeffs.size() == 1)
       coeffs = DblVec(n_terms, coeffs[0]);
-    else if (coeffs.size() != n_terms)
+    else if (coeffs.size() != static_cast<size_t>(n_terms))
     {
       PRINT_AND_THROW(boost::format("wrong size: coeffs. expected %i got %i") % n_terms % coeffs.size());
     }
     childFromYaml(params, dist_pen, "dist_pen");
     if (dist_pen.size() == 1)
       dist_pen = DblVec(n_terms, dist_pen[0]);
-    else if (dist_pen.size() != n_terms)
+    else if (dist_pen.size() != static_cast<size_t>(n_terms))
     {
       PRINT_AND_THROW(boost::format("wrong size: dist_pen. expected %i got %i") % n_terms % dist_pen.size());
     }
@@ -947,7 +948,7 @@ namespace trajopt
     childFromJson(params, vals, "vals");
 
     int n_dof = gPCI->rad->getDOF();
-    if (vals.size() != n_dof)
+    if (vals.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of dof vals. expected %i got %i") % n_dof % vals.size());
     }
@@ -964,7 +965,7 @@ namespace trajopt
     childFromYaml(params, vals, "vals");
 
     int n_dof = gPCI->rad->getDOF();
-    if (vals.size() != n_dof)
+    if (vals.size() != static_cast<size_t>(n_dof))
     {
       PRINT_AND_THROW(boost::format("wrong number of dof vals. expected %i got %i") % n_dof % vals.size());
     }
