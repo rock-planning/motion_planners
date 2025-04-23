@@ -229,45 +229,53 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
                                            PlannerStatus &planner_status)
 {
-    if (checkStartState(start_jointvalues, planner_status))
+    int iterate = 0;
+    while (iterate < 2)
     {
-        // assign the goal joint values from the target joint status
-        goal_pose_ = target_pose;
-        // assign the goal joint values from the target joint status
-        goal_joint_status_.clear();
-        goal_joint_status_.resize(planning_group_joints_.size());
-
-        kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
-
-        if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND || planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
+        if (checkStartState(start_jointvalues, planner_status))
         {
+            // assign the goal joint values from the target joint status
+            goal_pose_ = target_pose;
+            // assign the goal joint values from the target joint status
+            goal_joint_status_.clear();
+            goal_joint_status_.resize(planning_group_joints_.size());
 
-            for (std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
+            kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
+
+            if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND || planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
             {
-                for (size_t i = 0; i < planning_group_joints_.size(); i++)
+
+                for (std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
                 {
-                    try
+                    for (size_t i = 0; i < planning_group_joints_.size(); i++)
                     {
-                        goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
-                        goal_joint_status_.elements.at(i) = it->getElementByName(planning_group_joints_.at(i).first);
+                        try
+                        {
+                            goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
+                            goal_joint_status_.elements.at(i) = it->getElementByName(planning_group_joints_.at(i).first);
+                        }
+                        catch (base::samples::Joints::InvalidName const &e)
+                        { // Only catch exception to write more explicit error msgs
+                            LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value",
+                                      planning_group_joints_.at(i).first.c_str());
+                            return false;
+                        }
                     }
-                    catch (base::samples::Joints::InvalidName const &e)
-                    { // Only catch exception to write more explicit error msgs
-                        LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value",
-                                  planning_group_joints_.at(i).first.c_str());
-                        return false;
+                    if (checkGoalState(goal_joint_status_, planner_status))
+                    {
+                        constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
+                        return true;
                     }
-                }
-                if (checkGoalState(goal_joint_status_, planner_status))
-                {
-                    constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
-                    return true;
+                    else if (planner_status.statuscode == PlannerStatus::GOAL_STATE_IN_COLLISION)
+                    {
+                        iterate++;
+                    }
                 }
             }
-        }
-        else
-        {
-            planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
+            else
+            {
+                planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
+            }
         }
     }
     return false;
