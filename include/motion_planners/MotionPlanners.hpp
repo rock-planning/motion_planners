@@ -206,6 +206,19 @@ namespace motion_planners
          */
         void printPlannerStatus(motion_planners::PlannerStatus &planner_status);
 
+        /**
+         * 
+         */
+        void printPlanningGroupJoints(const std::vector<std::pair<std::string, urdf::Joint>>& planning_group_joints);
+
+        /**
+         * 
+         */
+        void printIKSolution(const std::vector<base::commands::Joints> &ik_solution);
+
+        bool ExcessiveJointMotion(const base::JointsTrajectory &traj, double max_angle_rad = M_PI);
+        bool LargeJointMotionOverWholePath(const base::JointsTrajectory &traj, double max_angle_rad = M_PI);
+
     protected:
         /**
          * @brief  Check the start state for the planning request.
@@ -274,6 +287,8 @@ namespace motion_planners
         std::vector<base::commands::Joints> ik_solution_;
 
         ConstraintPlanning constrainted_target_;
+
+        bool planning_type_; // True == Cartesian Space; False == Joint space
 
     private:
         Config config_;

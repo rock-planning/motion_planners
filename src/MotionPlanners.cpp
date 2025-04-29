@@ -193,42 +193,52 @@ bool MotionPlanners::usePredictedTrajectory(base::JointsTrajectory &solution, Pl
     return true;
 }
 
-bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::Joints &target_jointvalues,
+bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
+                                           const base::samples::Joints &target_jointvalues,
                                            PlannerStatus &planner_status)
 {
-
-    if (checkStartState(start_jointvalues, planner_status))
+    planning_type_ = false;
+    int iterate = 0;
+    while (iterate < 2)
     {
-        // assign the goal joint values from the target joint status
-        goal_joint_status_.clear();
-        goal_joint_status_.resize(planning_group_joints_.size());
-        for (size_t i = 0; i < planning_group_joints_.size(); i++)
+        if (checkStartState(start_jointvalues, planner_status))
         {
-            try
+            // assign the goal joint values from the target joint status
+            goal_joint_status_.clear();
+            goal_joint_status_.resize(planning_group_joints_.size());
+            for (size_t i = 0; i < planning_group_joints_.size(); i++)
             {
-                goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
-                goal_joint_status_.elements.at(i) = target_jointvalues.getElementByName(planning_group_joints_.at(i).first);
+                try
+                {
+                    goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
+                    goal_joint_status_.elements.at(i) = target_jointvalues.getElementByName(planning_group_joints_.at(i).first);
+                }
+                catch (base::samples::Joints::InvalidName const &e) // Only catch exception to write more explicit error msgs
+                {
+                    LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value",
+                              planning_group_joints_.at(i).first.c_str());
+                    return false;
+                }
             }
-            catch (base::samples::Joints::InvalidName const &e) // Only catch exception to write more explicit error msgs
+            if (checkGoalState(goal_joint_status_, planner_status))
             {
-                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value",
-                          planning_group_joints_.at(i).first.c_str());
-                return false;
+                constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
+                return true;
             }
-        }
-
-        if (checkGoalState(goal_joint_status_, planner_status))
-        {
-            constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
-            return true;
+            else if (planner_status.statuscode == PlannerStatus::GOAL_STATE_IN_COLLISION || planner_status.statuscode == PlannerStatus::NO_PATH_FOUND)
+            {
+                iterate++;
+            }
         }
     }
     return false;
 }
 
-bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const base::samples::RigidBodyState &target_pose,
+bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
+                                           const base::samples::RigidBodyState &target_pose,
                                            PlannerStatus &planner_status)
 {
+    planning_type_ = true;
     int iterate = 0;
     while (iterate < 2)
     {
@@ -242,9 +252,12 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 
             kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
 
-            if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND || planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
-            {
+            // printIKSolution(ik_solution_);
 
+            if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND ||
+                planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
+            {
+                // printPlanningGroupJoints(planning_group_joints_);
                 for (std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
                 {
                     for (size_t i = 0; i < planning_group_joints_.size(); i++)
@@ -266,7 +279,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
                         constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
                         return true;
                     }
-                    else if (planner_status.statuscode == PlannerStatus::GOAL_STATE_IN_COLLISION)
+                    else if (planner_status.statuscode == PlannerStatus::GOAL_STATE_IN_COLLISION || planner_status.statuscode == PlannerStatus::NO_PATH_FOUND)
                     {
                         iterate++;
                     }
@@ -284,50 +297,59 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
                                            PlannerStatus &planner_status)
 {
-    if (checkStartState(start_jointvalues, planner_status))
+    planning_type_ = false;
+    int iterate = 0;
+    while (iterate < 2)
     {
-        // assign the goal joint values from the target group state
-        auto it = named_group_states_.find(target_group_state);
-        if (it == named_group_states_.end())
+        if (checkStartState(start_jointvalues, planner_status))
         {
-            LOG_ERROR("[MotionPlanners]: Group State %s does not exist in the named group states for the planning group", target_group_state.c_str());
-            return false;
-        }
-        auto joint_map = it->second;
-        goal_joint_status_.clear();
-        goal_joint_status_.resize(planning_group_joints_.size());
-        for (size_t i = 0; i < planning_group_joints_.size(); i++)
-        {
-            try
+            // assign the goal joint values from the target group state
+            auto it = named_group_states_.find(target_group_state);
+            if (it == named_group_states_.end())
             {
-                goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
-                auto joint_it = joint_map.find((planning_group_joints_.at(i).first));
-                goal_joint_status_.elements.at(i).position = joint_it->second;
-            }
-            catch (base::samples::Joints::InvalidName const &e) // Only catch exception to write more explicit error msgs
-            {
-                LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value",
-                          planning_group_joints_.at(i).first.c_str());
+                LOG_ERROR("[MotionPlanners]: Group State %s does not exist in the named group states for the planning group", target_group_state.c_str());
                 return false;
             }
-        }
-        for (size_t i = 0; i < goal_joint_status_.size(); ++i)
-        {
-            // set new goal positions so that are only rotations with a value below of PI
-            if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position > M_PI)
+            auto joint_map = it->second;
+            goal_joint_status_.clear();
+            goal_joint_status_.resize(planning_group_joints_.size());
+            for (size_t i = 0; i < planning_group_joints_.size(); i++)
             {
-                goal_joint_status_.elements.at(i).position -= 2 * M_PI;
+                try
+                {
+                    goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
+                    auto joint_it = joint_map.find((planning_group_joints_.at(i).first));
+                    goal_joint_status_.elements.at(i).position = joint_it->second;
+                }
+                catch (base::samples::Joints::InvalidName const &e) // Only catch exception to write more explicit error msgs
+                {
+                    LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available in the given target value",
+                              planning_group_joints_.at(i).first.c_str());
+                    return false;
+                }
             }
-            else if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position < -M_PI)
+            for (size_t i = 0; i < goal_joint_status_.size(); ++i)
             {
-                goal_joint_status_.elements.at(i).position += 2 * M_PI;
+                // set new goal positions so that are only rotations with a value below of PI
+                if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position > M_PI)
+                {
+                    goal_joint_status_.elements.at(i).position -= 2 * M_PI;
+                }
+                else if (goal_joint_status_.elements.at(i).position - initial_joint_status_.elements.at(i).position < -M_PI)
+                {
+                    goal_joint_status_.elements.at(i).position += 2 * M_PI;
+                }
+                LOG_DEBUG("[MotionPlanners]: Named Goal Joint Value  for Joint %s = %f", goal_joint_status_.names.at(i).c_str(), goal_joint_status_.elements.at(i).position);
             }
-            LOG_DEBUG("[MotionPlanners]: Named Goal Joint Value  for Joint %s = %f", goal_joint_status_.names.at(i).c_str(), goal_joint_status_.elements.at(i).position);
-        }
-        if (checkGoalState(goal_joint_status_, planner_status))
-        {
-            constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
-            return true;
+            if (checkGoalState(goal_joint_status_, planner_status))
+            {
+                constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
+                return true;
+            }
+            else if (planner_status.statuscode == PlannerStatus::GOAL_STATE_IN_COLLISION || planner_status.statuscode == PlannerStatus::NO_PATH_FOUND)
+            {
+                iterate++;
+            }
         }
     }
     return false;
@@ -336,6 +358,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const ConstraintPlanning &constrainted_target,
                                            PlannerStatus &planner_status)
 {
+    planning_type_ = false;
     if (constrainted_target.use_constraint == motion_planners::JOINTS_CONSTRAINT)
     {
         if (!assignPlanningRequest(start_jointvalues, constrainted_target.target_joints_value, planner_status))
@@ -518,6 +541,32 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     auto start_time = std::chrono::high_resolution_clock::now();
 
     bool res = planner_->solve(solution, planner_status);
+
+    if ((planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution)) &&
+        planning_type_)
+    {
+        for (size_t ite = 1; ite < 5; ite++)
+        {
+            std::cout << "Need to replan" << std::endl;
+            printPlannerStatus(planner_status);
+            const base::commands::Joints &joint = ik_solution_[ite];
+            for (size_t i = 0; i < planning_group_joints_.size(); i++)
+            {
+                goal_joint_status_.elements.at(i) = joint.elements.at(i);
+            }
+            setStartAndGoal();
+            bool res = planner_->solve(solution, planner_status);
+            if (res)
+            {
+                break;
+            }
+            else if ((planner_status.statuscode == PlannerStatus::NO_PATH_FOUND ||
+                      ExcessiveJointMotion(solution)))
+            {
+                continue;
+            }
+        }
+    }
 
     auto finish_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish_time - start_time;
