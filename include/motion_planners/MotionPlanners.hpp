@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include <chrono>
+#include <memory>
 #include <base/samples/Joints.hpp>
 #include <base/JointsTrajectory.hpp>
 #include <collision_detection/CollisionFactory.hpp>

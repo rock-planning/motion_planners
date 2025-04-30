@@ -1,22 +1,12 @@
-#include <vector>
-#include <string>
-
 #include <motion_planners/MotionPlanners.hpp>
 
 using namespace motion_planners;
 
-MotionPlanners::MotionPlanners()
-{
-}
+MotionPlanners::MotionPlanners() = default;
 
-MotionPlanners::MotionPlanners(Config config)
-{
-    config_ = config;
-}
+MotionPlanners::MotionPlanners(Config config) : config_(config) {}
 
-MotionPlanners::~MotionPlanners()
-{
-}
+MotionPlanners::~MotionPlanners() = default;
 
 void MotionPlanners::loadConfig(Config config)
 {
@@ -66,6 +56,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     goal_pose_.position = Eigen::Vector3d::Zero();
     goal_pose_.orientation = Eigen::Quaterniond::Identity();
 
+    planner_status.statuscode = PlannerStatus::INIT;
     return true;
 }
 
@@ -238,57 +229,50 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
                                            const base::samples::RigidBodyState &target_pose,
                                            PlannerStatus &planner_status)
 {
+
     planning_type_ = true;
-    int iterate = 0;
-    while (iterate < 2)
+    if (checkStartState(start_jointvalues, planner_status))
     {
-        if (checkStartState(start_jointvalues, planner_status))
+        // assign the goal joint values from the target joint status
+        goal_pose_ = target_pose;
+        // assign the goal joint values from the target joint status
+        goal_joint_status_.clear();
+        goal_joint_status_.resize(planning_group_joints_.size());
+
+        kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
+
+        // printIKSolution(ik_solution_);
+
+        if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND ||
+            planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
         {
-            // assign the goal joint values from the target joint status
-            goal_pose_ = target_pose;
-            // assign the goal joint values from the target joint status
-            goal_joint_status_.clear();
-            goal_joint_status_.resize(planning_group_joints_.size());
-
-            kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
-
-            // printIKSolution(ik_solution_);
-
-            if (planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::IK_FOUND ||
-                planner_status.kinematic_status.statuscode == kinematics_library::KinematicsStatus::APPROX_IK_SOLUTION)
+            // printPlanningGroupJoints(planning_group_joints_);
+            for (std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
             {
-                // printPlanningGroupJoints(planning_group_joints_);
-                for (std::vector<base::commands::Joints>::iterator it = ik_solution_.begin(); it != ik_solution_.end(); ++it)
+                for (size_t i = 0; i < planning_group_joints_.size(); i++)
                 {
-                    for (size_t i = 0; i < planning_group_joints_.size(); i++)
+                    try
                     {
-                        try
-                        {
-                            goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
-                            goal_joint_status_.elements.at(i) = it->getElementByName(planning_group_joints_.at(i).first);
-                        }
-                        catch (base::samples::Joints::InvalidName const &e)
-                        { // Only catch exception to write more explicit error msgs
-                            LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value",
-                                      planning_group_joints_.at(i).first.c_str());
-                            return false;
-                        }
+                        goal_joint_status_.names.at(i) = planning_group_joints_.at(i).first;
+                        goal_joint_status_.elements.at(i) = it->getElementByName(planning_group_joints_.at(i).first);
                     }
-                    if (checkGoalState(goal_joint_status_, planner_status))
-                    {
-                        constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
-                        return true;
-                    }
-                    else if (planner_status.statuscode == PlannerStatus::GOAL_STATE_IN_COLLISION || planner_status.statuscode == PlannerStatus::NO_PATH_FOUND)
-                    {
-                        iterate++;
+                    catch (base::samples::Joints::InvalidName const &e)
+                    { // Only catch exception to write more explicit error msgs
+                        LOG_ERROR("[MotionPlanners]: Joint %s is given in planning group but is not available for the goal value",
+                                  planning_group_joints_.at(i).first.c_str());
+                        return false;
                     }
                 }
+                if (checkGoalState(goal_joint_status_, planner_status))
+                {
+                    constrainted_target_.use_constraint = motion_planners::NO_CONSTRAINT;
+                    return true;
+                }
             }
-            else
-            {
-                planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
-            }
+        }
+        else
+        {
+            planner_status.statuscode = PlannerStatus::KINEMATIC_ERROR;
         }
     }
     return false;
@@ -547,8 +531,7 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     {
         for (size_t ite = 1; ite < 5; ite++)
         {
-            std::cout << "Need to replan" << std::endl;
-            printPlannerStatus(planner_status);
+            LOG_INFO("Need to replan\n");
             const base::commands::Joints &joint = ik_solution_[ite];
             for (size_t i = 0; i < planning_group_joints_.size(); i++)
             {

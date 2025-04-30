@@ -297,6 +297,9 @@ void MotionPlanners::printPlannerStatus(motion_planners::PlannerStatus &planner_
 {
     switch (planner_status.statuscode)
     {
+    case motion_planners::PlannerStatus::INIT:
+        std::cout << "PLANNER_INITIALIZED" << std::endl;
+        break;
     case motion_planners::PlannerStatus::PATH_FOUND:
         std::cout << "PATH_FOUND" << std::endl;
         break;
