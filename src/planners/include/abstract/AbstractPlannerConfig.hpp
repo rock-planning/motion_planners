@@ -46,6 +46,7 @@ namespace motion_planners
     {
         enum StatusCode
         {
+            INIT,
             // Planner found a path
             PATH_FOUND,
             // No path found

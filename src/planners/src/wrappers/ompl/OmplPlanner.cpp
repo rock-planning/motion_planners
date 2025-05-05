@@ -201,12 +201,14 @@ namespace motion_planners
             solution_path_ptr_ = std::static_pointer_cast<ompl::geometric::PathGeometric>(problem_definition_ptr->getSolutionPath());
 
             LOG_DEBUG_S << "[OmplPlanner]: Found solution with size " << solution_path_ptr_->getStates().size();
-            std::cout << "Solution found before simplifying with size = " << solution_path_ptr_->getStates().size() << std::endl;
+            // std::cout << "Solution found before simplifying with size = " << solution_path_ptr_->getStates().size() << std::endl;
 
-            ompl::geometric::PathSimplifier path_simplifier(space_information);
-            // simplify the solution
-            simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
+            // simplify the solution - OFF
+            // ompl::geometric::PathSimplifier path_simplifier(space_information);
+            // simplifySolution(problem_definition_ptr, path_simplifier, ompl_config_.max_step_smoothing, ompl_config_.max_time_soln_simpilification);
+
             solution.resize(planning_group_joints_size_, solution_path_ptr_->getStates().size());
+
             for (size_t i = 0; i < planning_group_joints_size_; ++i)
                 solution.names.at(i) = planning_group_joints_.at(i).first;
 

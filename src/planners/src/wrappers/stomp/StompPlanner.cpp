@@ -60,6 +60,30 @@ namespace motion_planners
         return true;
     }
 
+    bool StompPlanner::jointSpaceStateValidChecker(double validity_checker_cost_)
+    {
+        int start = stomp::DIFF_RULE_LENGTH - 1;
+
+        base::samples::Joints joint_values;
+        
+        for (int i = 0; i < stomp_config_.num_time_steps_; i++)
+        {
+            joint_values.resize(planning_group_joints_name_.size());
+            joint_values.names = planning_group_joints_name_;
+
+            for (int d = 0; d < stomp_config_.num_dimensions_; d++)
+            {
+                joint_values.elements[d].position = optimization_task_->policy_->parameters_all_[d](i + start);
+            }
+
+            robot_model_->updateJointGroup(joint_values);
+            if (!robot_model_->isStateValid(validity_checker_cost_))
+                return false;
+        }
+
+        return true;
+    }
+
     bool StompPlanner::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status)
     {
         // optimization_task_->createPolicy();
@@ -110,10 +134,19 @@ namespace motion_planners
             // std::cout <<"Iteration = "<<i <<". Total Cost = "<<current_trajectory_totalcost<<" . Cost improvement = "<<cost_improvement<<std::endl;
 
             // Stop Criteria
+
+            double validity_checker_cost = 0.0;
+            if (jointSpaceStateValidChecker(validity_checker_cost))
+            {
+                break;
+            }
+
             // Here the "current_trajectory_totalcost" < 1 means there is no collision.
             // We assign a collision cost of value "1"
             if ((current_trajectory_totalcost < 1) && (fabs(cost_improvement) < stomp_config_.min_cost_improvement_))
+            {
                 break;
+            }
 
             if (debug_config_.save_noisy_trajectories_)
             {

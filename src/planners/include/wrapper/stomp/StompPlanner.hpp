@@ -75,6 +75,8 @@ namespace motion_planners
 
         double getMovementDeltaTime();
 
+        bool jointSpaceStateValidChecker(double collision_cost_);
+
     private:
         boost::shared_ptr<stomp::Stomp> stomp_;
         stomp::StompConfig stomp_config_;

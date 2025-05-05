@@ -297,6 +297,9 @@ void MotionPlanners::printPlannerStatus(motion_planners::PlannerStatus &planner_
 {
     switch (planner_status.statuscode)
     {
+    case motion_planners::PlannerStatus::INIT:
+        std::cout << "PLANNER_INITIALIZED" << std::endl;
+        break;
     case motion_planners::PlannerStatus::PATH_FOUND:
         std::cout << "PATH_FOUND" << std::endl;
         break;
@@ -410,6 +413,102 @@ void MotionPlanners::printPlannerStatus(motion_planners::PlannerStatus &planner_
         break;
     }
     }
+}
+
+void MotionPlanners::printPlanningGroupJoints(const std::vector<std::pair<std::string, urdf::Joint>> &planning_group_joints)
+{
+    for (const auto &joint_pair : planning_group_joints)
+    {
+        const std::string &joint_name = joint_pair.first;
+        const urdf::Joint &joint = joint_pair.second;
+
+        std::cout << "Joint Name: " << joint_name << std::endl;
+
+        // Print joint details
+        std::cout << "  Type: " << joint.type << std::endl;
+        std::cout << "  Parent Link: ";
+
+        // Manually print the translation and rotation
+        const urdf::Pose &pose = joint.parent_to_joint_origin_transform;
+        std::cout << "Translation: ("
+                  << pose.position.x << ", "
+                  << pose.position.y << ", "
+                  << pose.position.z << "), "
+                  << "Rotation: ("
+                  << pose.rotation.x << ", "
+                  << pose.rotation.y << ", "
+                  << pose.rotation.z << ", "
+                  << pose.rotation.w << ")"
+                  << std::endl;
+
+        std::cout << "  Child Link: " << joint.child_link_name << std::endl;
+    }
+}
+
+void MotionPlanners::printIKSolution(const std::vector<base::commands::Joints> &ik_solution)
+{
+    std::cout << "Size of IK solutions " << ik_solution.size() << std::endl;
+    for (size_t i = 0; i < ik_solution.size(); ++i)
+    {
+        std::cout << "IK Solution " << i + 1 << ":\n";
+        const base::commands::Joints &joint = ik_solution[i];
+        std::cout << "  Joint Positions: ";
+        for (size_t j = 0; j < 7; ++j)
+        {
+            std::cout << joint.elements[j].position << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+bool MotionPlanners::ExcessiveJointMotion(const base::JointsTrajectory &traj, double max_angle_rad)
+{
+    if (LargeJointMotionOverWholePath(traj, max_angle_rad))
+        return true;
+
+    size_t time_steps = traj.getTimeSteps();
+    size_t num_joints = traj.getNumberOfJoints();
+
+    for (size_t j = 0; j < num_joints; ++j)
+    {
+        for (size_t t = 1; t < time_steps; ++t)
+        {
+            double pos_t = traj.elements[j][t].position;
+            double pos_prev = traj.elements[j][t - 1].position;
+            double delta = std::abs(pos_t - pos_prev);
+
+            if (delta > max_angle_rad)
+            {
+                std::cout << "Joint = " << j << "; jumps = " << delta << " rad between t = " << t - 1 << "; and t = " << t << std::endl;
+                // LOG_DEBUG("Joint = %d; jumps = %d rad between t = %d; and t = %d", j, delta, t - 1, t);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool MotionPlanners::LargeJointMotionOverWholePath(const base::JointsTrajectory &traj,
+                                                   double max_angle_rad)
+{
+    size_t time_steps = traj.getTimeSteps();
+    size_t num_joints = traj.getNumberOfJoints();
+
+    for (size_t j = 0; j < num_joints; ++j)
+    {
+        double pos_start = traj.elements[j][0].position;
+        double pos_end = traj.elements[j][time_steps - 1].position;
+        double total_motion = std::abs(pos_end - pos_start);
+
+        if (total_motion > max_angle_rad)
+        {
+            std::cout << "Joint = " << j << "; moves = " << total_motion << " rad from start to end (exceeds " << max_angle_rad << " rad)" << std::endl;
+            // LOG_DEBUG("Joint = %d; moves = %d rad from start to end (exceeds %d rad)", j, total_motion, max_angle_rad);
+            return true;
+        }
+    }
+    return false;
 }
 
 // Create an iterate function
