@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.10)
 project(motion_planners
         VERSION 0.2
         DESCRIPTION "A framework for robot motion planning")

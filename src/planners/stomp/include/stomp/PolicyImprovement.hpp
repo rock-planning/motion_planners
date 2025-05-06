@@ -46,212 +46,210 @@
 namespace stomp
 {
 
-struct Rollout
-{
-    std::vector<base::VectorXd> parameters_;                   /**< [num_dimensions] num_parameters */
-    std::vector<base::VectorXd> noise_;                        /**< [num_dimensions] num_parameters */
-    std::vector<base::VectorXd> noise_projected_;              /**< [num_dimensions] num_parameters */
-    std::vector<base::VectorXd> parameters_noise_;             /**< [num_dimensions] num_parameters */
-    std::vector<base::VectorXd> parameters_noise_projected_;   /**< [num_dimensions] num_parameters */
-    base::VectorXd state_costs_;                               /**< num_time_steps */
-    std::vector<base::VectorXd> control_costs_;                /**< [num_dimensions] num_time_steps */
-    std::vector<base::VectorXd> total_costs_;                  /**< [num_dimensions] num_time_steps */
-    std::vector<base::VectorXd> cumulative_costs_;             /**< [num_dimensions] num_time_steps */
-    std::vector<base::VectorXd> probabilities_;                /**< [num_dimensions] num_time_steps */
+    struct Rollout
+    {
+        std::vector<base::VectorXd> parameters_;                 /**< [num_dimensions] num_parameters */
+        std::vector<base::VectorXd> noise_;                      /**< [num_dimensions] num_parameters */
+        std::vector<base::VectorXd> noise_projected_;            /**< [num_dimensions] num_parameters */
+        std::vector<base::VectorXd> parameters_noise_;           /**< [num_dimensions] num_parameters */
+        std::vector<base::VectorXd> parameters_noise_projected_; /**< [num_dimensions] num_parameters */
+        base::VectorXd state_costs_;                             /**< num_time_steps */
+        std::vector<base::VectorXd> control_costs_;              /**< [num_dimensions] num_time_steps */
+        std::vector<base::VectorXd> total_costs_;                /**< [num_dimensions] num_time_steps */
+        std::vector<base::VectorXd> cumulative_costs_;           /**< [num_dimensions] num_time_steps */
+        std::vector<base::VectorXd> probabilities_;              /**< [num_dimensions] num_time_steps */
 
-    std::vector<double> full_probabilities_;    		/**< [num_dimensions] probabilities of full trajectory */
-    std::vector<double> full_costs_;            		/**< [num_dimensions] costs of full trajectory */
-    
-    double importance_weight_;                                  /**< importance sampling weight */
-    double log_likelihood_;                                     /**< log likelihood of observing this rollout (constant terms ignored) */
-    double total_cost_;                                         /**< state + control cost */
-};
+        std::vector<double> full_probabilities_; /**< [num_dimensions] probabilities of full trajectory */
+        std::vector<double> full_costs_;         /**< [num_dimensions] costs of full trajectory */
 
-class PolicyImprovement
-{
-public:
-    /*!
-     * Constructor for the policy improvement class
-     */
-    PolicyImprovement();
+        double importance_weight_; /**< importance sampling weight */
+        double log_likelihood_;    /**< log likelihood of observing this rollout (constant terms ignored) */
+        double total_cost_;        /**< state + control cost */
+    };
 
-    /*!
-     * Destructor
-     */
-    ~PolicyImprovement();
+    class PolicyImprovement
+    {
+    public:
+        /*!
+         * Constructor for the policy improvement class
+         */
+        PolicyImprovement();
 
-    /**
-     * Initializes the object which is required for all operations to succeed.
-     * @param num_rollouts
-     * @param num_time_steps
-     * @param num_reused_rollouts
-     * @param policy
-     * @return true on success, false on failure
-     */
-    bool initialize(const int num_time_steps,
-                    const int min_rollouts,
-                    const int max_rollouts,
-                    const int num_rollouts_per_iteration,
-                    boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
-                    bool use_noise_adaptation,
-                    const std::vector<double>& noise_min_stddev, double control_cost_weight=0.0);
+        /*!
+         * Destructor
+         */
+        ~PolicyImprovement();
 
-    /**
-     * Resets the number of rollouts
-     * @param num_rollouts
-     * @return
-     */
-    bool setNumRollouts(const int min_rollouts,
+        /**
+         * Initializes the object which is required for all operations to succeed.
+         * @param num_rollouts
+         * @param num_time_steps
+         * @param num_reused_rollouts
+         * @param policy
+         * @return true on success, false on failure
+         */
+        bool initialize(const int num_time_steps,
+                        const int min_rollouts,
                         const int max_rollouts,
-                        const int num_rollouts_per_iteration);
+                        const int num_rollouts_per_iteration,
+                        boost::shared_ptr<stomp::CovariantMovementPrimitive> policy,
+                        bool use_noise_adaptation,
+                        const std::vector<double> &noise_min_stddev, double control_cost_weight = 0.0);
 
-    /**
-     * Gets the next set of rollouts. Only "new" rollouts that need to be executed are returned,
-     * not rollouts which might be reused from the previous set.
-     * @param rollouts_ [num_rollouts][num_dimensions] num_parameters
-     * @param noise_variance [num_dimensions] noise standard deviation per dimension
-     * @return
-     */
-    bool getRollouts(std::vector<std::vector<base::VectorXd> >& rollouts, const std::vector<double>& noise_stddev);
+        /**
+         * Resets the number of rollouts
+         * @param num_rollouts
+         * @return
+         */
+        bool setNumRollouts(const int min_rollouts,
+                            const int max_rollouts,
+                            const int num_rollouts_per_iteration);
 
-    /**
-     * Sets the next set of rollouts, possibly after some filtering. Only new rollouts returned by getRollouts() can be set here.
-     * @param rollouts_ [num_rollouts][num_dimensions] num_parameters
-     */
-    bool setRollouts(const std::vector<std::vector<base::VectorXd> >& rollouts);
+        /**
+         * Gets the next set of rollouts. Only "new" rollouts that need to be executed are returned,
+         * not rollouts which might be reused from the previous set.
+         * @param rollouts_ [num_rollouts][num_dimensions] num_parameters
+         * @param noise_variance [num_dimensions] noise standard deviation per dimension
+         * @return
+         */
+        bool getRollouts(std::vector<std::vector<base::VectorXd>> &rollouts, const std::vector<double> &noise_stddev);
 
-    /**
-     * Gets the rollouts, which have the original parameters + projected noise
-     */
-    bool getProjectedRollouts(std::vector<std::vector<base::VectorXd> >& rollouts);
+        /**
+         * Sets the next set of rollouts, possibly after some filtering. Only new rollouts returned by getRollouts() can be set here.
+         * @param rollouts_ [num_rollouts][num_dimensions] num_parameters
+         */
+        bool setRollouts(const std::vector<std::vector<base::VectorXd>> &rollouts);
 
-    /**
-     * Computes the projected noise after setting the new (possibly filtered) rollouts
-     */
-    bool computeProjectedNoise();
+        /**
+         * Gets the rollouts, which have the original parameters + projected noise
+         */
+        bool getProjectedRollouts(std::vector<std::vector<base::VectorXd>> &rollouts);
 
-    /*!
-     * Set the costs of each rollout per time-step
-     * Only the first "n" rows of the costs matrix is used, where n is the number of rollouts
-     * generated by getRollouts(), because some rollouts may be used from previous iterations.
-     * Outputs the total cost for each rollout (generated and reused) in rollout_costs_total
-     * @param costs
-     */
-    bool setRolloutCosts(const base::MatrixXd& costs, const double control_cost_weight, std::vector<double>& rollout_costs_total);
+        /**
+         * Computes the projected noise after setting the new (possibly filtered) rollouts
+         */
+        bool computeProjectedNoise();
 
-    bool setNoiselessRolloutCosts(const base::VectorXd& costs, double& total_cost);
+        /*!
+         * Set the costs of each rollout per time-step
+         * Only the first "n" rows of the costs matrix is used, where n is the number of rollouts
+         * generated by getRollouts(), because some rollouts may be used from previous iterations.
+         * Outputs the total cost for each rollout (generated and reused) in rollout_costs_total
+         * @param costs
+         */
+        bool setRolloutCosts(const base::MatrixXd &costs, const double control_cost_weight, std::vector<double> &rollout_costs_total);
 
-    /**
-     * Performs the PI^2 update and provides parameter updates at every time step
-     *
-     * @param parameter_updates [num_dimensions] num_time_steps x num_parameters
-     * @return
-     */
-    bool improvePolicy(std::vector<base::MatrixXd>& parameter_updates);
+        bool setNoiselessRolloutCosts(const base::VectorXd &costs, double &total_cost);
 
-    /**
-     * Adds extra rollouts to the set of rollouts to be reused
-     */
-    //bool addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs);
+        /**
+         * Performs the PI^2 update and provides parameter updates at every time step
+         *
+         * @param parameter_updates [num_dimensions] num_time_steps x num_parameters
+         * @return
+         */
+        bool improvePolicy(std::vector<base::MatrixXd> &parameter_updates);
 
-    /**
-     * Gets weights for the updates for timestep
-     * [num_dimensions] num_time_steps
-     */
-    bool getTimeStepWeights(std::vector<base::VectorXd>& time_step_weights);
+        /**
+         * Adds extra rollouts to the set of rollouts to be reused
+         */
+        // bool addExtraRollouts(std::vector<std::vector<Eigen::VectorXd> >& rollouts, std::vector<Eigen::VectorXd>& rollout_costs);
 
-    void clearReusedRollouts();
+        /**
+         * Gets weights for the updates for timestep
+         * [num_dimensions] num_time_steps
+         */
+        bool getTimeStepWeights(std::vector<base::VectorXd> &time_step_weights);
 
-    void getAllRollouts(std::vector<Rollout>& rollouts);
-    void getNoiselessRollout(Rollout& rollout);
-    double getNoiselessRolloutTotalCost();
-    void getAdaptedStddevs(std::vector<double>& stddevs);
+        void clearReusedRollouts();
 
-    void setCostCumulation(bool use_cumulative_costs);
+        void getAllRollouts(std::vector<Rollout> &rollouts);
+        void getNoiselessRollout(Rollout &rollout);
+        double getNoiselessRolloutTotalCost();
+        void getAdaptedStddevs(std::vector<double> &stddevs);
 
-    void resetAdaptiveNoise();
+        void setCostCumulation(bool use_cumulative_costs);
 
-private:
+        void resetAdaptiveNoise();
 
-    bool initialized_;
+    private:
+        bool initialized_;
 
-    int num_dimensions_;
-    std::vector<int> num_parameters_;
-    int num_time_steps_;
-    //int num_rollouts_reused_;
-    //int num_rollouts_extra_;
+        int num_dimensions_;
+        std::vector<int> num_parameters_;
+        int num_time_steps_;
+        // int num_rollouts_reused_;
+        // int num_rollouts_extra_;
 
-    int num_rollouts_;                  /**< Number of rollouts currently available */
-    int max_rollouts_;                  /**< Max number of rollouts to use in an update */
-    int min_rollouts_;                  /**< Min number of rollouts to use in an update */
-    int num_rollouts_per_iteration_;    /**< Number of new rollouts to add per iteration */
+        int num_rollouts_;               /**< Number of rollouts currently available */
+        int max_rollouts_;               /**< Max number of rollouts to use in an update */
+        int min_rollouts_;               /**< Min number of rollouts to use in an update */
+        int num_rollouts_per_iteration_; /**< Number of new rollouts to add per iteration */
 
-    double cost_scaling_h_;
+        double cost_scaling_h_;
 
-//    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
-//    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
-//    bool extra_rollouts_added_;                                             /**< Have the "extra rollouts" been added for use in the next iteration? */
-    int num_rollouts_gen_;                                                  /**< How many new rollouts have been generated in this iteration? */
+        //    bool rollouts_reused_;                                                  /**< Are we reusing rollouts for this iteration? */
+        //    bool rollouts_reused_next_;                                             /**< Can we reuse rollouts for the next iteration? */
+        //    bool extra_rollouts_added_;                                             /**< Have the "extra rollouts" been added for use in the next iteration? */
+        int num_rollouts_gen_; /**< How many new rollouts have been generated in this iteration? */
 
-    bool use_cumulative_costs_;                                             /**< Use cumulative costs or state costs? */
+        bool use_cumulative_costs_; /**< Use cumulative costs or state costs? */
 
-    boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
+        boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
 
-    std::vector<base::MatrixXd> control_costs_;                            /**< [num_dimensions] num_parameters x num_parameters */
-    std::vector<base::MatrixXd> inv_control_costs_;                        /**< [num_dimensions] num_parameters x num_parameters */
-    std::vector<base::MatrixXd> projection_matrix_;                        /**< [num_dimensions] num_parameters x num_parameters */
-    std::vector<base::MatrixXd> inv_projection_matrix_;                    /**< [num_dimensions] num_parameters x num_parameters */
-    double control_cost_weight_;
+        std::vector<base::MatrixXd> control_costs_;         /**< [num_dimensions] num_parameters x num_parameters */
+        std::vector<base::MatrixXd> inv_control_costs_;     /**< [num_dimensions] num_parameters x num_parameters */
+        std::vector<base::MatrixXd> projection_matrix_;     /**< [num_dimensions] num_parameters x num_parameters */
+        std::vector<base::MatrixXd> inv_projection_matrix_; /**< [num_dimensions] num_parameters x num_parameters */
+        double control_cost_weight_;
 
-    std::vector<base::MatrixXd> basis_functions_;                          /**< [num_dimensions] num_time_steps x num_parameters */
+        std::vector<base::MatrixXd> basis_functions_; /**< [num_dimensions] num_time_steps x num_parameters */
 
-    std::vector<base::VectorXd> parameters_;                               /**< [num_dimensions] num_parameters */
+        std::vector<base::VectorXd> parameters_; /**< [num_dimensions] num_parameters */
 
-    //std::vector<Rollout> all_rollouts_;
-    std::vector<Rollout> rollouts_;
-    std::vector<Rollout> reused_rollouts_;
-    Rollout noiseless_rollout_;
-    bool noiseless_rollout_valid_;
-    //std::vector<Rollout> extra_rollouts_;
+        // std::vector<Rollout> all_rollouts_;
+        std::vector<Rollout> rollouts_;
+        std::vector<Rollout> reused_rollouts_;
+        Rollout noiseless_rollout_;
+        bool noiseless_rollout_valid_;
+        // std::vector<Rollout> extra_rollouts_;
 
-    std::vector<MultivariateGaussian> noise_generators_;                    /**< objects that generate noise for each dimension */
-    std::vector<base::MatrixXd> parameter_updates_;                        /**< [num_dimensions] num_time_steps x num_parameters */
-    std::vector<base::VectorXd> time_step_weights_;                        /**< [num_dimensions] num_time_steps: Weights computed for updates per time-step */
+        std::vector<MultivariateGaussian> noise_generators_; /**< objects that generate noise for each dimension */
+        std::vector<base::MatrixXd> parameter_updates_;      /**< [num_dimensions] num_time_steps x num_parameters */
+        std::vector<base::VectorXd> time_step_weights_;      /**< [num_dimensions] num_time_steps: Weights computed for updates per time-step */
 
-    // covariance matrix adaptation variables
-    std::vector<double> adapted_stddevs_;
-    std::vector<base::MatrixXd> adapted_covariances_;
-    //std::vector<Eigen::MatrixXd> adapted_covariance_inverse_;
-    bool adapted_covariance_valid_;
-    bool use_covariance_matrix_adaptation_;
-    bool use_projection_;
-    std::vector<double> noise_min_stddev_;
+        // covariance matrix adaptation variables
+        std::vector<double> adapted_stddevs_;
+        std::vector<base::MatrixXd> adapted_covariances_;
+        // std::vector<Eigen::MatrixXd> adapted_covariance_inverse_;
+        bool adapted_covariance_valid_;
+        bool use_covariance_matrix_adaptation_;
+        bool use_projection_;
+        std::vector<double> noise_min_stddev_;
 
-    // temporary variables pre-allocated for efficiency:
-    std::vector<base::VectorXd> tmp_noise_;                /**< [num_dimensions] num_parameters */
-    std::vector<base::VectorXd> tmp_parameters_;           /**< [num_dimensions] num_parameters */
-    base::VectorXd tmp_max_cost_;                          /**< num_time_steps */
-    base::VectorXd tmp_min_cost_;                          /**< num_time_steps */
-    base::VectorXd tmp_max_minus_min_cost_;                /**< num_time_steps */
-    base::VectorXd tmp_sum_rollout_probabilities_;         /**< num_time_steps */
-    std::vector<std::pair<double, int> > rollout_cost_sorter_;  /**< vector used for sorting rollouts by their cost */
-    bool preAllocateTempVariables();
-    bool preComputeProjectionMatrices();
+        // temporary variables pre-allocated for efficiency:
+        std::vector<base::VectorXd> tmp_noise_;                   /**< [num_dimensions] num_parameters */
+        std::vector<base::VectorXd> tmp_parameters_;              /**< [num_dimensions] num_parameters */
+        base::VectorXd tmp_max_cost_;                             /**< num_time_steps */
+        base::VectorXd tmp_min_cost_;                             /**< num_time_steps */
+        base::VectorXd tmp_max_minus_min_cost_;                   /**< num_time_steps */
+        base::VectorXd tmp_sum_rollout_probabilities_;            /**< num_time_steps */
+        std::vector<std::pair<double, int>> rollout_cost_sorter_; /**< vector used for sorting rollouts by their cost */
+        bool preAllocateTempVariables();
+        bool preComputeProjectionMatrices();
 
-    bool computeRolloutControlCosts();
-    bool computeRolloutCumulativeCosts(std::vector<double>& rollout_costs_total);
-    bool computeRolloutProbabilities();
-    bool computeParameterUpdates();
+        bool computeRolloutControlCosts();
+        bool computeRolloutCumulativeCosts(std::vector<double> &rollout_costs_total);
+        bool computeRolloutProbabilities();
+        bool computeParameterUpdates();
 
-    bool computeNoise(Rollout& rollout);
-    bool computeProjectedNoise(Rollout& rollout);
-    bool computeRolloutControlCosts(Rollout& rollout);
-    bool computeRolloutCumulativeCosts(Rollout& rollout);
-    bool copyParametersFromPolicy();
+        bool computeNoise(Rollout &rollout);
+        bool computeProjectedNoise(Rollout &rollout);
+        bool computeRolloutControlCosts(Rollout &rollout);
+        bool computeRolloutCumulativeCosts(Rollout &rollout);
+        bool copyParametersFromPolicy();
 
-    bool generateRollouts(const std::vector<double>& noise_variance);
-
-};
+        bool generateRollouts(const std::vector<double> &noise_variance);
+    };
 
 }
 

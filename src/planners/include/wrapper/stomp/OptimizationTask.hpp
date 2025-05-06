@@ -11,15 +11,13 @@
 
 namespace motion_planners
 {
-  
 
-class OptimizationTask: public stomp::StompTask, public boost::enable_shared_from_this<motion_planners::OptimizationTask>
-{
+    class OptimizationTask : public stomp::StompTask, public boost::enable_shared_from_this<motion_planners::OptimizationTask>
+    {
     public:
-        OptimizationTask(stomp::StompConfig config, std::shared_ptr<robot_model::RobotModel>& robot_model);
+        OptimizationTask(stomp::StompConfig config, std::shared_ptr<robot_model::RobotModel> &robot_model);
 
         virtual ~OptimizationTask();
-
 
         // functions inherited from Task:
 
@@ -28,14 +26,14 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
          * @param num_threads Number of threads for multi-threading
          * @return
          */
-        
+
         bool stompInitialize(int num_threads, int num_rollouts);
-        
-        //void updateInitialTrajectory(const base::VectorXd &start, const base::VectorXd &goal);
+
+        // void updateInitialTrajectory(const base::VectorXd &start, const base::VectorXd &goal);
         void updateTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal);
-                
+
         void createPolicy();
-        
+
         void updatePolicy();
 
         /**
@@ -45,25 +43,25 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
          * @param weighted_feature_values num_time_steps x num_features matrix of weighted feature values per time step
          * @return
          */
-        virtual bool execute(std::vector<base::VectorXd>& parameters,
-                             std::vector<base::VectorXd>& projected_parameters,
-                             base::VectorXd& costs,
-                             base::MatrixXd& weighted_feature_values,
+        virtual bool execute(std::vector<base::VectorXd> &parameters,
+                             std::vector<base::VectorXd> &projected_parameters,
+                             base::VectorXd &costs,
+                             base::MatrixXd &weighted_feature_values,
                              const int iteration_number,
                              const int rollout_number,
                              int thread_id,
                              bool compute_gradients,
-                             std::vector<base::VectorXd>& gradients,
-                             bool& validity);
+                             std::vector<base::VectorXd> &gradients,
+                             bool &validity);
 
-        virtual bool filter(std::vector<base::VectorXd>& parameters, int rollout_id, int thread_id);
+        virtual bool filter(std::vector<base::VectorXd> &parameters, int rollout_id, int thread_id);
 
         /**
          * Get the Policy object of this Task
          * @param policy
          * @return
          */
-        virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive>& policy);
+        virtual bool getPolicy(boost::shared_ptr<stomp::CovariantMovementPrimitive> &policy);
 
         /**
          * Sets the Policy object of this Task
@@ -79,14 +77,13 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
          */
         virtual double getControlCostWeight();
 
-        void setOptimizationConstraints(ConstraintPlanning constraints){constraints_ = constraints;}
+        void setOptimizationConstraints(ConstraintPlanning constraints) { constraints_ = constraints; }
 
         boost::shared_ptr<stomp::CovariantMovementPrimitive> policy_;
 
         std::vector<base::VectorXd> initial_trajectory_, input_initial_trajectory_;
 
     private:
-
         stomp::StompConfig stomp_config_;
 
         double movement_dt_;
@@ -100,25 +97,22 @@ class OptimizationTask: public stomp::StompTask, public boost::enable_shared_fro
         base::MatrixXd vel_, acc_;
 
         base::VectorXd collision_costs_;
-        
+
         std::shared_ptr<robot_model::RobotModel> robot_model_;
         std::string planning_group_name_;
-        std::vector< std::string> planning_group_joints_names_;
-        std::vector< double > lower_limits_;
-        std::vector< double > upper_limits_;
-        
+        std::vector<std::string> planning_group_joints_names_;
+        std::vector<double> lower_limits_;
+        std::vector<double> upper_limits_;
+
         ConstraintPlanning constraints_;
 
-        void computeCollisionCost( base::VectorXd& costs, bool& validity);
+        void computeCollisionCost(base::VectorXd &costs, bool &validity);
 
-        void computeJointsConstraintCost( base::VectorXd& costs);
-        
+        void computeJointsConstraintCost(base::VectorXd &costs);
+
         double getConstrainDifference(const base::VectorXd &value, const base::VectorXd &tolerance, const base::VectorXd &current_value,
                                       const double &constraint_weight);
-
-        
-
-};
-}// end planner
+    };
+} // end planner
 
 #endif

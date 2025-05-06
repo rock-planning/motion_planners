@@ -6,26 +6,25 @@
 #include <wrapper/stomp/StompPlanner.hpp>
 #include <wrapper/trajopt/TrajoptPlanner.hpp>
 
-
-#if OMPL_LIB_FOUND    
-    #include <wrapper/ompl/OmplPlanner.hpp>
-#endif
+// #if OMPL_LIB_FOUND
+#include <wrapper/ompl/OmplPlanner.hpp>
+// #endif
 
 /** \file PlannerFactory.hpp
-*    \brief Factory class for the PlannerFactory class.
-*/
+ *    \brief Factory class for the PlannerFactory class.
+ */
 
 namespace motion_planners
 {
-    
-class PlannerFactory
-{
-    public:
-    PlannerFactory();
-    ~PlannerFactory();
-    AbstractPlannerPtr getPlannerTask(motion_planners::PlannerLibrary library);
-};
 
-}// end planner
+    class PlannerFactory
+    {
+    public:
+        PlannerFactory();
+        ~PlannerFactory();
+        AbstractPlannerPtr getPlannerTask(motion_planners::PlannerLibrary library);
+    };
+
+} // end planner
 
 #endif

@@ -1,6 +1,7 @@
 #include "logging.hpp"
 
-int main() {
+int main()
+{
   LOG_FATAL("fatal");
   LOG_ERROR("error");
   LOG_WARN("warn");

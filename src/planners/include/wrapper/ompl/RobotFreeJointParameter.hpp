@@ -7,47 +7,47 @@
 namespace motion_planners
 {
 
-class RobotFreeJointParameter 
-{
-    double pivot;
-    double step_size;
-    double lower_limit;
-    double upper_limit;
-    std::string joint_name;
-    double joint_position;
-    bool joint_position_has_been_set;
+    class RobotFreeJointParameter
+    {
+        double pivot;
+        double step_size;
+        double lower_limit;
+        double upper_limit;
+        std::string joint_name;
+        double joint_position;
+        bool joint_position_has_been_set;
 
-public:
-    RobotFreeJointParameter(std::string joint_name, double step_size, boost::shared_ptr<robot_model::RobotModel> &robot_model_ptr);
-    RobotFreeJointParameter(std::string joint_name, double step_size,double pivot ,boost::shared_ptr<robot_model::RobotModel> &robot_model_ptr);
-    RobotFreeJointParameter(std::string joint_name, double position );
-    RobotFreeJointParameter();
+    public:
+        RobotFreeJointParameter(std::string joint_name, double step_size, boost::shared_ptr<robot_model::RobotModel> &robot_model_ptr);
+        RobotFreeJointParameter(std::string joint_name, double step_size, double pivot, boost::shared_ptr<robot_model::RobotModel> &robot_model_ptr);
+        RobotFreeJointParameter(std::string joint_name, double position);
+        RobotFreeJointParameter();
 
-    void setPivot(double &pivot);
+        void setPivot(double &pivot);
 
-    double getPivot();
+        double getPivot();
 
-    void setStepSize(double &step_size);
+        void setStepSize(double &step_size);
 
-    double getStepSize();
+        double getStepSize();
 
-    void setUpperLimit(double &upper_limit);
+        void setUpperLimit(double &upper_limit);
 
-    double getUpperLimit();
+        double getUpperLimit();
 
-    void  setLowerLimit(double &lower_limit);
+        void setLowerLimit(double &lower_limit);
 
-    double getLowerLimit();
+        double getLowerLimit();
 
-    std::string & getJointName();
+        std::string &getJointName();
 
-    void setJointName(std::string & joint_name);
+        void setJointName(std::string &joint_name);
 
-    bool jointPositionHasBeenSet();
+        bool jointPositionHasBeenSet();
 
-    double getJointPosition();
-};
+        double getJointPosition();
+    };
 
-}// end namespace manipulator_planner_library
+} // end namespace manipulator_planner_library
 
-#endif //ROBOTFREEJOINTPARAMETER_HPP
+#endif // ROBOTFREEJOINTPARAMETER_HPP

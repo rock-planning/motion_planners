@@ -5,10 +5,11 @@
 #include "sco/sco_fwd.hpp"
 #include <Eigen/Core>
 #include "trajopt/common.hpp"
-namespace trajopt {
+namespace trajopt
+{
 
-using namespace sco;
-typedef BasicArray<Var> VarArray;
+  using namespace sco;
+  typedef BasicArray<Var> VarArray;
 
 #if 0
 void makeTrajVariablesAndBounds(int n_steps, const RobotAndDOF& manip, OptProb& prob_out, VarArray& vars_out);
@@ -26,45 +27,44 @@ public:
 };
 #endif
 
+  struct CartPoseErrCalculator : public VectorOfVector
+  {
+    geometry::Transform pose_inv_;
+    ConfigurationPtr manip_;
+    Link link_;
+    CartPoseErrCalculator(const geometry::Transform &pose, ConfigurationPtr manip, Link link) : pose_inv_(pose.inverse()),
+                                                                                                manip_(manip),
+                                                                                                link_(link) {}
+    VectorXd operator()(const VectorXd &dof_vals) const;
+  };
 
-struct CartPoseErrCalculator : public VectorOfVector {
-  geometry::Transform pose_inv_;
-  ConfigurationPtr manip_;
-  Link link_;
-  CartPoseErrCalculator(const geometry::Transform& pose, ConfigurationPtr manip, Link link) :
-    pose_inv_(pose.inverse()),
-    manip_(manip),
-    link_(link) {}
-  VectorXd operator()(const VectorXd& dof_vals) const;
-};
+  struct CartPoseErrorPlotter /* : public Plotter*/
+  {
+    boost::shared_ptr<void> m_calc; // actually points to a CartPoseErrCalculator = CartPoseCost::f_
+    VarVector m_vars;
+    CartPoseErrorPlotter(boost::shared_ptr<void> calc, const VarVector &vars) : m_calc(calc), m_vars(vars) {}
+    //  void Plot(const DblVec& x, OR::EnvironmentBase& env, std::vector<OR::GraphHandlePtr>& handles);
+  };
 
-struct CartPoseErrorPlotter/* : public Plotter*/ {
-  boost::shared_ptr<void> m_calc; //actually points to a CartPoseErrCalculator = CartPoseCost::f_
-  VarVector m_vars;
-  CartPoseErrorPlotter(boost::shared_ptr<void> calc, const VarVector& vars) : m_calc(calc), m_vars(vars) {}
-//  void Plot(const DblVec& x, OR::EnvironmentBase& env, std::vector<OR::GraphHandlePtr>& handles);
-};
+  struct CartVelJacCalculator : MatrixOfVector
+  {
+    ConfigurationPtr manip_;
+    Link link_;
+    double limit_;
+    CartVelJacCalculator(ConfigurationPtr manip, Link link, double limit) : manip_(manip), link_(link), limit_(limit) {}
 
+    MatrixXd operator()(const VectorXd &dof_vals) const;
+  };
 
-struct CartVelJacCalculator : MatrixOfVector {
-  ConfigurationPtr manip_;
-  Link link_;
-  double limit_;
-  CartVelJacCalculator(ConfigurationPtr manip, Link link, double limit) :
-    manip_(manip), link_(link), limit_(limit) {}
+  struct CartVelCalculator : VectorOfVector
+  {
+    ConfigurationPtr manip_;
+    Link link_;
+    double limit_;
+    CartVelCalculator(ConfigurationPtr manip, Link link, double limit) : manip_(manip), link_(link), limit_(limit) {}
 
-  MatrixXd operator()(const VectorXd& dof_vals) const;
-};
-
-struct CartVelCalculator : VectorOfVector {
-  ConfigurationPtr manip_;
-  Link link_;
-  double limit_;
-  CartVelCalculator(ConfigurationPtr manip, Link link, double limit) :
-    manip_(manip), link_(link), limit_(limit) {}
-
-  VectorXd operator()(const VectorXd& dof_vals) const;
-};
+    VectorXd operator()(const VectorXd &dof_vals) const;
+  };
 
 #if 0
 class CartPoseCost : public CostFromErrFunc {
@@ -82,7 +82,5 @@ public:
   CartVelConstraint(const VarVector& step0vars, const VarVector& step1vars, RobotAndDOFPtr manip, KinBody::LinkPtr link, double distlimit);
 };
 #endif
-
-
 
 }

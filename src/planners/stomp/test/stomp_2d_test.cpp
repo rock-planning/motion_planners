@@ -116,7 +116,7 @@ std::cout<<"After Init traj size = "<<initial_trajectory[d].size()<<std::endl<<i
         stomp_->getAdaptedStddevs(stddevs);
         if (debug_config.save_noiseless_trajectories_)
         {
-          for (unsigned int d=0; d<stddevs.size(); ++d)
+          for (size_t d=0; d<stddevs.size(); ++d)
           {
             fprintf(stddev_file, "%f\t", stddevs[d]);
           }
@@ -135,7 +135,7 @@ std::cout<<"After Init traj size = "<<initial_trajectory[d].size()<<std::endl<<i
         if (debug_config.save_noisy_trajectories_)
         {
           fprintf(num_rollouts_file, "%d\n", int(rollouts.size()));
-          for (unsigned int j=0; j<rollouts.size(); ++j)
+          for (size_t j=0; j<rollouts.size(); ++j)
           {
             std::stringstream ss2;
             ss2 << debug_config.output_dir_ << "/noisy_" << i << "_" << j << ".txt";
@@ -190,7 +190,7 @@ void Stomp2DTest::readObstacles(YAML::Node &obstacles_config)
 {
     std::cout<<"obst = "<<obstacles_config.size()<<std::endl;  
     
-    for(unsigned int i = 0; i < obstacles_config.size(); i++)
+    for(size_t i = 0; i < obstacles_config.size(); i++)
     {
         std::vector<double> center(2);
         center[0] = obstacles_config[i]["center"][0].as<double>();
@@ -328,7 +328,7 @@ double Stomp2DTest::evaluateCost(double x, double y, double vx, double vy) const
 double Stomp2DTest::evaluateMapCost(double x, double y) const
 {
   double cost = 0.0;
-  for (unsigned int o=0; o<obstacles_.size(); ++o)
+  for (size_t o=0; o<obstacles_.size(); ++o)
   {
     double dx = (x - obstacles_[o].center_[0])/obstacles_[o].radius_[0];
     double dy = (y - obstacles_[o].center_[1])/obstacles_[o].radius_[1];
@@ -465,7 +465,7 @@ bool Stomp2DTest::filter(std::vector<Eigen::VectorXd>& parameters, int rollout_i
 {
   return false;
   bool filtered = false;
-  for (unsigned int d=0; d<parameters.size(); ++d)
+  for (size_t d=0; d<parameters.size(); ++d)
   {
     for (int t=0; t<stomp_config.num_time_steps_; ++t)
     {
