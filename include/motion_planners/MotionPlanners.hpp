@@ -222,6 +222,11 @@ namespace motion_planners
         bool ExcessiveJointMotion(const base::JointsTrajectory &traj, double max_angle_rad = M_PI);
         bool LargeJointMotionOverWholePath(const base::JointsTrajectory &traj, double max_angle_rad = M_PI);
 
+        /**
+         * 
+         */
+        void updateRobot(const base::samples::Joints &robot_status);
+
     protected:
         /**
          * @brief  Check the start state for the planning request.

@@ -115,12 +115,12 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
     else if (solver_name == "opt")
     {
         kinematic_config.kinematic_solver = kinematics_library::OPT;
-        kinematic_config.solver_config_filename = "opt_ik_config.yml";
+        kinematic_config.solver_config_filename = "opt_ik_config_" + robot_name + ".yml";
     }
     else
     {
         kinematic_config.kinematic_solver = kinematics_library::TRACIK;
-        kinematic_config.solver_config_filename = "trac_ik_config.yml";
+        kinematic_config.solver_config_filename = "trac_ik_config_" + robot_name + ".yml";
     }
 
     return true;
@@ -266,6 +266,12 @@ StringPairSet MotionPlanners::getEnabledCollisionPairs(const std::string &srdf_p
     return enabled_pairs;
 }
 
+void MotionPlanners::updateRobot(const base::samples::Joints &robot_status)
+{
+    robot_model_->updateJointGroup(robot_status);
+}
+
+/// Printing methods
 void MotionPlanners::printPlannerStatus(motion_planners::PlannerStatus &planner_status)
 {
     switch (planner_status.statuscode)
