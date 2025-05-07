@@ -167,7 +167,8 @@ namespace motion_planners
         /**
          *
          */
-        static motion_planners::EnvironmentConfig getCollisionDetectionConfig(const std::string &srdf_path,
+        bool getCollisionDetectionConfig(motion_planners::EnvironmentConfig &env_config,
+                                                                              const std::string &srdf_path,
                                                                               const std::vector<std::string> &all_links,
                                                                               const std::string &reference_frame,
                                                                               const std::string &robot_name);
@@ -209,12 +210,12 @@ namespace motion_planners
         void printPlannerStatus(motion_planners::PlannerStatus &planner_status);
 
         /**
-         * 
+         *
          */
-        void printPlanningGroupJoints(const std::vector<std::pair<std::string, urdf::Joint>>& planning_group_joints);
+        void printPlanningGroupJoints(const std::vector<std::pair<std::string, urdf::Joint>> &joints);
 
         /**
-         * 
+         *
          */
         void printIKSolution(const std::vector<base::commands::Joints> &ik_solution);
 

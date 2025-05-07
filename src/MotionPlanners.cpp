@@ -162,7 +162,7 @@ void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octom
 
 void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap)
 {
-    // assign  a empty planning scene;
+    // assign an empty planning scene;
     robot_model_->assignPlanningScene(octomap, config_.env_config.env_frame, config_.env_config.env_object_name);
 }
 
