@@ -14,15 +14,24 @@ namespace
     std::string getBaseName(const std::string &reference_frame, const std::string &robot_name)
     {
         if (reference_frame == "webot_world")
+        {
             return "WEBOTS_WORLD_link";
-        if (reference_frame == "base_link")
+        }
+        else if (reference_frame == "base_link")
         {
             if (robot_name == "kuka")
+            {
                 return "IIWA14_BASE_LINK_link";
+            }
             if (robot_name == "vispa")
+            {
                 return "VISPA_BASE_LINK_link";
+            }
         }
-        return "";
+        else
+        {
+            return "";
+        }
     }
 
     bool fileExists(const std::string &path)
