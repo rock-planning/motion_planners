@@ -161,6 +161,30 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
     return true;
 }
 
+bool MotionPlanners::reInitializeRobotModelConfig(motion_planners::Config &config,
+                                                  const std::string &test_folder_path,
+                                                  const std::string &robot_name,
+                                                  const std::string &reference_frame)
+{
+    std::string srdf_file = test_folder_path + "/data/" + robot_name + ".srdf";
+    if (!fileExists(srdf_file))
+    {
+        std::cout << "[getRobotModelConfig] No SRDF file\n";
+        return false;
+    }
+
+    config.planner_config.robot_model_config.srdf_file = srdf_file;
+    config.planner_config.robot_model_config.planning_group_name = robot_name + "_manipulator";
+
+    // Get collision detection config
+    std::vector<std::string> all_links = getAllRobotLinks(config.planner_config.robot_model_config.urdf_file);
+
+    // get environment config
+    return getCollisionDetectionConfig(config.env_config,
+                                       config.planner_config.robot_model_config.srdf_file,
+                                       all_links, reference_frame, robot_name);
+}
+
 bool MotionPlanners::getCollisionDetectionConfig(motion_planners::EnvironmentConfig &env_config,
                                                  const std::string &srdf_path,
                                                  const std::vector<std::string> &all_links,
@@ -195,7 +219,7 @@ bool MotionPlanners::getCollisionDetectionConfig(motion_planners::EnvironmentCon
         {
             const auto &link1 = all_links[i], &link2 = all_links[j];
             if (enabled_pairs.count({link1, link2}) == 0 &&
-                enabled_pairs.count({link2, link1}) == 0)
+                enabled_pairs.count({link2, link1}) == 0) // If found keep enabled, otherwise disable
             {
                 disabled_pairs.emplace_back(link1, link2);
             }
