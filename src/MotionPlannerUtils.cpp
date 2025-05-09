@@ -161,27 +161,45 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
     return true;
 }
 
-bool MotionPlanners::reInitializeRobotModelConfig(motion_planners::Config &config,
-                                                  const std::string &test_folder_path,
+bool MotionPlanners::reInitializeRobotModelConfig(const std::string &test_folder_path,
                                                   const std::string &robot_name,
+                                                  const std::string &planner_name,
                                                   const std::string &reference_frame)
 {
     std::string srdf_file = test_folder_path + "/data/" + robot_name + ".srdf";
     if (!fileExists(srdf_file))
     {
-        std::cout << "[getRobotModelConfig] No SRDF file\n";
+        std::cout << "[reInitializeRobotModelConfig] No SRDF file\n";
         return false;
     }
 
-    config.planner_config.robot_model_config.srdf_file = srdf_file;
-    config.planner_config.robot_model_config.planning_group_name = robot_name + "_manipulator";
+    robot_model_->setSRDFfileAbsolutePath(srdf_file);
+    std::string group_name = robot_name + "_manipulator";
+    robot_model_->setPlanningGroupName(group_name);
+
+    // planner specific config (stomp_kuka or stomp_vispa)
+    config_.planner_config.planner_specific_config =
+        test_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
+
+    // planner
+    if (planner_name == "trajopt")
+    {
+        config_.planner_config.planner = motion_planners::TRAJOPT;
+    }
+    else if (planner_name == "ompl")
+    {
+        config_.planner_config.planner = motion_planners::OMPL;
+    }
+    else
+    {
+        config_.planner_config.planner = motion_planners::STOMP;
+    }
 
     // Get collision detection config
-    std::vector<std::string> all_links = getAllRobotLinks(config.planner_config.robot_model_config.urdf_file);
+    std::vector<std::string> all_links = getAllRobotLinks(robot_model_->getURDFfileAbsolutePath());
 
     // get environment config
-    return getCollisionDetectionConfig(config.env_config,
-                                       config.planner_config.robot_model_config.srdf_file,
+    return getCollisionDetectionConfig(config_.env_config, srdf_file,
                                        all_links, reference_frame, robot_name);
 }
 
@@ -213,6 +231,7 @@ bool MotionPlanners::getCollisionDetectionConfig(motion_planners::EnvironmentCon
 
     // Disable all pairs not explicitly enabled
     auto &disabled_pairs = env_config.disabled_collision_pair.collision_link_names;
+    disabled_pairs.clear();
     for (size_t i = 0; i < all_links.size(); ++i)
     {
         for (size_t j = i + 1; j < all_links.size(); ++j)

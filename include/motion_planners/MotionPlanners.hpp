@@ -51,7 +51,7 @@ namespace motion_planners
          * @brief Reinitialize the motion planner. This function is used in STOMP planner.
          * @return Returns true, when the initialization is successful or else returns false.
          */
-        bool reInitializePlanner();
+        bool reInitializePlanner(PlannerStatus &planner_status, const std::string &planner_name, bool &robot_updated);
         /**
          * @brief  Assign a planning request in joint space
          * @param  start_jointvalues Joints value at the start configuration
@@ -168,10 +168,10 @@ namespace motion_planners
          *
          */
         bool getCollisionDetectionConfig(motion_planners::EnvironmentConfig &env_config,
-                                                                              const std::string &srdf_path,
-                                                                              const std::vector<std::string> &all_links,
-                                                                              const std::string &reference_frame,
-                                                                              const std::string &robot_name);
+                                         const std::string &srdf_path,
+                                         const std::vector<std::string> &all_links,
+                                         const std::string &reference_frame,
+                                         const std::string &robot_name);
 
         /**
          *
@@ -223,9 +223,17 @@ namespace motion_planners
         bool LargeJointMotionOverWholePath(const base::JointsTrajectory &traj, double max_angle_rad = M_PI);
 
         /**
-         * 
+         *
          */
         void updateRobot(const base::samples::Joints &robot_status);
+
+        /**
+         *
+         */
+        bool reInitializeRobotModelConfig(const std::string &test_folder_path,
+                                          const std::string &robot_name,
+                                          const std::string &planner_name,
+                                          const std::string &reference_frame);
 
     protected:
         /**

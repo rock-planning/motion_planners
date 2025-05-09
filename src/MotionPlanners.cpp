@@ -62,10 +62,66 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     return true;
 }
 
-bool MotionPlanners::reInitializePlanner()
+bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const std::string &planner_name, bool &robot_updated)
 {
-    // Only planner specific parameters are reset. Robotmodel, kinematic models are untouched
-    return planner_->reInitializePlanner();
+    planner_status.statuscode = PlannerStatus::INIT;
+    if (robot_updated)
+    {
+        auto robot_collision_detector = collision_factory_.getCollisionDetector(config_.env_config.collision_detection_config);
+        auto world_collision_detector = collision_factory_.getCollisionDetector(config_.env_config.collision_detection_config);
+        robot_model_->setRobotCollisionDetector(robot_collision_detector);
+        robot_model_->setWorldCollisionDetector(world_collision_detector);
+
+        // reinitialise robot model
+        if (!robot_model_->reinitialization())
+        {
+            planner_status.statuscode = PlannerStatus::ROBOTMODEL_INITIALISATION_FAILED;
+            return false;
+        }
+
+        // disable any collision with the environment
+        robot_model_->setDisabledEnvironmentCollision(assignDisableCollisionObject(config_.env_config.disabled_collision_pair));
+
+        // config.planner_config.planner_specific_config =
+        //     config_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
+
+        // if (planner_name == "trajopt")
+        // {
+        //     config_.planner_config.planner = motion_planners::TRAJOPT;
+        // }
+        // else if (planner_name == "ompl")
+        // {
+        //     config_.planner_config.planner = motion_planners::OMPL;
+        // }
+        // else
+        // {
+        //     config_.planner_config.planner = motion_planners::STOMP;
+        // }
+
+        // planner
+        PlannerFactory planner_factory;
+        planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
+        if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config))
+        {
+            planner_status.statuscode = PlannerStatus::PLANNER_INITIALISATION_FAILED;
+            return false;
+        }
+
+        planning_group_joints_.clear();
+        robot_model_->getPlanningGroupJointInformation(robot_model_->getPlanningGroupName(),
+                                                       planning_group_joints_);
+
+        createNamedGroupStates(robot_model_->getSRDF());
+        goal_pose_.position = Eigen::Vector3d::Zero();
+        goal_pose_.orientation = Eigen::Quaterniond::Identity();
+    }
+
+    if (planner_name == "stomp")
+    {
+        return planner_->reInitializePlanner();
+    }
+
+    return true;
 }
 
 bool MotionPlanners::assignKinematicsToRobotModel(const kinematics_library::KinematicsConfig &kinematics_config,
@@ -234,7 +290,6 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
                                            const base::samples::RigidBodyState &target_pose,
                                            PlannerStatus &planner_status)
 {
-
     planning_type_ = true;
     if (!checkStartState(start_jointvalues, planner_status))
     {
