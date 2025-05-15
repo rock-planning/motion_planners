@@ -1,0 +1,9 @@
+[submodule "collision_detection"]
+	path = collision_detection
+	url = https://github.com/rock-planning/collision_detection
+[submodule "kinematics_library"]
+	path = kinematics_library
+	url = https://github.com/rock-planning/kinematics_library
+[submodule "robot_model"]
+	path = robot_model
+	url = https://github.com/rock-planning/robot_model
