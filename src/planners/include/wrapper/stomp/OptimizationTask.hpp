@@ -5,7 +5,7 @@
 #include <stomp/Stomp.hpp>
 #include <stomp/StompTask.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <base/samples/Joints.hpp>
+#include <base-types/samples/Joints.hpp>
 #include <robot_model/RobotModel.hpp>
 #include <abstract/AbstractPlanner.hpp>
 

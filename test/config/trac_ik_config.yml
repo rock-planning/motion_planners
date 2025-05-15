@@ -1,0 +1,24 @@
+trac_ik_config:
+  # can be :SPEED, :DISTANCE, :MANIP1 or :MANIP2
+  solver_type: :SPEED
+
+  # time out - used if trac ik is available
+  timeout_sec: 0.1
+
+  # stopping criteria for the numerical solver. Stop the solver, if the error is below the eps.              
+  eps: 0.001
+
+  # End Effector Pose Tolerance - used for setting the tolerances in trac_ik
+  tolerances:
+    - 0.0
+    - 0.0
+
+  # weight each of the seven joints with 1/7
+  joints_err_weight:
+    - 0.1428
+    - 0.1428
+    - 0.1428
+    - 0.1428
+    - 0.1428
+    - 0.1428
+    - 0.1428

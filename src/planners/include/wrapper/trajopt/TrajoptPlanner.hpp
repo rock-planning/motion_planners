@@ -4,7 +4,7 @@
 
 #include <abstract/AbstractPlanner.hpp>
 #include <robot_model/RobotModel.hpp>
-#include "json/json.h"
+// #include "json/json.h"
 #include "trajopt/problem_description.hpp"
 #include "sco/optimizers.hpp"
 #include "utils/clock.hpp"
@@ -12,7 +12,7 @@
 #include <wrapper/trajopt/FCLCollisionChecker.h>
 
 using namespace trajopt;
-using namespace Json;
+// using namespace Json;
 
 namespace motion_planners
 {

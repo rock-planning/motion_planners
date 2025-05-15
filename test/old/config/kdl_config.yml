@@ -1,0 +1,6 @@
+kdl_config:
+
+  #Maximum iteration allowed for numerical solver
+  max_iteration: 50
+  #stopping criteria for the numerical solver. Stop the solver, if the error is below the eps.              
+  eps: 0.001

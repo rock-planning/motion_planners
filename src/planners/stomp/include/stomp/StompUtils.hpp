@@ -42,7 +42,7 @@
 #include <vector>
 #include <stdio.h>
 #include <Eigen/Core>
-#include <base/Eigen.hpp>
+#include <base-types/Eigen.hpp>
 
 
 #define STOMP_VERIFY(cond) cond

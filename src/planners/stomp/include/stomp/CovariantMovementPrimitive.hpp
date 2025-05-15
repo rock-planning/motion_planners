@@ -40,7 +40,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <stomp/StompUtils.hpp>
-#include <base/Eigen.hpp>
+#include <base-types/Eigen.hpp>
 
 
 namespace stomp

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 project(trajopt)
 set(TRAJOPT_VERSION 0.1)
@@ -12,7 +12,7 @@ find_package(Eigen3 REQUIRED)
 
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(YAML REQUIRED yaml-cpp)
+# find_package(yaml-cpp REQUIRED)
 
 set (TRAJOPT_PATH ${CMAKE_CURRENT_LIST_DIR})
 
@@ -33,7 +33,7 @@ include_directories(
 ${EIGEN3_INCLUDE_DIR}
 ${TRAJOPT_INCLUDE_HEADER}
 ${BULLET_INCLUDE_DIRS}
-${YAML_INCLUDE_DIRS}
+# ${YAML_INCLUDE_DIRS}
 )
 
 add_library(trajopt SHARED
@@ -44,7 +44,7 @@ add_library(trajopt SHARED
         ${TRAJOPT_PLANNER_DIR_PATH}/src/problem_description.cpp
         ${TRAJOPT_PLANNER_DIR_PATH}/src/utils.cpp
 )
-target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${YAML_LIBRARIES} trajopt_sco trajopt_utils json)
+target_link_libraries(trajopt ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} trajopt_sco trajopt_utils json)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 

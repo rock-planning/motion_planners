@@ -12,13 +12,13 @@ find_package(OpenMP REQUIRED)
 find_package(Eigen3 REQUIRED)  
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(BASE_TYPES REQUIRED base-types)
+pkg_check_modules(BASE_TYPES REQUIRED base_types)
 #pkg_check_modules(YAML REQUIRED yaml-cpp)
 
-set (STOMP_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
+set(STOMP_DIR_PATH ${CMAKE_CURRENT_LIST_DIR})
 
-include_directories(${STOMP_DIR_PATH}/include ${EIGEN3_INCLUDE_DIR} ${BASE_TYPES_INCLUDE_DIRS} )
-link_directories(${BASE_TYPES_LIBRARY_DIRS} )
+# include_directories(${STOMP_DIR_PATH}/include ${EIGEN3_INCLUDE_DIR} ${BASE_TYPES_INCLUDE_DIRS} )
+# link_directories(${BASE_TYPES_LIBRARY_DIRS} )
 
 #message(${orocos_kdl_INCLUDE_DIRS})
 #message(${orocos_kdl_LIBRARIES})
@@ -33,8 +33,8 @@ add_library(stomp SHARED
 )
 
 #target_link_libraries(stomp ${BASE_TYPES_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OpenMP_CXX_FLAGS})
-target_link_libraries(stomp ${BASE_TYPES_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OpenMP_CXX_FLAGS})
-
+target_link_libraries(stomp PUBLIC Eigen3::Eigen ${BASE_TYPES_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OpenMP_CXX_FLAGS})
+target_include_directories(stomp PUBLIC ${STOMP_DIR_PATH}/include ${EIGEN3_INCLUDE_DIR} ${BASE_TYPES_INCLUDE_DIRS})
 #add_executable(test_stomp2d
 #  test/stomp_2d_test.cpp
 #)
