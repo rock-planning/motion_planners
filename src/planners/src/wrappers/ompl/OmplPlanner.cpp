@@ -101,6 +101,9 @@ bool OmplPlanner::setUpPlanningTaskInJointSpace(PlannerStatus &planner_status)
 
 bool OmplPlanner::solveTaskInJointSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
+    // Fixes deprecated usage of global boost placeholders, i.e., '_1'.
+    using namespace boost::placeholders;
+
     if(!setUpPlanningTaskInJointSpace(planner_status))
     {
         return false;
@@ -390,6 +393,9 @@ bool OmplPlanner::cartesianSpaceStateValidityChecker(const ompl::base::State *st
 
 bool OmplPlanner::solveTaskInCartesianSpace(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
+    // Fixes deprecated usage of global boost placeholders, i.e., '_1'.
+    using namespace boost::placeholders;
+
     if(!setUpPlanningTaskInCartesianSpace(planner_status))
     {
         return false;

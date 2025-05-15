@@ -7,6 +7,8 @@
 
 #include <urdf_model/model.h>
 
+// Fixes deprecated usage of global boost placeholders.
+#include <boost/bind/bind.hpp>
 
 #include <ompl/base/Planner.h>
 #include <ompl/base/SpaceInformation.h>
