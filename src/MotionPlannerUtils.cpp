@@ -14,15 +14,24 @@ namespace
     std::string getBaseName(const std::string &reference_frame, const std::string &robot_name)
     {
         if (reference_frame == "webot_world")
+        {
             return "WEBOTS_WORLD_link";
-        if (reference_frame == "base_link")
+        }
+        else if (reference_frame == "base_link")
         {
             if (robot_name == "kuka")
+            {
                 return "IIWA14_BASE_LINK_link";
+            }
             if (robot_name == "vispa")
+            {
                 return "VISPA_BASE_LINK_link";
+            }
         }
-        return "";
+        else
+        {
+            return "";
+        }
     }
 
     bool fileExists(const std::string &path)
@@ -115,12 +124,12 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
     else if (solver_name == "opt")
     {
         kinematic_config.kinematic_solver = kinematics_library::OPT;
-        kinematic_config.solver_config_filename = "opt_ik_config.yml";
+        kinematic_config.solver_config_filename = "opt_ik_config_" + robot_name + ".yml";
     }
     else
     {
         kinematic_config.kinematic_solver = kinematics_library::TRACIK;
-        kinematic_config.solver_config_filename = "trac_ik_config.yml";
+        kinematic_config.solver_config_filename = "trac_ik_config_" + robot_name + ".yml";
     }
 
     return true;
@@ -152,6 +161,48 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
     return true;
 }
 
+bool MotionPlanners::reInitializeRobotModelConfig(const std::string &test_folder_path,
+                                                  const std::string &robot_name,
+                                                  const std::string &planner_name,
+                                                  const std::string &reference_frame)
+{
+    std::string srdf_file = test_folder_path + "/data/" + robot_name + ".srdf";
+    if (!fileExists(srdf_file))
+    {
+        std::cout << "[reInitializeRobotModelConfig] No SRDF file\n";
+        return false;
+    }
+
+    robot_model_->setSRDFfileAbsolutePath(srdf_file);
+    std::string group_name = robot_name + "_manipulator";
+    robot_model_->setPlanningGroupName(group_name);
+
+    // planner specific config (stomp_kuka or stomp_vispa)
+    config_.planner_config.planner_specific_config =
+        test_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
+
+    // planner
+    if (planner_name == "trajopt")
+    {
+        config_.planner_config.planner = motion_planners::TRAJOPT;
+    }
+    else if (planner_name == "ompl")
+    {
+        config_.planner_config.planner = motion_planners::OMPL;
+    }
+    else
+    {
+        config_.planner_config.planner = motion_planners::STOMP;
+    }
+
+    // Get collision detection config
+    std::vector<std::string> all_links = getAllRobotLinks(robot_model_->getURDFfileAbsolutePath());
+
+    // get environment config
+    return getCollisionDetectionConfig(config_.env_config, srdf_file,
+                                       all_links, reference_frame, robot_name);
+}
+
 bool MotionPlanners::getCollisionDetectionConfig(motion_planners::EnvironmentConfig &env_config,
                                                  const std::string &srdf_path,
                                                  const std::vector<std::string> &all_links,
@@ -180,13 +231,14 @@ bool MotionPlanners::getCollisionDetectionConfig(motion_planners::EnvironmentCon
 
     // Disable all pairs not explicitly enabled
     auto &disabled_pairs = env_config.disabled_collision_pair.collision_link_names;
+    disabled_pairs.clear();
     for (size_t i = 0; i < all_links.size(); ++i)
     {
         for (size_t j = i + 1; j < all_links.size(); ++j)
         {
             const auto &link1 = all_links[i], &link2 = all_links[j];
             if (enabled_pairs.count({link1, link2}) == 0 &&
-                enabled_pairs.count({link2, link1}) == 0)
+                enabled_pairs.count({link2, link1}) == 0) // If found keep enabled, otherwise disable
             {
                 disabled_pairs.emplace_back(link1, link2);
             }
@@ -266,6 +318,12 @@ StringPairSet MotionPlanners::getEnabledCollisionPairs(const std::string &srdf_p
     return enabled_pairs;
 }
 
+void MotionPlanners::updateRobot(const base::samples::Joints &robot_status)
+{
+    robot_model_->updateJointGroup(robot_status);
+}
+
+/// Printing methods
 void MotionPlanners::printPlannerStatus(motion_planners::PlannerStatus &planner_status)
 {
     switch (planner_status.statuscode)
