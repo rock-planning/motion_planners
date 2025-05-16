@@ -154,6 +154,8 @@ namespace motion_planners
 
         AbstractPlannerPtr planner_;
 
+        int ik_sol_numeral_ = 0;
+
         /**
          *
          */
