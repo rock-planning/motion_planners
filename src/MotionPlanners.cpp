@@ -82,22 +82,6 @@ bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const st
         // disable any collision with the environment
         robot_model_->setDisabledEnvironmentCollision(assignDisableCollisionObject(config_.env_config.disabled_collision_pair));
 
-        // config.planner_config.planner_specific_config =
-        //     config_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
-
-        // if (planner_name == "trajopt")
-        // {
-        //     config_.planner_config.planner = motion_planners::TRAJOPT;
-        // }
-        // else if (planner_name == "ompl")
-        // {
-        //     config_.planner_config.planner = motion_planners::OMPL;
-        // }
-        // else
-        // {
-        //     config_.planner_config.planner = motion_planners::STOMP;
-        // }
-
         // planner
         PlannerFactory planner_factory;
         planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
