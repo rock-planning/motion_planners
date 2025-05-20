@@ -605,7 +605,7 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
         for (size_t attempt = ik_sol_numeral_; attempt < ik_solution_.size(); attempt++)
         {
             LOG_INFO("Need to replan");
-            printPlannerStatus(planner_status);
+            // printPlannerStatus(planner_status);
             // Try next IK solution
             const auto &joint = ik_solution_[attempt];
             for (size_t i = 0; i < planning_group_joints_.size(); i++)

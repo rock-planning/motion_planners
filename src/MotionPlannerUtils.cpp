@@ -42,19 +42,20 @@ namespace
 
 bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
                                             const std::string &config_folder_path,
+                                            const std::string &urdf_file,
                                             const std::string &robot_name,
                                             const std::string &planner_name,
                                             const std::string &solver_name,
                                             const std::string &reference_frame)
 {
     // get kinematics config
-    if (!getKinematicsConfig(config.planner_config.kinematics_config,
-                             config_folder_path, robot_name, solver_name, reference_frame))
+    if (!getKinematicsConfig(config.planner_config.kinematics_config, config_folder_path,
+                             urdf_file, robot_name, solver_name, reference_frame))
         return false;
 
     // get robot model config
     if (!getRobotModelConfig(config.planner_config.robot_model_config,
-                             config_folder_path, robot_name))
+                             urdf_file, robot_name))
         return false;
 
     // planner specific config (stomp_kuka or stomp_vispa)
@@ -85,20 +86,20 @@ bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
 }
 
 bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &kinematic_config,
-                                         const std::string &test_folder_path,
+                                         const std::string &config_folder_path,
+                                         const std::string &urdf_file,
                                          const std::string &robot_name,
                                          const std::string &solver_name,
                                          const std::string &reference_frame)
 {
-    std::string urdf_path = test_folder_path + "/data/eurise_scene.urdf";
-    if (!fileExists(urdf_path))
+    if (!fileExists(urdf_file))
     {
         std::cout << "[getKinematicsConfig] No URDF file\n";
         return false;
     }
 
-    kinematic_config.urdf_file = urdf_path;
-    kinematic_config.solver_config_abs_path = test_folder_path + "/solver";
+    kinematic_config.urdf_file = urdf_file;
+    kinematic_config.solver_config_abs_path = config_folder_path + "/solver";
 
     // Set robot-specific parameters
     if (robot_name == "kuka")
@@ -136,19 +137,22 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
 }
 
 bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_config,
-                                         const std::string &test_folder_path,
+                                         const std::string &urdf_file,
                                          const std::string &robot_name)
 {
-    std::string urdf_path = test_folder_path + "/data/eurise_scene.urdf";
-    if (!fileExists(urdf_path))
+    if (!fileExists(urdf_file))
     {
         std::cout << "[getRobotModelConfig] No URDF file\n";
         return false;
     }
 
-    robot_config.urdf_file = urdf_path;
+    robot_config.urdf_file = urdf_file;
 
-    std::string srdf_file = test_folder_path + "/data/" + robot_name + ".srdf";
+    std::string srdf_folder_path = extractDirectory(urdf_file);
+
+    // TODO - create SRDF
+
+    std::string srdf_file = srdf_folder_path + robot_name + ".srdf";
     if (!fileExists(srdf_file))
     {
         std::cout << "[getRobotModelConfig] No SRDF file\n";
@@ -493,9 +497,9 @@ bool MotionPlanners::ExcessiveJointMotion(const base::JointsTrajectory &traj, do
             double delta = std::abs(traj.elements[j][t].position - traj.elements[j][t - 1].position);
             if (delta > max_angle_rad)
             {
-                std::cout << "Joint = " << j << "; jump = " << delta << " rad between t = "
-                          << t - 1 << " and t = " << t << std::endl;
-                // LOG_DEBUG("Joint = %d; jumps = %d rad between t = %d; and t = %d", j, delta, t - 1, t);
+                // std::cout << "Joint = " << j << "; jump = " << delta << " rad between t = "
+                //           << t - 1 << " and t = " << t << std::endl;
+                LOG_DEBUG("Joint = %d; jumps = %d rad between t = %d; and t = %d", j, delta, t - 1, t);
                 return true;
             }
         }
@@ -517,12 +521,24 @@ bool MotionPlanners::LargeJointMotionOverWholePath(const base::JointsTrajectory 
 
         if (total_motion > max_angle_rad)
         {
-            std::cout << "Joint = " << j << "; moves = " << total_motion << " rad from start to end (exceeds " << max_angle_rad << " rad)" << std::endl;
-            // LOG_DEBUG("Joint = %d; moves = %d rad from start to end (exceeds %d rad)", j, total_motion, max_angle_rad);
+            // std::cout << "Joint = " << j << "; moves = " << total_motion << " rad from start to end (exceeds " << max_angle_rad << " rad)" << std::endl;
+            LOG_DEBUG("Joint = %d; moves = %d rad from start to end (exceeds %d rad)", j, total_motion, max_angle_rad);
             return true;
         }
     }
     return false;
 }
 
+std::string MotionPlanners::extractDirectory(const std::string &filepath)
+{
+    size_t pos = filepath.find_last_of('/');
+    if (pos != std::string::npos)
+    {
+        return filepath.substr(0, pos + 1); // Include trailing slash
+    }
+    else
+    {
+        return ""; // No slash found, return empty or handle differently
+    }
+}
 // Create an iterate function
