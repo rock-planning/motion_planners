@@ -82,22 +82,6 @@ bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const st
         // disable any collision with the environment
         robot_model_->setDisabledEnvironmentCollision(assignDisableCollisionObject(config_.env_config.disabled_collision_pair));
 
-        // config.planner_config.planner_specific_config =
-        //     config_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
-
-        // if (planner_name == "trajopt")
-        // {
-        //     config_.planner_config.planner = motion_planners::TRAJOPT;
-        // }
-        // else if (planner_name == "ompl")
-        // {
-        //     config_.planner_config.planner = motion_planners::OMPL;
-        // }
-        // else
-        // {
-        //     config_.planner_config.planner = motion_planners::STOMP;
-        // }
-
         // planner
         PlannerFactory planner_factory;
         planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
@@ -158,11 +142,11 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
-        for (const auto &[link1, link2] : collision_object_names_)
-        {
-            std::cout << "Link 1 " << link1 << std::endl;
-            std::cout << "Link 2 " << link2 << std::endl;
-        }
+        // for (const auto &[link1, link2] : collision_object_names_)
+        // {
+        //     std::cout << "Link 1 " << link1 << std::endl;
+        //     std::cout << "Link 2 " << link2 << std::endl;
+        // }
         return false;
     }
 
@@ -205,11 +189,11 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     {
         planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
-        for (const auto &[link1, link2] : collision_object_names_)
-        {
-            std::cout << "Link 1 " << link1 << std::endl;
-            std::cout << "Link 2 " << link2 << std::endl;
-        }
+        // for (const auto &[link1, link2] : collision_object_names_)
+        // {
+        //     std::cout << "Link 1 " << link1 << std::endl;
+        //     std::cout << "Link 2 " << link2 << std::endl;
+        // }
         return false;
     }
 
@@ -291,6 +275,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
                                            PlannerStatus &planner_status)
 {
     planning_type_ = true;
+    ik_sol_numeral_ = 0;
     if (!checkStartState(start_jointvalues, planner_status))
     {
         return false;
@@ -304,6 +289,16 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 
     kin_solver_->solveIK(goal_pose_, start_jointvalues, ik_solution_, planner_status.kinematic_status);
 
+    ik_solution_.erase(
+        std::remove_if(
+            ik_solution_.begin(),
+            ik_solution_.end(),
+            [&](const base::commands::Joints &joints)
+            {
+                return !checkGoalState(joints, planner_status);
+            }),
+        ik_solution_.end());
+
     // printIKSolution(ik_solution_);
 
     if (planner_status.kinematic_status.statuscode != kinematics_library::KinematicsStatus::IK_FOUND &&
@@ -316,6 +311,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     // printPlanningGroupJoints(planning_group_joints_);
     for (const auto &solution : ik_solution_)
     {
+        ik_sol_numeral_++;
         for (size_t i = 0; i < planning_group_joints_.size(); i++)
         {
             try
@@ -341,7 +337,8 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
-bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const std::string &target_group_state,
+bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
+                                           const std::string &target_group_state,
                                            PlannerStatus &planner_status)
 {
     planning_type_ = false;
@@ -403,7 +400,8 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
-bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues, const ConstraintPlanning &constrainted_target,
+bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
+                                           const ConstraintPlanning &constrainted_target,
                                            PlannerStatus &planner_status)
 {
     planning_type_ = false;
@@ -601,12 +599,13 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     // Try alternative IK solutions if needed for pose-based planning
     if ((planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution)) && planning_type_)
     {
-        const size_t MAX_IK_ATTEMPTS = 4; // Try up to 4 more IK solutions
+        // const size_t MAX_IK_ATTEMPTS = 4; // Try up to 4 more IK solutions
 
-        for (size_t attempt = 1; attempt < std::min(MAX_IK_ATTEMPTS + 1, ik_solution_.size()); attempt++)
+        // for (size_t attempt = ik_sol_numeral_; attempt < std::min(MAX_IK_ATTEMPTS + 1, ik_solution_.size()); attempt++)
+        for (size_t attempt = ik_sol_numeral_; attempt < ik_solution_.size(); attempt++)
         {
             LOG_INFO("Need to replan");
-            printPlannerStatus(planner_status);
+            // printPlannerStatus(planner_status);
             // Try next IK solution
             const auto &joint = ik_solution_[attempt];
             for (size_t i = 0; i < planning_group_joints_.size(); i++)
@@ -615,7 +614,7 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
             }
             if (!checkGoalState(goal_joint_status_, planner_status))
             {
-                break;
+                continue;
             }
             setStartAndGoal();
             res = planner_->solve(solution, planner_status);
@@ -629,7 +628,14 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     auto finish_time = std::chrono::high_resolution_clock::now();
     time_taken = std::chrono::duration<double>(finish_time - start_time).count();
 
-    return res;
+    if (planner_status.statuscode == PlannerStatus::PATH_FOUND && !ExcessiveJointMotion(solution))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model)

@@ -154,11 +154,14 @@ namespace motion_planners
 
         AbstractPlannerPtr planner_;
 
+        int ik_sol_numeral_ = 0;
+
         /**
          *
          */
         bool getMotionPlannerConfig(motion_planners::Config &config,
                                     const std::string &config_folder_path,
+                                    const std::string &urdf_file,
                                     const std::string &robot_name,
                                     const std::string &planner_name,
                                     const std::string &solver_name,
@@ -187,14 +190,15 @@ namespace motion_planners
          *
          */
         bool getRobotModelConfig(robot_model::RobotModelConfig &robot_config,
-                                 const std::string &test_folder_path,
+                                 const std::string &urdf_file,
                                  const std::string &robot_name);
 
         /**
          *
          */
         bool getKinematicsConfig(kinematics_library::KinematicsConfig &kinematic_config,
-                                 const std::string &test_folder_path,
+                                 const std::string &config_folder_path,
+                                 const std::string &urdf_file,
                                  const std::string &robot_name,
                                  const std::string &solver_name,
                                  const std::string &reference_frame);
@@ -234,6 +238,11 @@ namespace motion_planners
                                           const std::string &robot_name,
                                           const std::string &planner_name,
                                           const std::string &reference_frame);
+
+        /**
+         * 
+         */
+        std::string extractDirectory(const std::string &filepath);
 
     protected:
         /**

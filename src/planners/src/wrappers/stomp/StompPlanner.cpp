@@ -197,10 +197,10 @@ namespace motion_planners
             planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
             return true;
         }
-        else
+        else {
             planner_status.statuscode = motion_planners::PlannerStatus::NO_PATH_FOUND;
-
-        return false;
+            return false;
+        }
     }
 
     void StompPlanner::setStartGoalTrajectory(const base::samples::Joints &start, const base::samples::Joints &goal)
