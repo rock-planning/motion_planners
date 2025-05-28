@@ -572,7 +572,7 @@ bool MotionPlanners::handleGraspObject(const motion_planners::ModelObject &known
     {
     case collision_detection::REMOVE:
         LOG_INFO("[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str());
-        return robot_model_->removeGraspObject(known_object.object_name);
+        return robot_model_->removeGraspObject(known_object.object_name); // known_object.object_name is string
 
     case collision_detection::ADD:
         LOG_INFO("[MotionPlanners]: Add known object with name %s", known_object.object_name.c_str());

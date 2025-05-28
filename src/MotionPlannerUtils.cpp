@@ -7,6 +7,8 @@
 #include <iostream>
 
 using namespace motion_planners;
+// using namespace tinyxml2;
+// using namespace std;
 
 namespace
 {
@@ -48,13 +50,17 @@ bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
                                             const std::string &solver_name,
                                             const std::string &reference_frame)
 {
+    // Create SRDF files
+    generateSRDFFiles(urdf_file, "kuka_manipulator", "IIWA14_BASE_LINK_link", "IIWA14_SI_0_link", "IIWA14_LINK_0_link", config_folder_path + "kuka.srdf");
+    generateSRDFFiles(urdf_file, "vispa_manipulator", "VISPA_BASE_LINK_link", "VISPA_SI_0_link", "VISPA_LINK_0_link", config_folder_path + "vispa.srdf");
+
     // get kinematics config
     if (!getKinematicsConfig(config.planner_config.kinematics_config, config_folder_path,
                              urdf_file, robot_name, solver_name, reference_frame))
         return false;
 
     // get robot model config
-    if (!getRobotModelConfig(config.planner_config.robot_model_config,
+    if (!getRobotModelConfig(config.planner_config.robot_model_config, config_folder_path,
                              urdf_file, robot_name))
         return false;
 
@@ -137,6 +143,7 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
 }
 
 bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_config,
+                                         const std::string &config_folder_path,
                                          const std::string &urdf_file,
                                          const std::string &robot_name)
 {
@@ -148,11 +155,9 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
 
     robot_config.urdf_file = urdf_file;
 
-    std::string srdf_folder_path = extractDirectory(urdf_file);
+    // std::string srdf_folder_path = extractDirectory(urdf_file);
+    std::string srdf_file = config_folder_path + robot_name + ".srdf";
 
-    // TODO - create SRDF
-
-    std::string srdf_file = srdf_folder_path + robot_name + ".srdf";
     if (!fileExists(srdf_file))
     {
         std::cout << "[getRobotModelConfig] No SRDF file\n";
@@ -165,12 +170,13 @@ bool MotionPlanners::getRobotModelConfig(robot_model::RobotModelConfig &robot_co
     return true;
 }
 
-bool MotionPlanners::reInitializeRobotModelConfig(const std::string &test_folder_path,
+bool MotionPlanners::reInitializeRobotModelConfig(const std::string &config_folder_path,
                                                   const std::string &robot_name,
                                                   const std::string &planner_name,
                                                   const std::string &reference_frame)
 {
-    std::string srdf_file = test_folder_path + "/data/" + robot_name + ".srdf";
+    std::string srdf_file = config_folder_path + robot_name + ".srdf";
+
     if (!fileExists(srdf_file))
     {
         std::cout << "[reInitializeRobotModelConfig] No SRDF file\n";
@@ -183,7 +189,7 @@ bool MotionPlanners::reInitializeRobotModelConfig(const std::string &test_folder
 
     // planner specific config (stomp_kuka or stomp_vispa)
     config_.planner_config.planner_specific_config =
-        test_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
+        config_folder_path + "/planner/" + planner_name + "_" + robot_name + ".yml";
 
     // planner
     if (planner_name == "trajopt")
@@ -541,4 +547,185 @@ std::string MotionPlanners::extractDirectory(const std::string &filepath)
         return ""; // No slash found, return empty or handle differently
     }
 }
-// Create an iterate function
+
+/**
+ * SRDF Functions
+ */
+
+std::string MotionPlanners::prettifyXML(const std::string &xmlContent)
+{
+    tinyxml2::XMLDocument doc;
+
+    doc.Parse(xmlContent.c_str());
+
+    tinyxml2::XMLPrinter printer(nullptr, false, 2); // indent = 2 spaces
+    doc.Print(&printer);
+    return std::string(printer.CStr());
+}
+
+std::vector<std::string> MotionPlanners::getLinksFromChain(const std::vector<Joint> &joints, const std::string &base, const std::string &tip)
+{
+    std::vector<std::string> chain;
+    std::string current = tip;
+    while (current != base)
+    {
+        bool found = false;
+        for (const auto &joint : joints)
+        {
+            if (joint.child == current)
+            {
+                chain.push_back(current);
+                current = joint.parent;
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            throw std::runtime_error("No joint connects to " + current + ", can't reach base " + base);
+    }
+    chain.push_back(base);
+    reverse(chain.begin(), chain.end());
+    return chain;
+}
+
+std::string MotionPlanners::generateSRDF(const std::string &robotName, const std::string &groupName, const std::string &baseLink, const std::string &tipLink,
+                                         const std::vector<string> &robotLinks, const std::set<std::string> &envLinks, const std::vector<Joint> &joints)
+{
+    tinyxml2::XMLDocument doc;
+
+    // Add XML declaration
+    tinyxml2::XMLDeclaration *decl = doc.NewDeclaration("xml version=\"1.0\" ?");
+    doc.InsertFirstChild(decl);
+
+    tinyxml2::XMLNode *root = doc.NewElement("robot");
+    doc.InsertEndChild(root);
+    ((tinyxml2::XMLElement *)root)->SetAttribute("name", robotName.c_str());
+
+    tinyxml2::XMLElement *group = doc.NewElement("group");
+    group->SetAttribute("name", groupName.c_str());
+    tinyxml2::XMLElement *chain = doc.NewElement("chain");
+    chain->SetAttribute("base_link", baseLink.c_str());
+    chain->SetAttribute("tip_link", tipLink.c_str());
+    group->InsertEndChild(chain);
+    root->InsertEndChild(group);
+
+    tinyxml2::XMLElement *ee = doc.NewElement("end_effector");
+    ee->SetAttribute("name", (groupName + "_ee").c_str());
+    ee->SetAttribute("parent_link", tipLink.c_str());
+    ee->SetAttribute("group", groupName.c_str());
+    root->InsertEndChild(ee);
+
+    tinyxml2::XMLElement *vj = doc.NewElement("virtual_joint");
+    vj->SetAttribute("name", "base");
+    vj->SetAttribute("type", "fixed");
+    vj->SetAttribute("parent_frame", "base");
+    vj->SetAttribute("child_link", baseLink.c_str());
+    root->InsertEndChild(vj);
+
+    tinyxml2::XMLElement *collisionMatrix = doc.NewElement("collision_matrix");
+    collisionMatrix->SetAttribute("default", "enabled");
+    for (const auto &rl : robotLinks)
+    {
+        for (const auto &el : envLinks)
+        {
+            tinyxml2::XMLElement *pair = doc.NewElement("pair");
+            pair->SetAttribute("link1", rl.c_str());
+            pair->SetAttribute("link2", el.c_str());
+            collisionMatrix->InsertEndChild(pair);
+        }
+    }
+
+    std::set<std::pair<std::string, std::string>> parentChildPairs;
+    for (const auto &joint : joints)
+    {
+        parentChildPairs.insert({joint.parent, joint.child});
+    }
+
+    for (size_t i = 0; i < robotLinks.size(); ++i)
+    {
+        for (size_t j = i + 1; j < robotLinks.size(); ++j)
+        {
+            std::string l1 = robotLinks[i], l2 = robotLinks[j];
+            if (parentChildPairs.count({l1, l2}) == 0 && parentChildPairs.count({l2, l1}) == 0)
+            {
+                tinyxml2::XMLElement *pair = doc.NewElement("pair");
+                pair->SetAttribute("link1", l1.c_str());
+                pair->SetAttribute("link2", l2.c_str());
+                collisionMatrix->InsertEndChild(pair);
+            }
+        }
+    }
+
+    root->InsertEndChild(collisionMatrix);
+
+    tinyxml2::XMLPrinter printer(nullptr, false, 0); // compact = false, indent = 0
+    doc.Print(&printer);
+    return printer.CStr();
+}
+
+void MotionPlanners::parseURDF(const std::string &path, std::set<std::string> &links, std::vector<Joint> &joints, std::string &robotName)
+{
+    tinyxml2::XMLDocument doc;
+    if (doc.LoadFile(path.c_str()) != tinyxml2::XML_SUCCESS)
+    {
+        throw std::runtime_error("Failed to load URDF file");
+    }
+    tinyxml2::XMLElement *root = doc.RootElement();
+
+    if (!root || std::string(root->Name()) != "robot")
+    {
+        throw std::runtime_error("Invalid URDF: root element is not <robot>");
+    }
+
+    const char *nameAttr = root->Attribute("name");
+    if (!nameAttr)
+    {
+        throw std::runtime_error("URDF <robot> element missing 'name' attribute");
+    }
+    robotName = std::string(nameAttr); // Store robot name
+
+    for (tinyxml2::XMLElement *link = root->FirstChildElement("link"); link; link = link->NextSiblingElement("link"))
+    {
+        links.insert(link->Attribute("name"));
+    }
+
+    for (tinyxml2::XMLElement *joint = root->FirstChildElement("joint"); joint; joint = joint->NextSiblingElement("joint"))
+    {
+        Joint j;
+        j.name = joint->Attribute("name");
+        j.parent = joint->FirstChildElement("parent")->Attribute("link");
+        j.child = joint->FirstChildElement("child")->Attribute("link");
+        joints.push_back(j);
+    }
+}
+
+void MotionPlanners::generateSRDFFiles(const std::string &urdfPath, const std::string &manipName,
+                                       const std::string &base, const std::string &tip,
+                                       const std::string &firstLink, const std::string &outputFile)
+{
+    std::set<std::string> links;
+    std::vector<Joint> joints;
+    std::string urdf_robot_name;
+    parseURDF(urdfPath, links, joints, urdf_robot_name);
+
+    std::vector<std::string> chain = getLinksFromChain(joints, firstLink, tip);
+    std::set<std::string> chainSet(chain.begin(), chain.end());
+
+    std::set<std::string> envLinks;
+    for (const auto &link : links)
+    {
+        if (chainSet.find(link) == chainSet.end())
+        {
+            envLinks.insert(link);
+        }
+    }
+
+    std::string srdf = generateSRDF(urdf_robot_name, manipName, base, tip, chain, envLinks, joints);
+
+    std::ofstream out(outputFile);
+    // out << prettifyXML(srdf);
+    out << srdf;
+    out.close();
+
+    std::cout << "SRDF file generated: " << outputFile << std::endl;
+}
