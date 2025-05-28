@@ -264,6 +264,7 @@ namespace motion_planners
         std::vector<std::string> getLinksFromChain(const std::vector<Joint> &joints, const std::string &base, const std::string &tip);
 
         std::string prettifyXML(const std::string &xmlContent);
+        void printCollisionObjectNames();
 
     protected:
         /**

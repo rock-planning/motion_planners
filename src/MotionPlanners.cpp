@@ -142,11 +142,6 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
-        // for (const auto &[link1, link2] : collision_object_names_)
-        // {
-        //     std::cout << "Link 1 " << link1 << std::endl;
-        //     std::cout << "Link 2 " << link2 << std::endl;
-        // }
         return false;
     }
 
@@ -189,16 +184,21 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     {
         planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
-        // for (const auto &[link1, link2] : collision_object_names_)
-        // {
-        //     std::cout << "Link 1 " << link1 << std::endl;
-        //     std::cout << "Link 2 " << link2 << std::endl;
-        // }
         return false;
     }
 
     planner_status.statuscode = PlannerStatus::PLANNING_REQUEST_SUCCESS;
     return true;
+}
+
+void MotionPlanners::printCollisionObjectNames()
+{
+    std::cout << "Links in Collision" << std::endl;
+    for (const auto &[link1, link2] : this->collision_object_names_)
+    {
+        std::cout << "Link 1 " << link1 << std::endl;
+        std::cout << "Link 2 " << link2 << std::endl;
+    }
 }
 
 void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap)
