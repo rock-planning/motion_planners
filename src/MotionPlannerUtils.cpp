@@ -2,6 +2,7 @@
 
 #include <tinyxml2.h>
 #include <boost/container_hash/hash.hpp>
+#include <boost/filesystem.hpp>
 #include <unordered_set>
 #include <fstream>
 #include <iostream>
@@ -728,4 +729,134 @@ void MotionPlanners::generateSRDFFiles(const std::string &urdfPath, const std::s
     out.close();
 
     std::cout << "SRDF file generated: " << outputFile << std::endl;
+}
+
+/**
+ *
+ */
+void MotionPlanners::printCollisionObjectNames()
+{
+    std::cout << "Links in Collision" << std::endl;
+    for (const auto &[link1, link2] : this->collision_object_names_)
+    {
+        std::cout << "Link 1 " << link1 << std::endl;
+        std::cout << "Link 2 " << link2 << std::endl;
+    }
+}
+
+/**
+ *
+ */
+bool MotionPlanners::checkNaN(base::samples::Joints joint_value)
+{
+    for (const auto &element : joint_value.elements)
+    {
+        if (std::isnan(element.position))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ *
+ */
+bool MotionPlanners::updateObject(const std::string &ops, const std::string &obj_name,
+                                  const std::string &robot_name, const std::string &attack_link,
+                                  const base::Pose &obj_rel_pose, const bool &grasp)
+{
+    // First remove the object from the env.
+    motion_planners::ModelObject remove_object;
+    remove_object.object_name = obj_name;
+    remove_object.operation = collision_detection::REMOVE;
+    remove_object.model_type = collision_detection::MESH;
+    bool remove_res;
+    if (grasp)
+    {
+        remove_res = handleGraspObject(remove_object);
+    }
+    else
+    {
+        remove_res = handleCollisionObjectInWorld(remove_object);
+    }
+
+    if (ops == "add")
+    {
+        // Add the object as grasp obj in the environment
+        motion_planners::ModelObject add_grasp_object;
+        add_grasp_object.object_name = obj_name;
+        add_grasp_object.operation = collision_detection::ADD;
+        add_grasp_object.model_type = collision_detection::MESH;
+        std::string urdf_path = robot_model_->getURDFfileAbsolutePath();
+        add_grasp_object.object_path = getCollisionMeshAbsolutePath(urdf_path, obj_name);
+        add_grasp_object.attach_link_name = attack_link;
+        add_grasp_object.relative_pose = obj_rel_pose;
+        if (grasp)
+        {
+            return handleGraspObject(add_grasp_object);
+        }
+        else
+        {
+            return handleCollisionObjectInWorld(add_grasp_object);
+        }
+    }
+    else
+    {
+        return remove_res;
+    }
+}
+
+/**
+ *
+ */
+std::string MotionPlanners::getCollisionMeshAbsolutePath(const std::string &urdf_path, const std::string &obj_name)
+{
+    tinyxml2::XMLDocument doc;
+    if (doc.LoadFile(urdf_path.c_str()) != tinyxml2::XML_SUCCESS)
+    {
+        throw std::runtime_error("Failed to load URDF file: " + urdf_path);
+    }
+
+    tinyxml2::XMLElement *root = doc.RootElement();
+    if (!root || std::string(root->Name()) != "robot")
+    {
+        throw std::runtime_error("Invalid URDF: root element is not <robot>");
+    }
+
+    for (tinyxml2::XMLElement *link = root->FirstChildElement("link"); link; link = link->NextSiblingElement("link"))
+    {
+        const char *link_name = link->Attribute("name");
+        if (!link_name || obj_name != link_name)
+        {
+            continue;
+        }
+
+        tinyxml2::XMLElement *collision = link->FirstChildElement("collision");
+        if (!collision)
+            continue;
+
+        tinyxml2::XMLElement *geometry = collision->FirstChildElement("geometry");
+        if (!geometry)
+            continue;
+
+        tinyxml2::XMLElement *mesh = geometry->FirstChildElement("mesh");
+        if (!mesh)
+            continue;
+
+        const char *mesh_file = mesh->Attribute("filename");
+        if (!mesh_file)
+            continue;
+
+        boost::filesystem::path mesh_path(mesh_file);
+        if (mesh_path.is_relative())
+        {
+            boost::filesystem::path base_dir = boost::filesystem::path(urdf_path).parent_path();
+            mesh_path = base_dir / mesh_path;
+        }
+
+        return boost::filesystem::absolute(mesh_path).string();
+    }
+
+    throw std::runtime_error("No collision mesh found for link: " + obj_name);
 }

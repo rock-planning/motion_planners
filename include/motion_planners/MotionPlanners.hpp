@@ -265,6 +265,10 @@ namespace motion_planners
 
         std::string prettifyXML(const std::string &xmlContent);
         void printCollisionObjectNames();
+        bool updateObject(const std::string &ops, const std::string &obj_name,
+                                                    const std::string &robot_name, const std::string &attack_link,
+                                                    const base::Pose &obj_rel_pose, const bool &grasp);
+        std::string getCollisionMeshAbsolutePath(const std::string &urdf_path, const std::string &obj_name);
 
     protected:
         /**
