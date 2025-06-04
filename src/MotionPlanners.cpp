@@ -2,17 +2,29 @@
 
 using namespace motion_planners;
 
+/**
+ *      Constructors
+ */
 MotionPlanners::MotionPlanners() = default;
 
 MotionPlanners::MotionPlanners(Config config) : config_(config) {}
 
+/**
+ *      Destructor
+ */
 MotionPlanners::~MotionPlanners() = default;
 
+/**
+ *      Load the config
+ */
 void MotionPlanners::loadConfig(Config config)
 {
     config_ = config;
 }
 
+/**
+ *      Initialize the planner
+ */
 bool MotionPlanners::initialize(PlannerStatus &planner_status)
 {
     // create robotmodel
@@ -62,6 +74,9 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     return true;
 }
 
+/**
+ *      Reinitialize the planner
+ */
 bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const std::string &planner_name, bool &robot_updated)
 {
     planner_status.statuscode = PlannerStatus::INIT;
@@ -108,6 +123,9 @@ bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const st
     return true;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::assignKinematicsToRobotModel(const kinematics_library::KinematicsConfig &kinematics_config,
                                                   kinematics_library::AbstractKinematicPtr &robot_kinematics,
                                                   PlannerStatus &planner_status)
@@ -125,6 +143,9 @@ bool MotionPlanners::assignKinematicsToRobotModel(const kinematics_library::Kine
     return true;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_status, PlannerStatus &planner_status)
 {
     // Make sure incoming data doesn't have any NaN in it
@@ -142,11 +163,6 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
-        // for (const auto &[link1, link2] : collision_object_names_)
-        // {
-        //     std::cout << "Link 1 " << link1 << std::endl;
-        //     std::cout << "Link 2 " << link2 << std::endl;
-        // }
         return false;
     }
 
@@ -173,6 +189,9 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     return true;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerStatus &planner_status)
 {
     // Make sure incoming data doesn't have any NaN in it
@@ -189,11 +208,6 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     {
         planner_status.statuscode = PlannerStatus::GOAL_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
-        // for (const auto &[link1, link2] : collision_object_names_)
-        // {
-        //     std::cout << "Link 1 " << link1 << std::endl;
-        //     std::cout << "Link 2 " << link2 << std::endl;
-        // }
         return false;
     }
 
@@ -201,6 +215,9 @@ bool MotionPlanners::checkGoalState(const base::samples::Joints &goal, PlannerSt
     return true;
 }
 
+/**
+ *
+ */
 void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octomap)
 {
     robot_model_->updateOctomap(octomap, config_.env_config.env_object_name);
@@ -210,12 +227,18 @@ void MotionPlanners::updateOctomap(const std::shared_ptr<octomap::OcTree> &octom
     }
 }
 
+/**
+ *
+ */
 void MotionPlanners::assignOctomapPlanningScene(const std::shared_ptr<octomap::OcTree> &octomap)
 {
     // assign an empty planning scene;
     robot_model_->assignPlanningScene(octomap, config_.env_config.env_frame, config_.env_config.env_object_name);
 }
 
+/**
+ *
+ */
 bool MotionPlanners::usePredictedTrajectory(base::JointsTrajectory &solution, PlannerStatus &planner_status)
 {
     base::samples::Joints start, goal;
@@ -231,6 +254,9 @@ bool MotionPlanners::usePredictedTrajectory(base::JointsTrajectory &solution, Pl
     return true;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const base::samples::Joints &target_jointvalues,
                                            PlannerStatus &planner_status)
@@ -270,6 +296,9 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const base::samples::RigidBodyState &target_pose,
                                            PlannerStatus &planner_status)
@@ -337,6 +366,9 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const std::string &target_group_state,
                                            PlannerStatus &planner_status)
@@ -400,6 +432,9 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return false;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const ConstraintPlanning &constrainted_target,
                                            PlannerStatus &planner_status)
@@ -430,6 +465,9 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
     return result;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::ModelObject &known_object, std::shared_ptr<urdf::Collision> collision_object)
 {
     // Assign the object name
@@ -506,6 +544,9 @@ bool MotionPlanners::convertModelObjectToURDFCollision(const motion_planners::Mo
     return true;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::handleCollisionObjectInWorld(const motion_planners::ModelObject &known_object)
 {
     if (known_object.operation == collision_detection::RESET)
@@ -521,16 +562,10 @@ bool MotionPlanners::handleCollisionObjectInWorld(const motion_planners::ModelOb
         return false;
     }
 
-    auto collision_object = std::make_shared<urdf::Collision>();
-
-    if (!convertModelObjectToURDFCollision(known_object, collision_object))
-    {
-        return false;
-    }
-
     switch (known_object.operation)
     {
     case collision_detection::REMOVE:
+    {
         LOG_INFO("[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str());
 
         if (known_object.model_type == collision_detection::OCTREE)
@@ -541,18 +576,33 @@ bool MotionPlanners::handleCollisionObjectInWorld(const motion_planners::ModelOb
         }
 
         return robot_model_->removeWorldObject(known_object.object_name);
+    }
 
     case collision_detection::ADD:
+    {
+        auto collision_object = std::make_shared<urdf::Collision>();
+        if (!convertModelObjectToURDFCollision(known_object, collision_object))
+        {
+            return false;
+        }
         LOG_INFO("[MotionPlanners]: Add known object with name %s", known_object.object_name.c_str());
         robot_model_->addCollisionsToWorld(collision_object, known_object.attach_link_name);
         return true;
+    }
 
     default:
+    {
         LOG_INFO("[MotionPlanners]: Unknown collision::operation received");
         return false;
     }
+    }
+
+    return false;
 }
 
+/**
+ *
+ */
 bool MotionPlanners::handleGraspObject(const motion_planners::ModelObject &known_object)
 {
     if (known_object.operation == collision_detection::RESET)
@@ -561,43 +611,55 @@ bool MotionPlanners::handleGraspObject(const motion_planners::ModelObject &known
         return false;
     }
 
-    auto collision_object = std::make_shared<urdf::Collision>();
-
-    if (!convertModelObjectToURDFCollision(known_object, collision_object))
-    {
-        return false;
-    }
-
     switch (known_object.operation)
     {
     case collision_detection::REMOVE:
+    {
         LOG_INFO("[MotionPlanners]: Remove known object with name %s", known_object.object_name.c_str());
-        return robot_model_->removeGraspObject(known_object.object_name);
+        return robot_model_->removeGraspObject(known_object.object_name); // known_object.object_name is string
+    }
 
     case collision_detection::ADD:
+    {
+        auto collision_object = std::make_shared<urdf::Collision>();
+
+        if (!convertModelObjectToURDFCollision(known_object, collision_object))
+        {
+            return false;
+        }
         LOG_INFO("[MotionPlanners]: Add known object with name %s", known_object.object_name.c_str());
         robot_model_->addGraspObject(collision_object, known_object.attach_link_name);
         return true;
+    }
 
     default:
+    {
         LOG_INFO("[MotionPlanners]: Unknown collision::operation received");
         return false;
     }
+    }
+    return false;
 }
 
+/**
+ *
+ */
 void MotionPlanners::setStartAndGoal()
 {
     planner_->setConstraints(constrainted_target_);
     planner_->setStartGoalTrajectory(initial_joint_status_, goal_joint_status_);
 }
 
+/**
+ *
+ */
 bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &planner_status, double &time_taken)
 {
     auto start_time = std::chrono::high_resolution_clock::now();
     bool res = planner_->solve(solution, planner_status);
 
     // Try alternative IK solutions if needed for pose-based planning
-    if ((planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution)) && planning_type_)
+    if (planner_status.statuscode == PlannerStatus::NO_PATH_FOUND && planning_type_) // (planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution))
     {
         // const size_t MAX_IK_ATTEMPTS = 4; // Try up to 4 more IK solutions
 
@@ -618,7 +680,7 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
             }
             setStartAndGoal();
             res = planner_->solve(solution, planner_status);
-            if (res && !(planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution)))
+            if (res && !(planner_status.statuscode == PlannerStatus::NO_PATH_FOUND)) // (planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution))
             {
                 break;
             }
@@ -628,16 +690,17 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     auto finish_time = std::chrono::high_resolution_clock::now();
     time_taken = std::chrono::duration<double>(finish_time - start_time).count();
 
-    if (planner_status.statuscode == PlannerStatus::PATH_FOUND && !ExcessiveJointMotion(solution))
+    if (res)
     {
         return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
 }
 
+/**
+ *
+ */
 void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_model)
 {
     std::vector<srdf::Model::GroupState> group_states = srdf_model->getGroupStates();
@@ -659,6 +722,9 @@ void MotionPlanners::createNamedGroupStates(boost::shared_ptr<srdf::Model> srdf_
     }
 }
 
+/**
+ *
+ */
 collision_detection::CollisionLinksName MotionPlanners::getCollidedObjectsNames()
 {
     collision_detection::CollisionLinksName collided_links;
@@ -671,6 +737,9 @@ collision_detection::CollisionLinksName MotionPlanners::getCollidedObjectsNames(
     return collided_links;
 }
 
+/**
+ *
+ */
 std::vector<std::pair<std::string, std::string>> MotionPlanners::assignDisableCollisionObject(
     const collision_detection::CollisionLinksName &disabled_collision_pair)
 {
@@ -682,16 +751,4 @@ std::vector<std::pair<std::string, std::string>> MotionPlanners::assignDisableCo
     }
 
     return collision_pair;
-}
-
-bool MotionPlanners::checkNaN(base::samples::Joints joint_value)
-{
-    for (const auto &element : joint_value.elements)
-    {
-        if (std::isnan(element.position))
-        {
-            return false;
-        }
-    }
-    return true;
 }

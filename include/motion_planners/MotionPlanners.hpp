@@ -190,6 +190,7 @@ namespace motion_planners
          *
          */
         bool getRobotModelConfig(robot_model::RobotModelConfig &robot_config,
+                                 const std::string &config_folder_path,
                                  const std::string &urdf_file,
                                  const std::string &robot_name);
 
@@ -240,9 +241,34 @@ namespace motion_planners
                                           const std::string &reference_frame);
 
         /**
-         * 
+         *
          */
         std::string extractDirectory(const std::string &filepath);
+
+        struct Joint
+        {
+            string name;
+            string parent;
+            string child;
+        };
+
+        void generateSRDFFiles(const std::string &urdfPath, const std::string &manipName,
+                               const std::string &base, const std::string &tip,
+                               const std::string &firstLink, const std::string &outputFile);
+
+        void parseURDF(const std::string &path, std::set<std::string> &links, std::vector<Joint> &joints, std::string &robotName);
+
+        std::string generateSRDF(const std::string &robotName, const std::string &groupName, const std::string &baseLink, const std::string &tipLink,
+                                 const std::vector<string> &robotLinks, const std::set<std::string> &envLinks, const std::vector<Joint> &joints);
+
+        std::vector<std::string> getLinksFromChain(const std::vector<Joint> &joints, const std::string &base, const std::string &tip);
+
+        std::string prettifyXML(const std::string &xmlContent);
+        void printCollisionObjectNames();
+        bool updateObject(const std::string &ops, const std::string &obj_name,
+                                                    const std::string &robot_name, const std::string &attack_link,
+                                                    const base::Pose &obj_rel_pose, const bool &grasp);
+        std::string getCollisionMeshAbsolutePath(const std::string &urdf_path, const std::string &obj_name);
 
     protected:
         /**
