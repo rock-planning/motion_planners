@@ -14,13 +14,13 @@
 #include "PlannerFactory.hpp"
 #include "abstract/AbstractPlanner.hpp"
 #include "motion_planners/Config.hpp"
+#include "motion_planners/robot_links_config.hpp"
 
 using StringPair = std::pair<std::string, std::string>;
 using StringPairSet = std::unordered_set<StringPair, boost::hash<StringPair>>;
 
 namespace motion_planners
 {
-
     /**
      * @class MotionPlanners
      * @brief MotionPlanners class.
@@ -160,6 +160,7 @@ namespace motion_planners
          *
          */
         bool getMotionPlannerConfig(motion_planners::Config &config,
+                                    const std::string &robot_links_str,
                                     const std::string &config_folder_path,
                                     const std::string &urdf_file,
                                     const std::string &robot_name,
@@ -266,8 +267,8 @@ namespace motion_planners
         std::string prettifyXML(const std::string &xmlContent);
         void printCollisionObjectNames();
         bool updateObject(const std::string &ops, const std::string &obj_name,
-                                                    const std::string &robot_name, const std::string &attack_link,
-                                                    const base::Pose &obj_rel_pose, const bool &grasp);
+                          const std::string &robot_name, const std::string &attack_link,
+                          const base::Pose &obj_rel_pose, const bool &grasp);
         std::string getCollisionMeshAbsolutePath(const std::string &urdf_path, const std::string &obj_name);
 
     protected:
@@ -341,10 +342,14 @@ namespace motion_planners
 
         bool planning_type_; // True == Cartesian Space; False == Joint space
 
+        motion_planners::RobotConfig robot_links;
+
     private:
         Config config_;
 
         kinematics_library::AbstractKinematicPtr kin_solver_;
+
+        YAML::Node robot_link;
     };
 
 };
