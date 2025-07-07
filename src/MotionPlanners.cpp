@@ -56,7 +56,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     // planner
     PlannerFactory planner_factory;
     planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
-    if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config))
+    if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config, this->num_waypoints))
     {
         planner_status.statuscode = PlannerStatus::PLANNER_INITIALISATION_FAILED;
         return false;
@@ -100,7 +100,7 @@ bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const st
         // planner
         PlannerFactory planner_factory;
         planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
-        if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config))
+        if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config, this->num_waypoints))
         {
             planner_status.statuscode = PlannerStatus::PLANNER_INITIALISATION_FAILED;
             return false;

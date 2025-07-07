@@ -11,7 +11,8 @@ namespace motion_planners
     {
     }
 
-    bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel> &robot_model, std::string config_file_path)
+    bool StompPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel> &robot_model, std::string config_file_path,
+                                         const int &num_waypoints)
     {
 
         // assign the config
@@ -20,7 +21,7 @@ namespace motion_planners
         const YAML::Node &stomp_node = input_config["stomp"];
         const YAML::Node &debug_node = input_config["debug"];
 
-        stomp_config_ = handle_stomp_config::getStompConfig(stomp_node);
+        stomp_config_ = handle_stomp_config::getStompConfig(stomp_node, num_waypoints);
         debug_config_ = handle_stomp_config::getDebugConfig(debug_node);
 
         // assigning planning grouup joint names.
@@ -65,7 +66,7 @@ namespace motion_planners
         int start = stomp::DIFF_RULE_LENGTH - 1;
 
         base::samples::Joints joint_values;
-        
+
         for (int i = 0; i < stomp_config_.num_time_steps_; i++)
         {
             joint_values.resize(planning_group_joints_name_.size());
@@ -197,7 +198,8 @@ namespace motion_planners
             planner_status.statuscode = motion_planners::PlannerStatus::PATH_FOUND;
             return true;
         }
-        else {
+        else
+        {
             planner_status.statuscode = motion_planners::PlannerStatus::NO_PATH_FOUND;
             return false;
         }

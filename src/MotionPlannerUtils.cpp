@@ -52,8 +52,10 @@ bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
                                             const std::string &robot_name,
                                             const std::string &planner_name,
                                             const std::string &solver_name,
-                                            const std::string &reference_frame)
+                                            const std::string &reference_frame,
+                                            const int &num_waypoints)
 {
+    this->num_waypoints = num_waypoints;
     this->robot_links.load_from_yaml(robot_links_str);
     // Create SRDF files
     generateSRDFFiles(urdf_file, "kuka_manipulator", this->robot_links.kuka.base, this->robot_links.kuka.si, this->robot_links.kuka.j0, config_folder_path + "kuka.srdf");

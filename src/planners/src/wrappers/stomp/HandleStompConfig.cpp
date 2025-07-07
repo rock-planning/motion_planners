@@ -3,7 +3,7 @@
 namespace handle_stomp_config
 {
 
-    stomp::StompConfig getStompConfig(const YAML::Node &yaml_data)
+    stomp::StompConfig getStompConfig(const YAML::Node &yaml_data, const int &num_waypoints)
     {
 
         stomp::StompConfig config;
@@ -12,7 +12,17 @@ namespace handle_stomp_config
         config.min_rollouts_ = motion_planners::getValue<int, double>(yaml_data, "min_rollouts_");
         config.max_rollouts_ = motion_planners::getValue<int, double>(yaml_data, "max_rollouts_");
         config.num_rollouts_per_iteration_ = motion_planners::getValue<int, double>(yaml_data, "num_rollouts_per_iteration_");
-        config.num_time_steps_ = motion_planners::getValue<int, double>(yaml_data, "num_time_steps_");
+
+        int num_timesteps = motion_planners::getValue<int, double>(yaml_data, "num_time_steps_");
+        if (num_timesteps > num_waypoints)
+        {
+            config.num_time_steps_ = num_timesteps;
+        }
+        else
+        {
+            config.num_time_steps_ = num_waypoints;
+        }
+
         config.num_dimensions_ = motion_planners::getValue<int, double>(yaml_data, "num_dimensions_");
         config.num_iterations_ = motion_planners::getValue<int, double>(yaml_data, "num_iterations_");
 

@@ -15,7 +15,7 @@ namespace handle_stomp_config
     // template<typename T>
     // T getValue (const YAML::Node &yaml_data, std::string name);
 
-    stomp::StompConfig getStompConfig(const YAML::Node &yaml_data);
+    stomp::StompConfig getStompConfig(const YAML::Node &yaml_data, const int &num_waypoints);
 
     stomp::DebugConfig getDebugConfig(const YAML::Node &yaml_data);
 

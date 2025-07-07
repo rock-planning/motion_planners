@@ -12,7 +12,7 @@ namespace motion_planners
     {
     }
 
-    bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel> &robot_model, std::string config_file_path)
+    bool OmplPlanner::initializePlanner(std::shared_ptr<robot_model::RobotModel> &robot_model, std::string config_file_path, const int &num_waypoints)
     {
         // assigning planning group joint names.
         if (!assignPlanningJointInformation(robot_model))

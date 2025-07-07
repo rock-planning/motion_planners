@@ -29,7 +29,7 @@ namespace motion_planners
     {
     }
 
-    bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel> &robot_model, std::string config_file_path)
+    bool TrajoptPlanner::initializePlanner(std::shared_ptr<RobotModel> &robot_model, std::string config_file_path, const int &num_waypoints)
     {
         motion_planners::loadConfigFile(config_file_path, m_input_config);
         // assigning planning grouup joint names.

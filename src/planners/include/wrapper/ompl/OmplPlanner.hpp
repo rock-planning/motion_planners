@@ -48,7 +48,7 @@ namespace motion_planners
          * @param planner_specfic Configuration file for planner.
          * @return Returns true, when the initialization is successful or else returns false
          */
-        bool initializePlanner(std::shared_ptr<robot_model::RobotModel> &robot_model, std::string config_file_path);
+        bool initializePlanner(std::shared_ptr<robot_model::RobotModel> &robot_model, std::string config_file_path, const int &num_waypoints);
         /**
          * @brief Reinitialize the motion planner. This function is used only in STOMP planner.
          * @return Returns true, when the initialization is successful or else returns false

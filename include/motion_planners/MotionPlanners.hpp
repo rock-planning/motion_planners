@@ -166,7 +166,8 @@ namespace motion_planners
                                     const std::string &robot_name,
                                     const std::string &planner_name,
                                     const std::string &solver_name,
-                                    const std::string &reference_frame);
+                                    const std::string &reference_frame,
+                                    const int &num_waypoints);
 
         /**
          *
@@ -270,6 +271,8 @@ namespace motion_planners
                           const std::string &robot_name, const std::string &attack_link,
                           const base::Pose &obj_rel_pose, const bool &grasp);
         std::string getCollisionMeshAbsolutePath(const std::string &urdf_path, const std::string &obj_name);
+
+        int num_waypoints;
 
     protected:
         /**
