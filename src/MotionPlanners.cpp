@@ -255,7 +255,7 @@ bool MotionPlanners::usePredictedTrajectory(base::JointsTrajectory &solution, Pl
 }
 
 /**
- *
+ * Planning Request for Joint Space Planning
  */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const base::samples::Joints &target_jointvalues,
@@ -297,7 +297,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 }
 
 /**
- *
+ * Planning Request for Cartesian Space Planning
  */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const base::samples::RigidBodyState &target_pose,
