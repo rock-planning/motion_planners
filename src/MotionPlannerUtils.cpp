@@ -14,27 +14,29 @@ using namespace motion_planners;
 namespace
 {
     // Helper function to determine base name based on reference frame and robot name
-    std::string getBaseName(const std::string &reference_frame, const std::string &robot_name)
+    std::string getBaseName(motion_planners::RobotConfig &robot_links,
+                            const std::string &reference_frame, const std::string &robot_name)
     {
         if (reference_frame == "webot_world")
         {
-            return "WEBOTS_WORLD_link";
+            return robot_links.world.name;
         }
         else if (reference_frame == "base_link")
         {
             if (robot_name == "kuka")
             {
-                return "IIWA14_BASE_LINK_link";
+                return robot_links.kuka.base;
             }
-            if (robot_name == "vispa")
+            else if (robot_name == "vispa")
             {
-                return "VISPA_BASE_LINK_link";
+                return robot_links.vispa.base;
             }
         }
         else
         {
             return "";
         }
+        return "";
     }
 
     bool fileExists(const std::string &path)
@@ -44,16 +46,20 @@ namespace
 }
 
 bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
+                                            const std::string &robot_links_str,
                                             const std::string &config_folder_path,
                                             const std::string &urdf_file,
                                             const std::string &robot_name,
                                             const std::string &planner_name,
                                             const std::string &solver_name,
-                                            const std::string &reference_frame)
+                                            const std::string &reference_frame,
+                                            const int &num_waypoints)
 {
+    this->num_waypoints = num_waypoints;
+    this->robot_links.load_from_yaml(robot_links_str);
     // Create SRDF files
-    generateSRDFFiles(urdf_file, "kuka_manipulator", "IIWA14_BASE_LINK_link", "IIWA14_SI_0_link", "IIWA14_LINK_0_link", config_folder_path + "kuka.srdf");
-    generateSRDFFiles(urdf_file, "vispa_manipulator", "VISPA_BASE_LINK_link", "VISPA_SI_0_link", "VISPA_LINK_0_link", config_folder_path + "vispa.srdf");
+    generateSRDFFiles(urdf_file, "kuka_manipulator", this->robot_links.kuka.base, this->robot_links.kuka.si, this->robot_links.kuka.j0, config_folder_path + "kuka.srdf");
+    generateSRDFFiles(urdf_file, "vispa_manipulator", this->robot_links.vispa.base, this->robot_links.vispa.si, this->robot_links.vispa.j0, config_folder_path + "vispa.srdf");
 
     // get kinematics config
     if (!getKinematicsConfig(config.planner_config.kinematics_config, config_folder_path,
@@ -112,16 +118,16 @@ bool MotionPlanners::getKinematicsConfig(kinematics_library::KinematicsConfig &k
     if (robot_name == "kuka")
     {
         kinematic_config.config_name = "kuka_arm";
-        kinematic_config.tip_name = "IIWA14_LINK_7_link";
+        kinematic_config.tip_name = this->robot_links.kuka.ee;
     }
     else if (robot_name == "vispa")
     {
         kinematic_config.config_name = "vispa_arm";
-        kinematic_config.tip_name = "VISPA_LINK_6_link";
+        kinematic_config.tip_name = this->robot_links.vispa.ee;
     }
 
     // Set base name
-    kinematic_config.base_name = getBaseName(reference_frame, robot_name);
+    kinematic_config.base_name = getBaseName(this->robot_links, reference_frame, robot_name);
 
     // Set solver type and config filename
     if (solver_name == "kdl")
@@ -221,7 +227,7 @@ bool MotionPlanners::getCollisionDetectionConfig(motion_planners::EnvironmentCon
                                                  const std::string &robot_name)
 {
     // Set environment frame
-    env_config.env_frame = getBaseName(reference_frame, robot_name);
+    env_config.env_frame = getBaseName(this->robot_links, reference_frame, robot_name);
 
     // Set collision detection config defaults
     auto &collision_config = env_config.collision_detection_config;

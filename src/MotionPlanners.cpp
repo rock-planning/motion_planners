@@ -56,7 +56,7 @@ bool MotionPlanners::initialize(PlannerStatus &planner_status)
     // planner
     PlannerFactory planner_factory;
     planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
-    if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config))
+    if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config, this->num_waypoints))
     {
         planner_status.statuscode = PlannerStatus::PLANNER_INITIALISATION_FAILED;
         return false;
@@ -100,7 +100,7 @@ bool MotionPlanners::reInitializePlanner(PlannerStatus &planner_status, const st
         // planner
         PlannerFactory planner_factory;
         planner_ = planner_factory.getPlannerTask(config_.planner_config.planner);
-        if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config))
+        if (!planner_->initializePlanner(robot_model_, config_.planner_config.planner_specific_config, this->num_waypoints))
         {
             planner_status.statuscode = PlannerStatus::PLANNER_INITIALISATION_FAILED;
             return false;
@@ -255,7 +255,7 @@ bool MotionPlanners::usePredictedTrajectory(base::JointsTrajectory &solution, Pl
 }
 
 /**
- *
+ * Planning Request for Joint Space Planning
  */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const base::samples::Joints &target_jointvalues,
@@ -297,7 +297,7 @@ bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jo
 }
 
 /**
- *
+ * Planning Request for Cartesian Space Planning
  */
 bool MotionPlanners::assignPlanningRequest(const base::samples::Joints &start_jointvalues,
                                            const base::samples::RigidBodyState &target_pose,
@@ -659,11 +659,11 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
     bool res = planner_->solve(solution, planner_status);
 
     // Try alternative IK solutions if needed for pose-based planning
-    if (planner_status.statuscode == PlannerStatus::NO_PATH_FOUND && planning_type_) // (planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution))
+    if (!(planner_status.statuscode == PlannerStatus::PATH_FOUND ||
+          planner_status.statuscode == PlannerStatus::EXACT_SOLUTION ||
+          planner_status.statuscode == PlannerStatus::APPROXIMATE_SOLUTION) &&
+        planning_type_)
     {
-        // const size_t MAX_IK_ATTEMPTS = 4; // Try up to 4 more IK solutions
-
-        // for (size_t attempt = ik_sol_numeral_; attempt < std::min(MAX_IK_ATTEMPTS + 1, ik_solution_.size()); attempt++)
         for (size_t attempt = ik_sol_numeral_; attempt < ik_solution_.size(); attempt++)
         {
             LOG_INFO("Need to replan");
@@ -680,7 +680,9 @@ bool MotionPlanners::solve(base::JointsTrajectory &solution, PlannerStatus &plan
             }
             setStartAndGoal();
             res = planner_->solve(solution, planner_status);
-            if (res && !(planner_status.statuscode == PlannerStatus::NO_PATH_FOUND)) // (planner_status.statuscode == PlannerStatus::NO_PATH_FOUND || ExcessiveJointMotion(solution))
+            if (res && (planner_status.statuscode == PlannerStatus::PATH_FOUND ||
+                        planner_status.statuscode == PlannerStatus::EXACT_SOLUTION ||
+                        planner_status.statuscode == PlannerStatus::APPROXIMATE_SOLUTION))
             {
                 break;
             }
