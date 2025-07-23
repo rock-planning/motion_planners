@@ -58,8 +58,8 @@ bool MotionPlanners::getMotionPlannerConfig(motion_planners::Config &config,
     this->num_waypoints = num_waypoints;
     this->robot_links.load_from_yaml(robot_links_str);
     // Create SRDF files
-    generateSRDFFiles(urdf_file, "kuka_manipulator", this->robot_links.kuka.base, this->robot_links.kuka.si, this->robot_links.kuka.j0, config_folder_path + "kuka.srdf");
-    generateSRDFFiles(urdf_file, "vispa_manipulator", this->robot_links.vispa.base, this->robot_links.vispa.si, this->robot_links.vispa.j0, config_folder_path + "vispa.srdf");
+    generateSRDFFiles(urdf_file, "kuka_manipulator", this->robot_links.kuka.base, this->robot_links.kuka.ee, this->robot_links.kuka.j0, config_folder_path + "kuka.srdf");
+    generateSRDFFiles(urdf_file, "vispa_manipulator", this->robot_links.vispa.base, this->robot_links.vispa.ee, this->robot_links.vispa.j0, config_folder_path + "vispa.srdf");
 
     // get kinematics config
     if (!getKinematicsConfig(config.planner_config.kinematics_config, config_folder_path,
@@ -643,11 +643,45 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
     }
 
     std::set<std::pair<std::string, std::string>> parentChildPairs;
+    std::map<std::string, std::vector<std::string>> adjacencyList;
+
+    // Build adjacency list from direct joint connections
     for (const auto &joint : joints)
     {
         parentChildPairs.insert({joint.parent, joint.child});
+        adjacencyList[joint.parent].push_back(joint.child);
     }
 
+    // Function to find all descendants of a given link using DFS
+    std::function<void(const std::string &, const std::string &, std::set<std::string> &)> findDescendants =
+        [&](const std::string &root, const std::string &current, std::set<std::string> &visited)
+    {
+        if (visited.count(current))
+            return; // Avoid cycles
+        visited.insert(current);
+
+        if (current != root)
+        {
+            parentChildPairs.insert({root, current});
+        }
+
+        if (adjacencyList.count(current))
+        {
+            for (const auto &child : adjacencyList[current])
+            {
+                findDescendants(root, child, visited);
+            }
+        }
+    };
+
+    // Build transitive closure - find all descendants for each link
+    for (const auto &[parent, children] : adjacencyList)
+    {
+        std::set<std::string> visited;
+        findDescendants(parent, parent, visited);
+    }
+
+    // Now generate collision pairs excluding all connected links
     for (size_t i = 0; i < robotLinks.size(); ++i)
     {
         for (size_t j = i + 1; j < robotLinks.size(); ++j)
@@ -700,6 +734,7 @@ void MotionPlanners::parseURDF(const std::string &path, std::set<std::string> &l
     {
         Joint j;
         j.name = joint->Attribute("name");
+        j.type = joint->Attribute("type");
         j.parent = joint->FirstChildElement("parent")->Attribute("link");
         j.child = joint->FirstChildElement("child")->Attribute("link");
         joints.push_back(j);

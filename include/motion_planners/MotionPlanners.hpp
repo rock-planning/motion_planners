@@ -250,6 +250,7 @@ namespace motion_planners
         struct Joint
         {
             string name;
+            string type;
             string parent;
             string child;
         };
