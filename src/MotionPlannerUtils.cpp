@@ -189,7 +189,7 @@ bool MotionPlanners::reInitializeRobotModelConfig(const std::string &config_fold
         std::cout << "[reInitializeRobotModelConfig] No SRDF file\n";
         return false;
     }
-    
+
     robot_model_->setSRDFfileAbsolutePath(srdf_file);
     std::string group_name = robot_name + "_manipulator";
     robot_model_->setPlanningGroupName(group_name);
@@ -657,21 +657,26 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
 
     // Expand parent-child transitive closure in chain
     std::function<void(const std::string &, const std::string &, std::set<std::string> &)> findDescendants =
-        [&](const std::string &root, const std::string &current, std::set<std::string> &visited) {
-            if (visited.count(current))
-                return;
-            visited.insert(current);
-            if (current != root) {
-                parentChildPairs.insert({root, current});
+        [&](const std::string &root, const std::string &current, std::set<std::string> &visited)
+    {
+        if (visited.count(current))
+            return;
+        visited.insert(current);
+        if (current != root)
+        {
+            parentChildPairs.insert({root, current});
+        }
+        if (adjacencyList.count(current))
+        {
+            for (const auto &child : adjacencyList[current])
+            {
+                findDescendants(root, child, visited);
             }
-            if (adjacencyList.count(current)) {
-                for (const auto &child : adjacencyList[current]) {
-                    findDescendants(root, child, visited);
-                }
-            }
-        };
+        }
+    };
 
-    for (const auto &[parent, children] : adjacencyList) {
+    for (const auto &[parent, children] : adjacencyList)
+    {
         std::set<std::string> visited;
         findDescendants(parent, parent, visited);
     }
@@ -842,48 +847,49 @@ bool MotionPlanners::checkNaN(base::samples::Joints joint_value)
 /**
  *
  */
-bool MotionPlanners::updateObject(const std::string &ops, const std::string &obj_name,
-                                  const std::string &robot_name, const std::string &attack_link,
-                                  const base::Pose &obj_rel_pose, const bool &grasp)
+bool MotionPlanners::removeObject(const std::string &obj_name, const std::string &attach_link)
 {
     // First remove the object from the env.
     motion_planners::ModelObject remove_object;
     remove_object.object_name = obj_name;
     remove_object.operation = collision_detection::REMOVE;
     remove_object.model_type = collision_detection::MESH;
-    bool remove_res;
-    if (grasp)
+    if (attach_link == this->robot_links.kuka.ee || attach_link == this->robot_links.vispa.ee ||
+        attach_link == "VISPA_SI_0_link" || attach_link == "IIWA14_SI_0_link")
     {
-        remove_res = handleGraspObject(remove_object);
+        return handleGraspObject(remove_object);
     }
     else
     {
-        remove_res = handleCollisionObjectInWorld(remove_object);
+        return handleCollisionObjectInWorld(remove_object);
     }
+}
 
-    if (ops == "add")
+/**
+ *
+ */
+bool MotionPlanners::addObject(const std::string &obj_name, const std::string &attach_link, const base::Pose &obj_rel_pose)
+{
+    // First remove the object
+    bool remove_res = removeObject(obj_name, attach_link);
+
+    // Add the object as grasp obj in the environment
+    motion_planners::ModelObject add_grasp_object;
+    add_grasp_object.object_name = obj_name;
+    add_grasp_object.operation = collision_detection::ADD;
+    add_grasp_object.model_type = collision_detection::MESH;
+    std::string urdf_path = robot_model_->getURDFfileAbsolutePath();
+    add_grasp_object.object_path = getCollisionMeshAbsolutePath(urdf_path, obj_name);
+    add_grasp_object.attach_link_name = attach_link;
+    add_grasp_object.relative_pose = obj_rel_pose;
+    if (attach_link == this->robot_links.kuka.ee || attach_link == this->robot_links.vispa.ee ||
+        attach_link == "VISPA_SI_0_link" || attach_link == "IIWA14_SI_0_link")
     {
-        // Add the object as grasp obj in the environment
-        motion_planners::ModelObject add_grasp_object;
-        add_grasp_object.object_name = obj_name;
-        add_grasp_object.operation = collision_detection::ADD;
-        add_grasp_object.model_type = collision_detection::MESH;
-        std::string urdf_path = robot_model_->getURDFfileAbsolutePath();
-        add_grasp_object.object_path = getCollisionMeshAbsolutePath(urdf_path, obj_name);
-        add_grasp_object.attach_link_name = attack_link;
-        add_grasp_object.relative_pose = obj_rel_pose;
-        if (grasp)
-        {
-            return handleGraspObject(add_grasp_object);
-        }
-        else
-        {
-            return handleCollisionObjectInWorld(add_grasp_object);
-        }
+        return handleGraspObject(add_grasp_object);
     }
     else
     {
-        return remove_res;
+        return handleCollisionObjectInWorld(add_grasp_object);
     }
 }
 
