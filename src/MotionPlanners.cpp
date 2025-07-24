@@ -163,6 +163,10 @@ bool MotionPlanners::checkStartState(const base::samples::Joints &current_robot_
     {
         planner_status.statuscode = PlannerStatus::START_STATE_IN_COLLISION;
         collision_object_names_ = robot_model_->getCollidedObjectsNames();
+        for (size_t i = 0; i < planning_group_joints_.size(); i++)
+        {
+            const auto &joint_name = planning_group_joints_[i].first;
+        }
         return false;
     }
 

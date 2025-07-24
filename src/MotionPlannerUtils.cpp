@@ -189,7 +189,7 @@ bool MotionPlanners::reInitializeRobotModelConfig(const std::string &config_fold
         std::cout << "[reInitializeRobotModelConfig] No SRDF file\n";
         return false;
     }
-
+    
     robot_model_->setSRDFfileAbsolutePath(srdf_file);
     std::string group_name = robot_name + "_manipulator";
     robot_model_->setPlanningGroupName(group_name);
@@ -570,33 +570,33 @@ std::string MotionPlanners::prettifyXML(const std::string &xmlContent)
     return std::string(printer.CStr());
 }
 
-std::vector<std::string> MotionPlanners::getLinksFromChain(const std::vector<Joint> &joints, const std::string &base, const std::string &tip)
-{
-    std::vector<std::string> chain;
-    std::string current = tip;
-    while (current != base)
-    {
-        bool found = false;
-        for (const auto &joint : joints)
-        {
-            if (joint.child == current)
-            {
-                chain.push_back(current);
-                current = joint.parent;
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-            throw std::runtime_error("No joint connects to " + current + ", can't reach base " + base);
-    }
-    chain.push_back(base);
-    reverse(chain.begin(), chain.end());
-    return chain;
-}
+// std::vector<std::string> MotionPlanners::getLinksFromChain(const std::vector<Joint> &joints, const std::string &base, const std::string &tip)
+// {
+//     std::vector<std::string> chain;
+//     std::string current = tip;
+//     while (current != base)
+//     {
+//         bool found = false;
+//         for (const auto &joint : joints)
+//         {
+//             if (joint.child == current)
+//             {
+//                 chain.push_back(current);
+//                 current = joint.parent;
+//                 found = true;
+//                 break;
+//             }
+//         }
+//         if (!found)
+//             throw std::runtime_error("No joint connects to " + current + ", can't reach base " + base);
+//     }
+//     chain.push_back(base);
+//     reverse(chain.begin(), chain.end());
+//     return chain;
+// }
 
 std::string MotionPlanners::generateSRDF(const std::string &robotName, const std::string &groupName, const std::string &baseLink, const std::string &tipLink,
-                                         const std::vector<string> &robotLinks, const std::set<std::string> &envLinks, const std::vector<Joint> &joints)
+                                         const std::vector<std::string> &robotLinks, const std::set<std::string> &envLinks, const std::vector<Joint> &joints)
 {
     tinyxml2::XMLDocument doc;
 
@@ -608,20 +608,46 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
     doc.InsertEndChild(root);
     ((tinyxml2::XMLElement *)root)->SetAttribute("name", robotName.c_str());
 
+    // Only use the kinematic chain from baseLink to tipLink
+    std::map<std::string, Joint> childToJoint;
+    for (const auto &joint : joints)
+    {
+        childToJoint[joint.child] = joint;
+    }
+
+    std::set<std::string> chainLinks;
+    std::map<std::string, std::vector<std::string>> adjacencyList;
+    std::set<std::pair<std::string, std::string>> parentChildPairs;
+
+    std::string current = tipLink;
+    while (current != baseLink && childToJoint.count(current))
+    {
+        const Joint &joint = childToJoint[current];
+        chainLinks.insert(current);
+        parentChildPairs.insert({joint.parent, joint.child});
+        adjacencyList[joint.parent].push_back(joint.child);
+        current = joint.parent;
+    }
+    chainLinks.insert(baseLink);
+
+    // Add group and chain definition
     tinyxml2::XMLElement *group = doc.NewElement("group");
     group->SetAttribute("name", groupName.c_str());
+
     tinyxml2::XMLElement *chain = doc.NewElement("chain");
     chain->SetAttribute("base_link", baseLink.c_str());
     chain->SetAttribute("tip_link", tipLink.c_str());
     group->InsertEndChild(chain);
     root->InsertEndChild(group);
 
+    // End effector
     tinyxml2::XMLElement *ee = doc.NewElement("end_effector");
     ee->SetAttribute("name", (groupName + "_ee").c_str());
     ee->SetAttribute("parent_link", tipLink.c_str());
     ee->SetAttribute("group", groupName.c_str());
     root->InsertEndChild(ee);
 
+    // Virtual joint
     tinyxml2::XMLElement *vj = doc.NewElement("virtual_joint");
     vj->SetAttribute("name", "base");
     vj->SetAttribute("type", "fixed");
@@ -629,10 +655,36 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
     vj->SetAttribute("child_link", baseLink.c_str());
     root->InsertEndChild(vj);
 
+    // Expand parent-child transitive closure in chain
+    std::function<void(const std::string &, const std::string &, std::set<std::string> &)> findDescendants =
+        [&](const std::string &root, const std::string &current, std::set<std::string> &visited) {
+            if (visited.count(current))
+                return;
+            visited.insert(current);
+            if (current != root) {
+                parentChildPairs.insert({root, current});
+            }
+            if (adjacencyList.count(current)) {
+                for (const auto &child : adjacencyList[current]) {
+                    findDescendants(root, child, visited);
+                }
+            }
+        };
+
+    for (const auto &[parent, children] : adjacencyList) {
+        std::set<std::string> visited;
+        findDescendants(parent, parent, visited);
+    }
+
+    // Collision matrix
     tinyxml2::XMLElement *collisionMatrix = doc.NewElement("collision_matrix");
     collisionMatrix->SetAttribute("default", "enabled");
+
     for (const auto &rl : robotLinks)
     {
+        if (!chainLinks.count(rl))
+            continue;
+
         for (const auto &el : envLinks)
         {
             tinyxml2::XMLElement *pair = doc.NewElement("pair");
@@ -642,51 +694,18 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
         }
     }
 
-    std::set<std::pair<std::string, std::string>> parentChildPairs;
-    std::map<std::string, std::vector<std::string>> adjacencyList;
-
-    // Build adjacency list from direct joint connections
-    for (const auto &joint : joints)
-    {
-        parentChildPairs.insert({joint.parent, joint.child});
-        adjacencyList[joint.parent].push_back(joint.child);
-    }
-
-    // Function to find all descendants of a given link using DFS
-    std::function<void(const std::string &, const std::string &, std::set<std::string> &)> findDescendants =
-        [&](const std::string &root, const std::string &current, std::set<std::string> &visited)
-    {
-        if (visited.count(current))
-            return; // Avoid cycles
-        visited.insert(current);
-
-        if (current != root)
-        {
-            parentChildPairs.insert({root, current});
-        }
-
-        if (adjacencyList.count(current))
-        {
-            for (const auto &child : adjacencyList[current])
-            {
-                findDescendants(root, child, visited);
-            }
-        }
-    };
-
-    // Build transitive closure - find all descendants for each link
-    for (const auto &[parent, children] : adjacencyList)
-    {
-        std::set<std::string> visited;
-        findDescendants(parent, parent, visited);
-    }
-
-    // Now generate collision pairs excluding all connected links
     for (size_t i = 0; i < robotLinks.size(); ++i)
     {
+        const auto &l1 = robotLinks[i];
+        if (!chainLinks.count(l1))
+            continue;
+
         for (size_t j = i + 1; j < robotLinks.size(); ++j)
         {
-            std::string l1 = robotLinks[i], l2 = robotLinks[j];
+            const auto &l2 = robotLinks[j];
+            if (!chainLinks.count(l2))
+                continue;
+
             if (parentChildPairs.count({l1, l2}) == 0 && parentChildPairs.count({l2, l1}) == 0)
             {
                 tinyxml2::XMLElement *pair = doc.NewElement("pair");
@@ -699,7 +718,8 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
 
     root->InsertEndChild(collisionMatrix);
 
-    tinyxml2::XMLPrinter printer(nullptr, false, 0); // compact = false, indent = 0
+    // Output SRDF as string
+    tinyxml2::XMLPrinter printer(nullptr, false, 0);
     doc.Print(&printer);
     return printer.CStr();
 }
@@ -711,8 +731,8 @@ void MotionPlanners::parseURDF(const std::string &path, std::set<std::string> &l
     {
         throw std::runtime_error("Failed to load URDF file");
     }
-    tinyxml2::XMLElement *root = doc.RootElement();
 
+    tinyxml2::XMLElement *root = doc.RootElement();
     if (!root || std::string(root->Name()) != "robot")
     {
         throw std::runtime_error("Invalid URDF: root element is not <robot>");
@@ -723,7 +743,7 @@ void MotionPlanners::parseURDF(const std::string &path, std::set<std::string> &l
     {
         throw std::runtime_error("URDF <robot> element missing 'name' attribute");
     }
-    robotName = std::string(nameAttr); // Store robot name
+    robotName = std::string(nameAttr);
 
     for (tinyxml2::XMLElement *link = root->FirstChildElement("link"); link; link = link->NextSiblingElement("link"))
     {
@@ -739,6 +759,26 @@ void MotionPlanners::parseURDF(const std::string &path, std::set<std::string> &l
         j.child = joint->FirstChildElement("child")->Attribute("link");
         joints.push_back(j);
     }
+}
+
+std::vector<std::string> MotionPlanners::getLinksFromChain(const std::vector<Joint> &joints, const std::string &startLink, const std::string &endLink)
+{
+    std::map<std::string, Joint> childToJoint;
+    for (const auto &joint : joints)
+    {
+        childToJoint[joint.child] = joint;
+    }
+
+    std::vector<std::string> chain;
+    std::string current = endLink;
+    while (current != startLink && childToJoint.count(current))
+    {
+        chain.push_back(current);
+        current = childToJoint[current].parent;
+    }
+    chain.push_back(startLink);
+    std::reverse(chain.begin(), chain.end());
+    return chain;
 }
 
 void MotionPlanners::generateSRDFFiles(const std::string &urdfPath, const std::string &manipName,
@@ -765,7 +805,6 @@ void MotionPlanners::generateSRDFFiles(const std::string &urdfPath, const std::s
     std::string srdf = generateSRDF(urdf_robot_name, manipName, base, tip, chain, envLinks, joints);
 
     std::ofstream out(outputFile);
-    // out << prettifyXML(srdf);
     out << srdf;
     out.close();
 
