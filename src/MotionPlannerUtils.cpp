@@ -689,6 +689,8 @@ std::string MotionPlanners::generateSRDF(const std::string &robotName, const std
     {
         if (!chainLinks.count(rl))
             continue;
+        if( rl == robotLinks[0])  // WORKAROUND: Ignore collisions of first Link with environment
+            continue;
 
         for (const auto &el : envLinks)
         {
